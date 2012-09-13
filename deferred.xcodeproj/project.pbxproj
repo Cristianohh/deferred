@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		2707F84416026C020014C2E1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2707F84316026C020014C2E1 /* Cocoa.framework */; };
 		273AB3F316026C5F007C7682 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 273AB3ED16026C5F007C7682 /* main.cpp */; };
+		278F9E0A1602862200F90E06 /* timer.c in Sources */ = {isa = PBXBuildFile; fileRef = 278F9E081602862200F90E06 /* timer.c */; };
+		278F9E0D1602862700F90E06 /* timer_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 278F9E0C1602862700F90E06 /* timer_test.cpp */; };
 		27ADE89016026DCD00D888DE /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ADE88C16026DCD00D888DE /* AppDelegate.m */; };
 		27ADE89216026DCD00D888DE /* MacApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ADE88F16026DCD00D888DE /* MacApplication.m */; };
 		27ADE89A16026DD900D888DE /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 27ADE89416026DD900D888DE /* Credits.rtf */; };
@@ -31,6 +33,9 @@
 		2707F84716026C020014C2E1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		2707F84816026C020014C2E1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		273AB3ED16026C5F007C7682 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		278F9E081602862200F90E06 /* timer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = timer.c; sourceTree = "<group>"; };
+		278F9E091602862200F90E06 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timer.h; sourceTree = "<group>"; };
+		278F9E0C1602862700F90E06 /* timer_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = timer_test.cpp; sourceTree = "<group>"; };
 		27ADE88B16026DCD00D888DE /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		27ADE88C16026DCD00D888DE /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		27ADE88D16026DCD00D888DE /* deferred-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "deferred-Info.plist"; sourceTree = "<group>"; };
@@ -106,6 +111,8 @@
 		273AB3E216026C5F007C7682 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				278F9E081602862200F90E06 /* timer.c */,
+				278F9E091602862200F90E06 /* timer.h */,
 				27ADE8AB16027ACD00D888DE /* tests */,
 				27ADE8AC16027ACD00D888DE /* unit_test.cpp */,
 				27ADE8AD16027ACD00D888DE /* unit_test.h */,
@@ -148,6 +155,7 @@
 		27ADE8AB16027ACD00D888DE /* tests */ = {
 			isa = PBXGroup;
 			children = (
+				278F9E0C1602862700F90E06 /* timer_test.cpp */,
 				27CF508716027C57009DBE5A /* unit_test.cpp */,
 				27ADE8AF16027B1E00D888DE /* application.cpp */,
 			);
@@ -245,6 +253,8 @@
 				27CF508816027C57009DBE5A /* unit_test.cpp in Sources */,
 				27CF508E1602805B009DBE5A /* render_gl.cpp in Sources */,
 				27CF509016028273009DBE5A /* render_gl.m in Sources */,
+				278F9E0A1602862200F90E06 /* timer.c in Sources */,
+				278F9E0D1602862700F90E06 /* timer_test.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

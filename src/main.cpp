@@ -9,20 +9,22 @@
 #include "unit_test.h"
 
 #include "render.h"
+#include "timer.h"
 
 static Render* _render = NULL;
+static Timer _timer = {0};
 
 int on_init(int argc, const char* argv[]) {
     _render = Render::create();
     _render->initialize(app_get_window());
+    timer_init(&_timer);
     return 0;
     (void)sizeof(argc);
     (void)sizeof(argv[0]);
 }
 int on_frame(void) {
-    static int _frame_count = 0;
-    if(_frame_count % 60 == 0)
-        printf("%f\n", _frame_count);
+    float delta_time = (float)timer_delta_time(&_timer);
+    printf("%f\n", 1.0f/delta_time);
 
     _render->render();
     return 0;
