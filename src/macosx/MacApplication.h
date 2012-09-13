@@ -1,4 +1,5 @@
-/*! @file AppDelegate.h
+/*! @file MacApplication.h
+ *  @brief TODO: Add the purpose of this module
  *  @author Kyle Weicht
  *  @date 9/13/12
  *  @copyright Copyright (c) 2012 Kyle Weicht. All rights reserved.
@@ -6,8 +7,8 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+#include "application.h"
 
-@property (assign) IBOutlet NSWindow *window;
+@interface MacApplication : NSApplication
 
 @end

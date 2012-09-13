@@ -5,9 +5,10 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#include "application.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
-@property (assign) IBOutlet NSWindow *window;
+@property NSWindow *window;
 
 @end

@@ -1,10 +1,8 @@
-//
-//  main.m
-//  deferred
-//
-//  Created by Kyle Weicht on 9/13/12.
-//  Copyright (c) 2012 Kyle Weicht. All rights reserved.
-//
+/*! @file main.m
+ *  @author Kyle Weicht
+ *  @date 9/13/12
+ *  @copyright Copyright (c) 2012 Kyle Weicht. All rights reserved.
+ */
 
 #import <Cocoa/Cocoa.h>
 
