@@ -18,9 +18,6 @@
     <ClCompile Include="src\tests\timer_test.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
-    <ClCompile Include="src\application.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -44,6 +41,9 @@
     </ClCompile>
     <ClCompile Include="src\tests\unit_test_test.cpp">
       <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application.c">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

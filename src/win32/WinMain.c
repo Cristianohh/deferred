@@ -8,6 +8,8 @@
     #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
+#include <Shellapi.h>
+#include "application.h"
 
 /*
  * Internal 
@@ -22,13 +24,6 @@ static int  _fullscreen = 0;
  * Functions
  */
 void* app_get_window(void) { return _hwnd; }
-int ApplicationMain(int argc, const char* argv[])
-{
-    int ii;
-    for(ii=0;ii<argc;++ii)
-        argv[ii] = argv[0];
-    return 0;
-}
 
 static LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam );
 
@@ -155,12 +150,32 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
  */
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) 
 {
+    int argc = 0;
+    int ii;
+    LPWSTR cmd_line = GetCommandLineW();
+    LPWSTR* argvw = CommandLineToArgvW(cmd_line, &argc);
+    char args[256][32] = {0};
+    const char* argv[32] = {0};
+    for(ii=0;ii<argc;++ii) {
+        WideCharToMultiByte(CP_ACP, 0, argvw[ii], -1, args[ii], sizeof(args[ii]), NULL, NULL);
+        argv[ii] = args[ii];
+    }
+    return ApplicationMain(argc, argv);
+    (void)sizeof(hInstance);
+    (void)sizeof(hPrevInstance);
+    (void)sizeof(nCmdShow);
+    (void)sizeof(lpCmdLine);
+}
+int ApplicationMain(int argc, const char* argv[])
+{
     MSG msg = {0};
+    HINSTANCE hInstance = GetModuleHandle(NULL);
     _create_application(hInstance, _class_name);
     _hwnd = _create_window(hInstance, _class_name);
     ShowWindow(_hwnd, SW_SHOWNORMAL);
 
     /* TODO: Initialization code */
+    on_init(argc, argv);
 
     /* Main loop */
     do {
@@ -169,12 +184,12 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
             DispatchMessage(&msg); 
         } else {
             /* TODO: Per-frame code */
+            on_frame();
         }
     } while(msg.message != WM_QUIT);
 
     /* TODO: Shutdown code */
+    on_shutdown();
+
     return 0;
-    (void)sizeof(hPrevInstance);
-    (void)sizeof(lpCmdLine);
-    (void)sizeof(nCmdShow);
 }

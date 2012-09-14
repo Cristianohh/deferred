@@ -36,6 +36,8 @@ extern void on_shutdown(void);
  */
 void* app_get_window(void);
 
+/*! @brief Output string to debug output */
+void debug_output(const char* format, ...);
 
 #ifdef __cplusplus
 } // extern "C" {

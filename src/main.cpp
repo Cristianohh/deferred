@@ -19,7 +19,7 @@ int on_init(int argc, const char* argv[]) {
     _render->initialize(app_get_window());
     timer_init(&_timer);
     for(int ii=0;ii<argc;++ii)
-        printf("%s\n", argv[ii]);
+        debug_output("%s\n", argv[ii]);
     return 0;
     (void)sizeof(argc);
     (void)sizeof(argv[0]);
@@ -28,7 +28,7 @@ int on_frame(void) {
     double delta_time = timer_delta_time(&_timer);
     static int frame_count = 0;
     if(frame_count++ % 1024 == 0)
-        printf("%f\n", 1.0/delta_time);
+        debug_output("%f\n", 1.0/delta_time);
 
     _render->render();
     return 0;
