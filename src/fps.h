@@ -9,16 +9,20 @@
 #ifndef __fps_h__
 #define __fps_h__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+enum { kFPSFrameCount = 63 };
+
 typedef struct {
-    int frame_count;
-    float time;
+    float times[kFPSFrameCount];
+    uint32_t frame;
 } FPSCounter;
 
-void fps_update(float delta_time);
+void update_fps(FPSCounter* fps, float delta_time);
 float get_fps(FPSCounter* fps);
 
 #ifdef __cplusplus
