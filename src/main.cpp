@@ -25,8 +25,10 @@ int on_init(int argc, const char* argv[]) {
     (void)sizeof(argv[0]);
 }
 int on_frame(void) {
-    float delta_time = (float)timer_delta_time(&_timer);
-    printf("%f\n", 1.0f/delta_time);
+    double delta_time = timer_delta_time(&_timer);
+    static int frame_count = 0;
+    if(frame_count++ % 1024 == 0)
+        printf("%f\n", 1.0/delta_time);
 
     _render->render();
     return 0;
@@ -39,5 +41,5 @@ void on_shutdown(void) {
 int main(int argc, const char* argv[])
 {
     RUN_ALL_TESTS(argc, argv, "-t");
-    return ApplicationMain(argc, (const char**)argv);
+    return ApplicationMain(argc, argv);
 }
