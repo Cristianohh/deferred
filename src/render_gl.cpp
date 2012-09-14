@@ -37,13 +37,14 @@ void* window(void) { return _window; }
 
 void initialize(void* window) {
     _window = window;
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
+    glClearDepth(1.0f);
 }
 void shutdown(void) {
 }
 void render(void) {
-    _clear();
     _present();
+    _clear();
 }
 
 private:
