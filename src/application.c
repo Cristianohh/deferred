@@ -6,8 +6,8 @@
 #include "application.h"
 
 #include <stdio.h>
+#include <stdarg.h>
 #ifdef _WIN32
-    #include <stdarg.h>
     #define WIN32_LEAN_AND_MEAN
     #include <Windows.h>
 #endif
@@ -26,5 +26,9 @@ void debug_output(const char* format, ...)
     va_start(ap, format);
     vsprintf(buffer, format, ap);
     va_end(ap);
+#ifdef _WIN32
     OutputDebugString(buffer);
+#elif defined(__APPLE__)
+    printf("%s", buffer);
+#endif
 }

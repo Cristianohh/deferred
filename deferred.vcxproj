@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="external\glew.c" />
     <ClCompile Include="src\application.c" />
+    <ClCompile Include="src\fps.c" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\render_gl.cpp" />
     <ClCompile Include="src\tests\application_test.cpp" />
@@ -36,6 +37,7 @@
     <ClInclude Include="external\GL\glxew.h" />
     <ClInclude Include="external\GL\wglew.h" />
     <ClInclude Include="src\application.h" />
+    <ClInclude Include="src\fps.h" />
     <ClInclude Include="src\render.h" />
     <ClInclude Include="src\timer.h" />
     <ClInclude Include="src\unit_test.h" />
@@ -137,6 +139,9 @@
     <Manifest>
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>$(TargetPath) -t</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -160,6 +165,9 @@
     <Manifest>
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>$(TargetPath) -t</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -185,6 +193,9 @@
     <Manifest>
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>$(TargetPath) -t</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -210,6 +221,9 @@
     <Manifest>
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>
+    <PostBuildEvent>
+      <Command>$(TargetPath) -t</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

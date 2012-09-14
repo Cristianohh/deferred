@@ -30,7 +30,7 @@ int on_frame(void) {
     float delta_time = (float)timer_delta_time(&_timer);
     static int frame_count = 0;
     if(++frame_count % kFPSFrameCount == 0)
-        printf("%f\n", get_fps(&_fps));
+        debug_output("%f\n", get_fps(&_fps));
 
     _render->render();
     update_fps(&_fps, delta_time);

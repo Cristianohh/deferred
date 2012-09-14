@@ -45,6 +45,9 @@
     <ClCompile Include="src\application.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\fps.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application.h">
@@ -70,6 +73,9 @@
     </ClInclude>
     <ClInclude Include="external\GL\glcorearb.h">
       <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="src\fps.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

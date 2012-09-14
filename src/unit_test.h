@@ -154,11 +154,11 @@ int run_all_tests(int argc, const char* argv[]);
 
 #define RUN_ALL_TESTS(argc, argv, test_arg)         \
     do {                                            \
-        int _ii;                                     \
-        for(_ii=0;_ii<argc;++_ii)                      \
-            if(strcmp(argv[_ii], test_arg) == 0)     \
+        int _ii;                                    \
+        for(_ii=0;_ii<argc;++_ii)                   \
+            if(strcmp(argv[_ii], test_arg) == 0)    \
                 return run_all_tests(argc, argv);   \
-    } while(0)
+    } while(__LINE__ == -1)
 
 #ifdef __cplusplus
 }

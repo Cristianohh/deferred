@@ -10,6 +10,7 @@
 #include <Windows.h>
 #include <Shellapi.h>
 #include "application.h"
+#include "unit_test.h"
 
 /*
  * Internal 
@@ -154,7 +155,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     int ii;
     LPWSTR cmd_line = GetCommandLineW();
     LPWSTR* argvw = CommandLineToArgvW(cmd_line, &argc);
-    char args[256][32] = {0};
+    char args[32][256] = {0};
     const char* argv[32] = {0};
     for(ii=0;ii<argc;++ii) {
         WideCharToMultiByte(CP_ACP, 0, argvw[ii], -1, args[ii], sizeof(args[ii]), NULL, NULL);
@@ -168,8 +169,10 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 }
 int ApplicationMain(int argc, const char* argv[])
 {
-    MSG msg = {0};
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    MSG msg = {0};
+    RUN_ALL_TESTS(argc, argv, "-t");
+    
     _create_application(hInstance, _class_name);
     _hwnd = _create_window(hInstance, _class_name);
     ShowWindow(_hwnd, SW_SHOWNORMAL);

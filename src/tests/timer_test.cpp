@@ -17,7 +17,7 @@ TEST(TimerTest)
     Timer timer;
     timer_init(&timer);
     double time = 0.0f;
-    for(int ii=0;ii<1;++ii)
+    for(int ii=0;ii<1024;++ii)
     {
         time += timer_delta_time(&timer);
     }
