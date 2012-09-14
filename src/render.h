@@ -22,6 +22,8 @@ public:
 
     static Render* create(void);
     static void destroy(Render* render);
+private:
+    static Render* _create_ogl(void);
 };
 
 /* @} */

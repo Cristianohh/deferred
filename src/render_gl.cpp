@@ -38,6 +38,7 @@
 
 class RenderGL : public Render {
 public:
+
 RenderGL()
     : _window(NULL)
 {
@@ -57,7 +58,7 @@ void initialize(void* window) {
 	pfd.nVersion    = 1;
 	pfd.dwFlags     = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
 	pfd.iPixelType  = PFD_TYPE_RGBA;
-	pfd.cColorBits  = 32;
+	pfd.cColorBits  = 24;
 	pfd.cDepthBits  = 24;
 	pfd.iLayerType  = PFD_MAIN_PLANE;
 
@@ -91,15 +92,18 @@ void initialize(void* window) {
     };
     HGLRC new_GLRC = wglCreateContextAttribsARB(hDC, 0, attributes);
     assert(new_GLRC);
+    CheckGLError();
 
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(first_GLRC);
     wglMakeCurrent(hDC, new_GLRC);
+    CheckGLError();
     _dc = hDC;
 
     // Disable vsync
     assert(wglewIsSupported("WGL_EXT_swap_control") == 1);
     wglSwapIntervalEXT(0);
+    CheckGLError();
 #endif
     _window = window;
     glClearColor(0.6f, 0.2f, 0.5f, 1.0f);
@@ -116,12 +120,14 @@ void render(void) {
 private:
 void _clear(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    CheckGLError();
 }
 void _present(void) {
 #ifdef __APPLE__
     _osx_flush_buffer(_window);
 #elif defined(_WIN32)
     SwapBuffers(_dc);
+    CheckGLError();
 #endif
 }
 
@@ -137,9 +143,6 @@ HDC _dc;
 /*
  * External
  */
-Render* Render::create() {
+Render* Render::_create_ogl(void) {
     return new RenderGL;
-}
-void Render::destroy(Render* render) {
-    delete render;
 }

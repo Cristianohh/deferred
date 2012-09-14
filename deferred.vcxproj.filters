@@ -48,6 +48,12 @@
     <ClCompile Include="src\fps.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\game.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application.h">
@@ -78,6 +84,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\assert.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\game.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

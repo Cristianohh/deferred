@@ -135,6 +135,7 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             }
             return 0;
         }
+        break;
     case WM_MENUCHAR: /* identify alt+enter, make it not beep since we're handling it: */
         if( LOWORD(wParam) & VK_RETURN )
             return MAKELRESULT(0, MNC_CLOSE);
@@ -187,7 +188,8 @@ int ApplicationMain(int argc, const char* argv[])
             DispatchMessage(&msg); 
         } else {
             /* TODO: Per-frame code */
-            on_frame();
+            if(on_frame())
+                break;
         }
     } while(msg.message != WM_QUIT);
 

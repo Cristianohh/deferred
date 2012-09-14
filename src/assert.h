@@ -11,7 +11,7 @@
  */
 #if defined( _MSC_VER )
     #define debugBreak() __debugbreak()
-    #pragma warning(disable:4127) /* Conditional expression is constant */
+    #pragma warning(disable:4127) /* Conditional expression is constant (the do-while) */
 #elif defined( __GNUC__ )
     #define debugBreak() __asm__( "int $3\n" : : )
 #else
