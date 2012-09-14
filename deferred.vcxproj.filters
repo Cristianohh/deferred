@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{1fe3ee65-2117-4a55-9655-24b7729eca55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\win32">
+      <UniqueIdentifier>{7acd5c53-994c-4d54-826e-fcbf92c877cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\tests">
+      <UniqueIdentifier>{d6158347-82a3-4bc9-87be-81da73723ba0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{c1fa8c3e-46b5-4ef7-a56e-08ecaca363a0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\tests\timer_test.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\application.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render_gl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\timer.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\unit_test.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win32\WinMain.c">
+      <Filter>src\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="external\glew.c">
+      <Filter>external</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\application_test.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\unit_test_test.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\application.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\timer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\unit_test.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="external\GL\glew.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\GL\glxew.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\GL\wglew.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="external\GL\glcorearb.h">
+      <Filter>external</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -18,6 +18,8 @@ int on_init(int argc, const char* argv[]) {
     _render = Render::create();
     _render->initialize(app_get_window());
     timer_init(&_timer);
+    for(int ii=0;ii<argc;++ii)
+        printf("%s\n", argv[ii]);
     return 0;
     (void)sizeof(argc);
     (void)sizeof(argv[0]);

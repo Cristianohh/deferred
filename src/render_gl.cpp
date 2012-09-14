@@ -19,7 +19,7 @@
 #elif defined(_WIN32)
     #include <gl/glew.h>
     #include <gl/wglew.h>
-    #include <gl/gl3.h>
+    #include <gl/glcorearb.h>
     #pragma warning(disable:4127) /* Conditional expression is constant */
     #define snprintf _snprintf
 #endif
