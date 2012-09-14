@@ -37,6 +37,10 @@
     <ClInclude Include="external\GL\glxew.h" />
     <ClInclude Include="external\GL\wglew.h" />
     <ClInclude Include="src\application.h" />
+    <ClInclude Include="src\assert.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
     <ClInclude Include="src\fps.h" />
     <ClInclude Include="src\render.h" />
     <ClInclude Include="src\timer.h" />

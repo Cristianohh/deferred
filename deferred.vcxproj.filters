@@ -77,5 +77,8 @@
     <ClInclude Include="src\fps.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\assert.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
