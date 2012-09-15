@@ -9,6 +9,7 @@
 #include "assert.h"
 
 #include "application.h"
+#include "vec_math.h"
 
 #ifdef __APPLE__
     #include "TargetConditionals.h"
@@ -39,6 +40,12 @@
 
 namespace {
 
+enum UniformBufferType {
+    kWorldTransformBuffer,
+    kViewProjTransformBuffer,
+
+    kNUM_UNIFORM_BUFFERS
+};
 enum VertexShaderType {
     kVSPos,
 
@@ -54,11 +61,11 @@ enum ProgramType {
 
     kNUM_PROGRAMS
 };
-const char* kVertexShaderNames[kNUM_VERTEX_SHADERS] =
+const char* kVertexShaderNames[] =
 {
 /* kVSPos */    "assets/shaders/PosGL.vsh",
 };
-const char* kFragmentShaderNames[kNUM_FRAGMENT_SHADERS] =
+const char* kFragmentShaderNames[] =
 {
 /* kPSColor */  "assets/shaders/ColorGL.fsh",
 };
@@ -68,6 +75,11 @@ const struct {
 } kPrograms[] =
 {
 /* kSimpleColor */ { kVSPos, kFSColor },
+};
+const char* kUniformBufferBindings[] =
+{
+/* kWorldTransformBuffer */     "PerObject",
+/* kViewProjTransformBuffer */  "PerFrame"
 };
 
 GLuint _compile_shader(GLenum shader_type, const char* filename) {
@@ -229,6 +241,7 @@ void initialize(void* window) {
 }
 void shutdown(void) {
     _unload_shaders();
+    glDeleteBuffers(kNUM_UNIFORM_BUFFERS, _uniform_buffers);
 }
 void render(void) {
     _present();
@@ -269,6 +282,18 @@ void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_FRAGMENT_SHADERS;++ii)
         glDeleteShader(_fragment_shaders[ii]);
 }
+void _create_uniform_buffers(void) {
+    glGenBuffers(kNUM_UNIFORM_BUFFERS, _uniform_buffers);
+    for(int ii=0;ii<kNUM_UNIFORM_BUFFERS;++ii) {
+        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[ii]);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+}
+void _bind_uniform_buffers(void) {
+    GLuint buffer_index = glGetUniformBlockIndex(_programs[kSimpleColor], kUniformBufferBindings[kWorldTransformBuffer]);
+    glUniformBlockBinding(_programs[kSimpleColor], buffer_index, 0);
+}
 
 private:
 
@@ -279,6 +304,7 @@ HDC _dc;
 GLuint  _vertex_shaders[kNUM_VERTEX_SHADERS];
 GLuint  _fragment_shaders[kNUM_FRAGMENT_SHADERS];
 GLuint  _programs[kNUM_PROGRAMS];
+GLuint  _uniform_buffers[kNUM_UNIFORM_BUFFERS];
 
 };
 

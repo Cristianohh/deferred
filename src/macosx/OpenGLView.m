@@ -85,6 +85,7 @@
     CGLLockContext([[self openGLContext]CGLContextObj]);
     CheckGLError();
     
+    glViewport(0, 0, (int)bounds.size.width, (int)bounds.size.height);
     CheckGLError();
     printf("W: %d  H: %d\n", (int)bounds.size.width, (int)bounds.size.height);
     

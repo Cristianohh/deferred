@@ -1,6 +1,6 @@
 
-#ifndef _rps_math_h__
-#define _rps_math_h__
+#ifndef _vec_math_h__
+#define _vec_math_h__
 #include <math.h>
 
 /*
@@ -153,11 +153,7 @@ static float3 float3cross(const float3* l, const float3* r)
 /*
  * float4 functions
  */
-static float4 float4zero(void)
-{
-    float4 zero = { 0,0,0,0 };
-    return zero;
-}
+static const float4 float4zero = { 0,0,0,0 };
 
 /* Vector operations */
 static float4 float4add(const float4* a, const float4* b)
@@ -239,22 +235,17 @@ static float float4dot(const float4* l, const float4* r)
  */
 
 /* Matrix operations */
-static float3x3 float3x3identity(void)
-{
-    float3x3 identity =
+static const float3x3 float3x3identity =
     {
         {1,0,0},
         {0,1,0},
         {0,0,1},
     };
 
-    return identity;
-}
-
 #define MTX3_INDEX(f,r,c) ((f)[(r*3)+c])
 static float3x3 float3x3multiply(const float3x3* a, const float3x3* b)
 {
-    float3x3 m = float3x3identity();
+    float3x3 m = float3x3identity;
 
     const float* left     = (const float*)a;
     const float* right    = (const float*)b;
@@ -446,18 +437,13 @@ static float3x3 float3x3Scale(float x, float y, float z)
  */
 
 /* Matrix operations */
-static float4x4 float4x4identity(void)
+static const float4x4 float4x4identity =
 {
-    float4x4 identity =
-    {
-        {1,0,0,0},
-        {0,1,0,0},
-        {0,0,1,0},
-        {0,0,0,1}
-    };
-
-    return identity;
-}
+    {1,0,0,0},
+    {0,1,0,0},
+    {0,0,1,0},
+    {0,0,0,1}
+};
 
 static float4x4 float4x4fromFloat3x3(const float3x3* m)
 {
@@ -476,7 +462,7 @@ static float4x4 float4x4fromFloat3x3(const float3x3* m)
 static float4x4 float4x4multiply(const float4x4* a, const float4x4* b)
 {
 
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
 
     const float* left     = (const float*)a;
     const float* right    = (const float*)b;
@@ -814,7 +800,7 @@ static float4x4 float4x4RotationAxis(const float3* axis, float rad )
     float y = normAxis.y;
     float z = normAxis.z;
 
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
 
     m.r0.x = (t * x * x) + c;
     m.r0.y = (t * x * y) + s * z;
@@ -864,7 +850,7 @@ static float4x4 float4x4translationVector(const float3* t)
 
 static float4x4 float4x4PerspectiveFovLH(float fov, float aspect, float nearPlane, float farPlane)
 {
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
 
     float f = tanf(kPiDiv2 - (fov/2));
     float diff = farPlane-nearPlane;
@@ -881,7 +867,7 @@ static float4x4 float4x4PerspectiveFovLH(float fov, float aspect, float nearPlan
 }
 static float4x4 float4x4PerspectiveFovRH(float fov, float aspect, float nearPlane, float farPlane)
 {
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
 
     float f = tanf(kPiDiv2 - (fov/2));
     float diff = nearPlane-farPlane;
@@ -897,7 +883,7 @@ static float4x4 float4x4PerspectiveFovRH(float fov, float aspect, float nearPlan
 }
 static float4x4 float4x4PerspectiveLH(float width, float height, float nearPlane, float farPlane)
 {
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
 
     m.r0.x = 2*nearPlane/width;
     m.r1.y = 2*nearPlane/height;
@@ -909,7 +895,7 @@ static float4x4 float4x4PerspectiveLH(float width, float height, float nearPlane
 }
 static float4x4 float4x4PerspectiveRH(float width, float height, float nearPlane, float farPlane)
 {
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
 
     m.r0.x = 2*nearPlane/width;
     m.r1.y = 2*nearPlane/height;
@@ -921,7 +907,7 @@ static float4x4 float4x4PerspectiveRH(float width, float height, float nearPlane
 }
 static float4x4 float4x4OrthographicOffCenterLH(float left, float right, float top, float bottom, float nearPlane, float farPlane)
 {
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
 
     float diff = farPlane-nearPlane;
 
@@ -936,7 +922,7 @@ static float4x4 float4x4OrthographicOffCenterLH(float left, float right, float t
 }
 static float4x4 float4x4OrthographicOffCenterRH(float left, float right, float top, float bottom, float nearPlane, float farPlane)
 {
-    float4x4 m = float4x4identity();
+    float4x4 m = float4x4identity;
     float diff = nearPlane-farPlane;
 
     m.r0.x = 2.0f/(right-left);
