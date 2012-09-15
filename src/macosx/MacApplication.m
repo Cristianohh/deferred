@@ -34,6 +34,42 @@ int ApplicationMain(int argc, const char* argv[]) {
 void* app_get_window(void) {
     return (__bridge void*)[[NSApp delegate] window];
 }
+MessageBoxResult message_box(const char* header, const char* message) {
+    /*convert the strings from char* to CFStringRef */
+    CFStringRef header_ref  = CFStringCreateWithCString(NULL, header, kCFStringEncodingASCII);
+    CFStringRef message_ref = CFStringCreateWithCString(NULL, message, kCFStringEncodingASCII);
+
+    CFOptionFlags result;  /*result code from the message box */
+   
+    /*launch the message box */
+    CFUserNotificationDisplayAlert( 0.0f, /* no timeout */
+                                    kCFUserNotificationNoteAlertLevel, /*change it depending message_type flags ( MB_ICONASTERISK.... etc.) */
+                                    NULL, /*icon url, use default, you can change it depending message_type flags */
+                                    NULL, /*not used */
+                                    NULL, /*localization of strings */
+                                    header_ref, /*header text  */
+                                    message_ref, /*message text */
+                                    NULL, /*default "ok" text in button */
+                                    CFSTR("Cancel"), /*alternate button title */
+                                    CFSTR("Retry"), /*other button title, null--> no other button */
+                                    &result /*response flags */
+                                    );
+
+    /*Clean up the strings */
+    CFRelease( header_ref );
+    CFRelease( message_ref );
+
+    /*Convert the result */
+    switch(result) {
+    case kCFUserNotificationDefaultResponse:
+        return kMBOK;
+    case kCFUserNotificationAlternateResponse:
+        return kMBCancel;
+    case kCFUserNotificationOtherResponse:
+        return kMBRetry;
+    }
+    return (MessageBoxResult)-1;
+}
 
 @implementation MacApplication
 

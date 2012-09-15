@@ -5,6 +5,7 @@
  */
 #include "render.h"
 #include <stddef.h>
+#include <stdio.h>
 #include "assert.h"
 
 #include "application.h"
@@ -35,6 +36,45 @@
         }                               \
         assert(_glError == GL_NO_ERROR);\
     } while(__LINE__ == 0)
+
+namespace {
+
+enum VertexShaderType {
+kVSPos,
+
+kNUM_VERTEX_SHADERS
+};
+const char* kVertexShaderNames[] =
+{
+    /* kVSPos */    "assets/shaders/PosGL.vsh",
+};
+
+GLuint _compile_shader(GLenum shader_type, const char* source) {
+    GLint status = GL_TRUE;
+    GLuint shader = glCreateShader(shader_type);
+    CheckGLError();
+    glShaderSource(shader, 1, &source, NULL);
+    CheckGLError();
+    glCompileShader(shader);
+    CheckGLError();
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    CheckGLError();
+    if(status == GL_FALSE) {
+        char printBuffer[1024];
+        char statusBuffer[1024];
+        glGetShaderInfoLog(shader, sizeof(statusBuffer), NULL, statusBuffer);
+        CheckGLError();
+        
+        snprintf(printBuffer, sizeof(printBuffer), "Shader compile error: %s", statusBuffer);
+        debug_output("%s\n", printBuffer);
+        glDeleteShader(shader);
+        CheckGLError();
+        shader = 0;
+    }
+    return shader;
+}
+
+}
 
 class RenderGL : public Render {
 public:
@@ -108,6 +148,7 @@ void initialize(void* window) {
     _window = window;
     glClearColor(0.6f, 0.2f, 0.5f, 1.0f);
     glClearDepth(1.0f);
+    _load_shaders();
     _clear(); // Clear once so the first present isn't garbage
 }
 void shutdown(void) {
@@ -130,6 +171,26 @@ void _present(void) {
     CheckGLError();
 #endif
 }
+void _load_shaders(void) {
+    // Vertex Shaders
+    for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii) {
+        MessageBoxResult retry = kMBOK;
+        do {
+            char buffer[1024*64]; // 64k should be a safe size
+            FILE* file = fopen(kVertexShaderNames[ii], "rt");
+            assert(file);
+            size_t bytes_read = fread(buffer, sizeof(char), sizeof(buffer), file);
+            buffer[bytes_read] = '\0';
+            fclose(file);
+            _vertex_shaders[ii] = _compile_shader(GL_VERTEX_SHADER, buffer);
+            if(_vertex_shaders[ii] == 0) {
+                char message[512];
+                snprintf(message, sizeof(message), "Error compiling shader %s", kVertexShaderNames[ii]);
+                retry = message_box("Shader Compile Error", message);
+            }
+        } while(retry == kMBRetry);
+    }
+}
 
 private:
 
@@ -137,6 +198,7 @@ void* _window;
 #ifdef _WIN32
 HDC _dc;
 #endif
+GLuint  _vertex_shaders[kNUM_VERTEX_SHADERS];
 
 };
 

@@ -39,6 +39,14 @@ void* app_get_window(void);
 /*! @brief Output string to debug output */
 void debug_output(const char* format, ...);
 
+/*! @brief Displays a message box to the user */
+typedef enum {
+    kMBOK,
+    kMBRetry,
+    kMBCancel
+} MessageBoxResult;
+MessageBoxResult message_box(const char* header, const char* message);
+
 #ifdef __cplusplus
 } // extern "C" {
 #endif
