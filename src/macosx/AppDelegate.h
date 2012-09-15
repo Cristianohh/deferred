@@ -9,6 +9,7 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
-@property NSWindow *window;
+@property NSWindow* window;
+@property NSWindowController* controller;
 
 @end

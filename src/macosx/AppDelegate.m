@@ -37,8 +37,16 @@
         [self setOpaque:YES];
         [self setHidesOnDeactivate:NO];
     }
-    [self makeKeyAndOrderFront:nil];
+    [[self windowController] showWindow:nil];
     (void)sizeof(sender);
+}
+- (BOOL) canBecomeKeyWindow
+{
+    return YES;
+}
+- (void)keyDown:(NSEvent *)theEvent
+{
+    printf("%d\n",[theEvent keyCode]);
 }
 
 @end
@@ -54,13 +62,15 @@
     unsigned int height = (unsigned int)(screenRect.size.height/2.0f);
     NSRect frame = NSMakeRect(0, screenRect.size.height-height, width, height);
 
+
     [self setWindow:[[OpenGLWindow alloc] initWithContentRect:frame
                                                     styleMask:NSTitledWindowMask | NSResizableWindowMask
                                                       backing:NSBackingStoreBuffered
                                                         defer:YES]];
     
     [[self window] setContentView:[[OpenGLView alloc] init]];
-    [[self window] makeKeyAndOrderFront:nil];
+    [self setController:[[NSWindowController alloc] initWithWindow:[self window]]];
+    [[self controller] showWindow:nil];
 
     chdir([[bundle resourcePath] UTF8String]); /* Set cwd to Content/Resources */
     {   /* Get argc/argv */

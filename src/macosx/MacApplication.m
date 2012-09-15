@@ -15,6 +15,7 @@ int ApplicationMain(int argc, const char* argv[]) {
     NSNib *mainNib = NULL;
 
     if([principalClass respondsToSelector:@selector(sharedApplication)] == 0) {
+        NSLog(@"NSPrincipalClass does not respond to `sharedApplication");
         return 1;
     }
     application = [principalClass sharedApplication];
