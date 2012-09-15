@@ -25,6 +25,8 @@
 		27CF508B16027CE0009DBE5A /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CF508A16027CE0009DBE5A /* OpenGL.framework */; };
 		27CF508E1602805B009DBE5A /* render_gl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27CF508C1602805B009DBE5A /* render_gl.cpp */; };
 		27CF509016028273009DBE5A /* render_gl.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF508F16028273009DBE5A /* render_gl.m */; };
+		27DEFE02160408D7003C3972 /* game.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27DEFE00160408D7003C3972 /* game.cpp */; };
+		27DEFE0516040903003C3972 /* render.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27DEFE0416040903003C3972 /* render.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +61,9 @@
 		27CF508C1602805B009DBE5A /* render_gl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = render_gl.cpp; sourceTree = "<group>"; };
 		27CF508D1602805B009DBE5A /* render.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render.h; sourceTree = "<group>"; };
 		27CF508F16028273009DBE5A /* render_gl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = render_gl.m; sourceTree = "<group>"; };
+		27DEFE00160408D7003C3972 /* game.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = game.cpp; sourceTree = "<group>"; };
+		27DEFE01160408D7003C3972 /* game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game.h; sourceTree = "<group>"; };
+		27DEFE0416040903003C3972 /* render.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = render.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -114,20 +119,23 @@
 		273AB3E216026C5F007C7682 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				278F9E081602862200F90E06 /* timer.c */,
-				278F9E091602862200F90E06 /* timer.h */,
-				27ADE8AB16027ACD00D888DE /* tests */,
-				27ADE8AC16027ACD00D888DE /* unit_test.cpp */,
-				27ADE8AD16027ACD00D888DE /* unit_test.h */,
 				27ADE8A016026E1E00D888DE /* application.c */,
 				27ADE8A116026E1E00D888DE /* application.h */,
-				273AB3ED16026C5F007C7682 /* main.cpp */,
-				273AB3E316026C5F007C7682 /* macosx */,
-				27CF508C1602805B009DBE5A /* render_gl.cpp */,
-				27CF508D1602805B009DBE5A /* render.h */,
-				27CF508F16028273009DBE5A /* render_gl.m */,
 				27B5E1631602DFE900C0ECC0 /* fps.c */,
 				27B5E1641602DFE900C0ECC0 /* fps.h */,
+				27DEFE00160408D7003C3972 /* game.cpp */,
+				27DEFE01160408D7003C3972 /* game.h */,
+				273AB3ED16026C5F007C7682 /* main.cpp */,
+				27CF508D1602805B009DBE5A /* render.h */,
+				27DEFE0416040903003C3972 /* render.cpp */,
+				27CF508C1602805B009DBE5A /* render_gl.cpp */,
+				27CF508F16028273009DBE5A /* render_gl.m */,
+				278F9E081602862200F90E06 /* timer.c */,
+				278F9E091602862200F90E06 /* timer.h */,
+				27ADE8AC16027ACD00D888DE /* unit_test.cpp */,
+				27ADE8AD16027ACD00D888DE /* unit_test.h */,
+				27ADE8AB16027ACD00D888DE /* tests */,
+				273AB3E316026C5F007C7682 /* macosx */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -261,6 +269,8 @@
 				278F9E0A1602862200F90E06 /* timer.c in Sources */,
 				278F9E0D1602862700F90E06 /* timer_test.cpp in Sources */,
 				27B5E1651602DFE900C0ECC0 /* fps.c in Sources */,
+				27DEFE02160408D7003C3972 /* game.cpp in Sources */,
+				27DEFE0516040903003C3972 /* render.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

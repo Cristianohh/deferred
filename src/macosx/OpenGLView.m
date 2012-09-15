@@ -48,7 +48,14 @@
 
     return self;
 }
-
+- (BOOL)acceptsFirstResponder
+{
+    return YES;
+}
+- (BOOL)preservesContentDuringLiveResize
+{
+    return YES;
+}
 - (void)drawRect:(NSRect)dirtyRect
 {
     /* Drawing code here. */
@@ -99,4 +106,8 @@
                                                object:[self window]];
 }
 
+- (void)toggleFullScreen:(id)sender
+{
+    [[self window] toggleFullScreen:sender];
+}
 @end
