@@ -72,7 +72,8 @@
     [self setController:[[NSWindowController alloc] initWithWindow:[self window]]];
     [[self controller] showWindow:nil];
 
-    chdir([[bundle resourcePath] UTF8String]); /* Set cwd to Content/Resources */
+    /*chdir([[bundle resourcePath] UTF8String]); */ /* Set cwd to Content/Resources */
+    chdir([[[bundle bundlePath] stringByDeletingLastPathComponent] UTF8String]);
     {   /* Get argc/argv */
         NSArray *arguments = [[NSProcessInfo processInfo] arguments];
         int argc = (int)[arguments count];

@@ -40,38 +40,114 @@
 namespace {
 
 enum VertexShaderType {
-kVSPos,
+    kVSPos,
 
-kNUM_VERTEX_SHADERS
+    kNUM_VERTEX_SHADERS
 };
-const char* kVertexShaderNames[] =
+enum FragmentShaderType {
+    kFSColor,
+
+    kNUM_FRAGMENT_SHADERS
+};
+enum ProgramType {
+    kSimpleColor,
+
+    kNUM_PROGRAMS
+};
+const char* kVertexShaderNames[kNUM_VERTEX_SHADERS] =
 {
-    /* kVSPos */    "assets/shaders/PosGL.vsh",
+/* kVSPos */    "assets/shaders/PosGL.vsh",
+};
+const char* kFragmentShaderNames[kNUM_FRAGMENT_SHADERS] =
+{
+/* kPSColor */  "assets/shaders/ColorGL.fsh",
+};
+const struct {
+    VertexShaderType    vertex_shader;
+    FragmentShaderType  fragment_shader;
+} kPrograms[] =
+{
+/* kSimpleColor */ { kVSPos, kFSColor },
 };
 
-GLuint _compile_shader(GLenum shader_type, const char* source) {
+GLuint _compile_shader(GLenum shader_type, const char* filename) {
+    MessageBoxResult result = kMBOK;
     GLint status = GL_TRUE;
-    GLuint shader = glCreateShader(shader_type);
+    GLuint shader = 0;
     CheckGLError();
-    glShaderSource(shader, 1, &source, NULL);
+    do {
+        result = kMBOK;
+        GLchar buffer[1024*64]; // 64k should be a safe size
+        FILE* file = fopen(filename, "rt");
+        assert(file);
+        size_t bytes_read = fread(buffer, sizeof(GLchar), sizeof(buffer), file);
+        buffer[bytes_read] = '\0';
+        fclose(file);
+
+        shader = glCreateShader(shader_type);
+        const GLchar* p = buffer;
+        glShaderSource(shader, 1, &p, NULL);
+        CheckGLError();
+        glCompileShader(shader);
+        CheckGLError();
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+        CheckGLError();
+        if(status == GL_FALSE) {
+            char printBuffer[1024*16];
+            char statusBuffer[1024*16];
+            glGetShaderInfoLog(shader, sizeof(statusBuffer), NULL, statusBuffer);
+            CheckGLError();
+
+            snprintf(printBuffer, sizeof(printBuffer), "Error compiling shader: %s\n%s", filename, statusBuffer);
+            result = message_box("Shader Compile Error", printBuffer);
+            glDeleteShader(shader);
+            CheckGLError();
+            shader = 0;
+        }
+    } while(result == kMBRetry);
+    
+    return shader;
+}
+GLuint _create_program(GLuint vertex_shader, GLuint fragment_shader) {
+    GLint status = GL_TRUE;
+    GLuint program = glCreateProgram();
     CheckGLError();
-    glCompileShader(shader);
+    glAttachShader(program, vertex_shader);
     CheckGLError();
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    glAttachShader(program, fragment_shader);
+    CheckGLError();
+    glLinkProgram(program);
+    CheckGLError();
+    glGetProgramiv(program, GL_LINK_STATUS, &status);
     CheckGLError();
     if(status == GL_FALSE) {
         char printBuffer[1024];
         char statusBuffer[1024];
-        glGetShaderInfoLog(shader, sizeof(statusBuffer), NULL, statusBuffer);
+        glGetProgramInfoLog(program, sizeof(statusBuffer), NULL, statusBuffer);
         CheckGLError();
-        
-        snprintf(printBuffer, sizeof(printBuffer), "Shader compile error: %s", statusBuffer);
+
+        snprintf(printBuffer, sizeof(printBuffer), "Link error: %s", statusBuffer);
         debug_output("%s\n", printBuffer);
-        glDeleteShader(shader);
-        CheckGLError();
-        shader = 0;
+        glDeleteProgram(program);
+        program = 0;
     }
-    return shader;
+    return program;
+}
+void _validate_program(GLuint program) {
+    GLint status = GL_TRUE;
+    glValidateProgram(program);
+    CheckGLError();
+    glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
+    CheckGLError();
+    if(status == GL_FALSE) {
+        char printBuffer[1024];
+        char statusBuffer[1024];
+        glGetProgramInfoLog(program, sizeof(statusBuffer), NULL, statusBuffer);
+        CheckGLError();
+
+        snprintf(printBuffer, sizeof(printBuffer), "Link error: %s", statusBuffer);
+        debug_output("%s\n", printBuffer);
+    }
 }
 
 }
@@ -93,19 +169,19 @@ void initialize(void* window) {
     HWND hWnd = (HWND)window;    
     HDC hDC = GetDC(hWnd);
 
-    PIXELFORMATDESCRIPTOR   pfd = {0};
+    FRAGMENTFORMATDESCRIPTOR   pfd = {0};
 	pfd.nSize       = sizeof(pfd);
 	pfd.nVersion    = 1;
 	pfd.dwFlags     = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
-	pfd.iPixelType  = PFD_TYPE_RGBA;
+	pfd.iFragmentType  = PFD_TYPE_RGBA;
 	pfd.cColorBits  = 24;
 	pfd.cDepthBits  = 24;
 	pfd.iLayerType  = PFD_MAIN_PLANE;
 
-    int pixel_format = ChoosePixelFormat(hDC, &pfd);
-    assert(pixel_format);
+    int fragment_format = ChooseFragmentFormat(hDC, &pfd);
+    assert(fragment_format);
 
-    int result = SetPixelFormat(hDC, pixel_format, &pfd);
+    int result = SetFragmentFormat(hDC, fragment_format, &pfd);
     assert(result);
 
     // Create a dummy OpenGL 1.1 context to use for Glew initialization
@@ -152,6 +228,7 @@ void initialize(void* window) {
     _clear(); // Clear once so the first present isn't garbage
 }
 void shutdown(void) {
+    _unload_shaders();
 }
 void render(void) {
     _present();
@@ -174,22 +251,23 @@ void _present(void) {
 void _load_shaders(void) {
     // Vertex Shaders
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii) {
-        MessageBoxResult retry = kMBOK;
-        do {
-            char buffer[1024*64]; // 64k should be a safe size
-            FILE* file = fopen(kVertexShaderNames[ii], "rt");
-            assert(file);
-            size_t bytes_read = fread(buffer, sizeof(char), sizeof(buffer), file);
-            buffer[bytes_read] = '\0';
-            fclose(file);
-            _vertex_shaders[ii] = _compile_shader(GL_VERTEX_SHADER, buffer);
-            if(_vertex_shaders[ii] == 0) {
-                char message[512];
-                snprintf(message, sizeof(message), "Error compiling shader %s", kVertexShaderNames[ii]);
-                retry = message_box("Shader Compile Error", message);
-            }
-        } while(retry == kMBRetry);
+        _vertex_shaders[ii] = _compile_shader(GL_VERTEX_SHADER, kVertexShaderNames[ii]);
     }
+    // fragment Shaders
+    for(int ii=0;ii<kNUM_FRAGMENT_SHADERS;++ii) {
+        _fragment_shaders[ii] = _compile_shader(GL_FRAGMENT_SHADER, kFragmentShaderNames[ii]);
+    }
+    // programs
+    for(int ii=0;ii<kNUM_PROGRAMS;++ii) {
+        _programs[ii] = _create_program(_vertex_shaders[kPrograms[ii].vertex_shader],
+                                        _fragment_shaders[kPrograms[ii].fragment_shader]);
+    }
+}
+void _unload_shaders(void) {
+    for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)
+        glDeleteShader(_vertex_shaders[ii]);
+    for(int ii=0;ii<kNUM_FRAGMENT_SHADERS;++ii)
+        glDeleteShader(_fragment_shaders[ii]);
 }
 
 private:
@@ -199,6 +277,8 @@ void* _window;
 HDC _dc;
 #endif
 GLuint  _vertex_shaders[kNUM_VERTEX_SHADERS];
+GLuint  _fragment_shaders[kNUM_FRAGMENT_SHADERS];
+GLuint  _programs[kNUM_PROGRAMS];
 
 };
 
