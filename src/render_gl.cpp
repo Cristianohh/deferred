@@ -145,6 +145,8 @@ void _validate_program(GLuint program) {
 GLuint _create_buffer(GLenum type, size_t size, const void* data) {\
     GLuint buffer;
     glGenBuffers(1, &buffer);
+    CheckGLError();
+    assert(buffer);
     glBindBuffer(type, buffer);
     CheckGLError();
     glBufferData(type, (GLsizeiptr)size, data, GL_DYNAMIC_DRAW);
@@ -268,11 +270,8 @@ void _unload_shaders(void) {
         glDeleteShader(_fragment_shaders[ii]);
 }
 void _create_uniform_buffers(void) {
-    glGenBuffers(kNUM_UNIFORM_BUFFERS, _uniform_buffers);
     for(int ii=0;ii<kNUM_UNIFORM_BUFFERS;++ii) {
-        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[ii]);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        _uniform_buffers[ii] = _create_buffer(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity);
     }
 }
 void _bind_uniform_buffers(void) {
@@ -282,10 +281,10 @@ void _bind_uniform_buffers(void) {
 
 private:
 
-void* _window;
 #ifdef _WIN32
-HDC _dc;
+HDC     _dc;
 #endif
+void* _window;
 GLuint  _vertex_shaders[kNUM_VERTEX_SHADERS];
 GLuint  _fragment_shaders[kNUM_FRAGMENT_SHADERS];
 GLuint  _programs[kNUM_PROGRAMS];
