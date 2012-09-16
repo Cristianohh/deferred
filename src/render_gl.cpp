@@ -57,29 +57,10 @@ enum FragmentShaderType {
     kNUM_FRAGMENT_SHADERS
 };
 enum ProgramType {
-    kSimpleColor,
+    k3DProgram,
+    k2DProgram,
 
     kNUM_PROGRAMS
-};
-const char* kVertexShaderNames[] =
-{
-/* kVSPos */    "assets/shaders/PosGL.vsh",
-};
-const char* kFragmentShaderNames[] =
-{
-/* kPSColor */  "assets/shaders/ColorGL.fsh",
-};
-const struct {
-    VertexShaderType    vertex_shader;
-    FragmentShaderType  fragment_shader;
-} kPrograms[] =
-{
-/* kSimpleColor */ { kVSPos, kFSColor },
-};
-const char* kUniformBufferBindings[] =
-{
-/* kWorldTransformBuffer */     "PerObject",
-/* kViewProjTransformBuffer */  "PerFrame"
 };
 
 GLuint _compile_shader(GLenum shader_type, const char* filename) {
@@ -160,6 +141,17 @@ void _validate_program(GLuint program) {
         snprintf(printBuffer, sizeof(printBuffer), "Link error: %s", statusBuffer);
         debug_output("%s\n", printBuffer);
     }
+}
+GLuint _create_buffer(GLenum type, size_t size, const void* data) {\
+    GLuint buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(type, buffer);
+    CheckGLError();
+    glBufferData(type, (GLsizeiptr)size, data, GL_DYNAMIC_DRAW);
+    CheckGLError();
+    glBindBuffer(type, 0);
+    CheckGLError();
+    return buffer;
 }
 
 }
@@ -262,19 +254,12 @@ void _present(void) {
 #endif
 }
 void _load_shaders(void) {
-    // Vertex Shaders
-    for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii) {
-        _vertex_shaders[ii] = _compile_shader(GL_VERTEX_SHADER, kVertexShaderNames[ii]);
-    }
-    // fragment Shaders
-    for(int ii=0;ii<kNUM_FRAGMENT_SHADERS;++ii) {
-        _fragment_shaders[ii] = _compile_shader(GL_FRAGMENT_SHADER, kFragmentShaderNames[ii]);
-    }
-    // programs
-    for(int ii=0;ii<kNUM_PROGRAMS;++ii) {
-        _programs[ii] = _create_program(_vertex_shaders[kPrograms[ii].vertex_shader],
-                                        _fragment_shaders[kPrograms[ii].fragment_shader]);
-    }
+    // 3D
+    GLuint vs_3d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/3D.vsh");
+    GLuint fs_3d = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/3D.fsh");
+    _programs[k3DProgram] = _create_program(vs_3d, fs_3d);
+    glDeleteShader(vs_3d);
+    glDeleteShader(fs_3d);
 }
 void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)
@@ -291,8 +276,8 @@ void _create_uniform_buffers(void) {
     }
 }
 void _bind_uniform_buffers(void) {
-    GLuint buffer_index = glGetUniformBlockIndex(_programs[kSimpleColor], kUniformBufferBindings[kWorldTransformBuffer]);
-    glUniformBlockBinding(_programs[kSimpleColor], buffer_index, 0);
+    //GLuint buffer_index = glGetUniformBlockIndex(_programs[kSimpleColor], kUniformBufferBindings[kWorldTransformBuffer]);
+    //glUniformBlockBinding(_programs[kSimpleColor], buffer_index, 0);
 }
 
 private:
