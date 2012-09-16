@@ -53,10 +53,9 @@ int Game::on_frame(void) {
 
     // Frame
     _render->render();
-    if(_frame_count % 1024 == 0)
-        debug_output("%.0f FPS\n", get_fps(&_fps));
 
     // End of frame stuff
-    _frame_count++;
+    if(++_frame_count % 1024 == 0)
+        debug_output("%.0f FPS\n", get_fps(&_fps));
     return 0;
 }

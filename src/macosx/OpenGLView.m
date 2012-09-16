@@ -109,7 +109,6 @@
                                                  name:NSWindowDidResizeNotification
                                                object:[self window]];
 }
-
 - (void)toggleFullScreen:(id)sender
 {
     [[self window] toggleFullScreen:sender];

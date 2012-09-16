@@ -95,33 +95,31 @@ const SystemEvent* app_pop_event(void) {
 
 - (void)toggleFullScreen:(id)sender
 {
+    NSRect screenRect = [[NSScreen mainScreen] frame];
     _fullscreen = !_fullscreen;
     if(_fullscreen) {
-        NSRect screenRect = [[NSScreen mainScreen] frame];
         [self setStyleMask:NSBorderlessWindowMask];
-        [self setFrame:screenRect display:YES];
+        
+        [self setContentSize:screenRect.size];
+        [self setFrameTopLeftPoint:NSMakePoint(0.0f, screenRect.size.height)];
+        /*[self setFrame:screenRect display:YES];*/
         [self setLevel:NSMainMenuWindowLevel+1];
-        [self setOpaque:YES];
         [self setHidesOnDeactivate:YES];
     } else {
-        NSRect screenRect = [[NSScreen mainScreen] frame];
-        unsigned int width = (unsigned int)(screenRect.size.width/2.0f);
-        unsigned int height = (unsigned int)(screenRect.size.height/2.0f);
-        NSRect frame = NSMakeRect(0, screenRect.size.height-height, width, height);
+        unsigned int width = (unsigned int)(screenRect.size.width/2);
+        unsigned int height = (unsigned int)(screenRect.size.height/2);
         
         [self setStyleMask:NSTitledWindowMask | NSResizableWindowMask];
-        [self setFrame:frame display:YES];
+        [self setContentSize:NSMakeSize(width, height)];
+        [self setFrameTopLeftPoint:NSMakePoint(0.0f, screenRect.size.height)];
         [self setLevel:NSNormalWindowLevel];
-        [self setOpaque:YES];
         [self setHidesOnDeactivate:NO];
     }
     [[self windowController] showWindow:nil];
     (void)sizeof(sender);
 }
-- (BOOL) canBecomeKeyWindow
-{
-    return YES;
-}
+- (BOOL)canBecomeKeyWindow { return YES; }
+- (BOOL)canBecomeMainWindow { return YES; }
 - (void)keyDown:(NSEvent *)theEvent
 {
     printf("%d\n",[theEvent keyCode]);
@@ -138,15 +136,17 @@ const SystemEvent* app_pop_event(void) {
     NSRect screenRect = [[NSScreen mainScreen] frame];
     unsigned int width = (unsigned int)(screenRect.size.width/2.0f);
     unsigned int height = (unsigned int)(screenRect.size.height/2.0f);
-    NSRect frame = NSMakeRect(0, screenRect.size.height-height, width, height);
+    NSRect frame = NSMakeRect(0, 0, width, height);
 
 
     [self setWindow:[[OpenGLWindow alloc] initWithContentRect:frame
                                                     styleMask:NSTitledWindowMask | NSResizableWindowMask
                                                       backing:NSBackingStoreBuffered
                                                         defer:YES]];
+    [[self window] setFrameTopLeftPoint:NSMakePoint(0.0f, screenRect.size.height)];
     
     [[self window] setContentView:[[OpenGLView alloc] init]];
+    [[self window] setOpaque:YES];
     [self setController:[[NSWindowController alloc] initWithWindow:[self window]]];
     [[self controller] showWindow:nil];
 
@@ -171,10 +171,6 @@ const SystemEvent* app_pop_event(void) {
 {
     on_shutdown();
     return NSTerminateNow;
-    (void)sizeof(sender);
-}
-- (void)toggleFullscreen:(NSObject*)sender
-{
     (void)sizeof(sender);
 }
 

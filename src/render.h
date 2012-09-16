@@ -9,6 +9,24 @@
 #ifndef __render_h__
 #define __render_h__
 
+#include "vec_math.h"
+
+struct VtxPosNormTex {
+    float3    pos;
+    float3    norm;
+    float2    tex;
+};
+struct VtxPosTex {
+    float3    pos;
+    float2    tex;
+};
+enum VertexType {
+    kVtxPosNormTex,
+    kVtxPosTex,
+
+    kNUM_VERTEX_TYPES
+};
+
 class Render {
 public:
     virtual ~Render() {}

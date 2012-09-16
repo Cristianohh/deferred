@@ -38,7 +38,17 @@
         assert(_glError == GL_NO_ERROR);\
     } while(__LINE__ == 0)
 
+#define ARRAYSIZE(a) (sizeof((a))/sizeof((a)[0]))
+
 namespace {
+
+struct Mesh {
+    GLuint      vao;
+    GLuint      vertex_buffer;
+    GLuint      index_buffer;
+    uint32_t    index_count;
+    GLenum      index_format;
+};
 
 enum UniformBufferType {
     kWorldTransformBuffer,
@@ -62,6 +72,99 @@ enum ProgramType {
 
     kNUM_PROGRAMS
 };
+
+enum { kMAX_MESHES = 1024 };
+
+static const struct VertexDescription {
+    uint32_t slot;
+    int count;
+} kVertexDescriptions[kNUM_VERTEX_TYPES][8] =
+{
+    { // kVtxPosNormTex
+        { 0, 3 },
+        { 1, 3 },
+        { 2, 2 },
+        { 0, 0 },
+    },
+    { // kVtxPosTex
+        { 0, 3 },
+        { 1, 2 },
+        { 0, 0 },
+    }
+};
+
+static const VtxPosNormTex kCubeVertices[] =
+{
+    /* Top */
+    { {-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 1.0f} },
+    { { 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 1.0f} },
+    { { 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 0.0f} },
+    { {-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f} },
+    
+    /* Bottom */
+    { {-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 1.0f} },
+    { { 0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 1.0f} },
+    { { 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 0.0f} },
+    { {-0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 0.0f} },
+    
+    /* Left */
+    { {-0.5f, -0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 1.0f} },
+    { {-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 1.0f} },
+    { {-0.5f,  0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 0.0f} },
+    { {-0.5f,  0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 0.0f} },
+
+    /* Right */
+    { { 0.5f, -0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}, {1.0f, 1.0f} },
+    { { 0.5f, -0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}, {0.0f, 1.0f} },
+    { { 0.5f,  0.5f, -0.5f}, { 1.0f,  0.0f,  0.0f}, {0.0f, 0.0f} },
+    { { 0.5f,  0.5f,  0.5f}, { 1.0f,  0.0f,  0.0f}, {1.0f, 0.0f} },
+
+    /* Front */
+    { {-0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 1.0f} },
+    { { 0.5f, -0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 1.0f} },
+    { { 0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {1.0f, 0.0f} },
+    { {-0.5f,  0.5f, -0.5f}, { 0.0f,  0.0f, -1.0f}, {0.0f, 0.0f} },
+
+    /* Back */
+    { {-0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 1.0f} },
+    { { 0.5f, -0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 1.0f} },
+    { { 0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {0.0f, 0.0f} },
+    { {-0.5f,  0.5f,  0.5f}, { 0.0f,  0.0f,  1.0f}, {1.0f, 0.0f} },
+};
+static const unsigned short kCubeIndices[] =
+{
+    3,1,0,
+    2,1,3,
+
+    6,4,5,
+    7,4,6,
+
+    11,9,8,
+    10,9,11,
+
+    14,12,13,
+    15,12,14,
+
+    19,17,16,
+    18,17,19,
+
+    22,20,21,
+    23,20,22
+};
+
+static const VtxPosTex kQuadVertices[] =
+{
+    { {-0.5f,  0.0f, -0.5f}, {0.0f, 1.0f} },
+    { { 0.5f,  0.0f, -0.5f}, {1.0f, 1.0f} },
+    { { 0.5f,  0.0f,  0.5f}, {1.0f, 0.0f} },
+    { {-0.5f,  0.0f,  0.5f}, {0.0f, 0.0f} },
+};
+static const unsigned short kQuadIndices[] =
+{
+    3,1,0,
+    2,1,3,
+};
+
 
 GLuint _compile_shader(GLenum shader_type, const char* filename) {
     MessageBoxResult result = kMBOK;
@@ -155,6 +258,46 @@ GLuint _create_buffer(GLenum type, size_t size, const void* data) {\
     CheckGLError();
     return buffer;
 }
+static Mesh _create_mesh(uint32_t vertex_count, VertexType vertex_type,
+                         uint32_t index_count, size_t index_size,
+                         const void* vertices, const void* indices)
+{
+    const VertexDescription* vertex_desc = kVertexDescriptions[vertex_type];
+    size_t vertex_size = (vertex_type == kVtxPosNormTex) ? sizeof(VtxPosNormTex) : sizeof(VtxPosTex);
+    GLuint vertex_buffer = _create_buffer(GL_ARRAY_BUFFER, vertex_count*vertex_size, vertices);
+    GLuint index_buffer = _create_buffer(GL_ELEMENT_ARRAY_BUFFER, index_size*index_count, indices);
+    intptr_t offset = 0;
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    CheckGLError();
+    glBindVertexArray(vao);
+    CheckGLError();
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    CheckGLError();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+    CheckGLError();
+    while(vertex_desc && vertex_desc->count) {
+        glEnableVertexAttribArray(vertex_desc->slot);
+        CheckGLError();
+        glVertexAttribPointer(vertex_desc->slot, vertex_desc->count, GL_FLOAT, GL_FALSE, (GLsizei)vertex_size, (void*)offset);
+        CheckGLError();
+        offset += sizeof(float) * (uint32_t)vertex_desc->count;
+        ++vertex_desc;
+    }
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    CheckGLError();
+
+    Mesh mesh;
+    mesh.index_buffer = index_buffer;
+    mesh.vertex_buffer = vertex_buffer;
+    mesh.index_count = index_count;
+    mesh.index_format = (index_size == 2) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
+    mesh.vao = vao;
+    return mesh;
+}
 
 }
 
@@ -163,6 +306,7 @@ public:
 
 RenderGL()
     : _window(NULL)
+    , _num_meshes(0)
 {
 }
 ~RenderGL() {
@@ -231,6 +375,7 @@ void initialize(void* window) {
     glClearColor(0.6f, 0.2f, 0.5f, 1.0f);
     glClearDepth(1.0f);
     _load_shaders();
+    _create_base_meshes();
     _clear(); // Clear once so the first present isn't garbage
 }
 void shutdown(void) {
@@ -240,6 +385,7 @@ void shutdown(void) {
 void render(void) {
     _present();
     _clear();
+    _draw_mesh(1, k2DProgram);
 }
 void resize(int width, int height) {
     glViewport(0, 0, width, height);
@@ -270,6 +416,18 @@ void _load_shaders(void) {
     glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
     buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
     glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
+    
+    // 2D
+    GLuint vs_2d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/2D.vsh");
+    GLuint fs_2d = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/2D.fsh");
+    _programs[k2DProgram] = _create_program(vs_2d, fs_2d);
+    glDeleteShader(vs_2d);
+    glDeleteShader(fs_2d);
+
+    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
+    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
+    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
+    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
 }
 void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)
@@ -280,7 +438,25 @@ void _unload_shaders(void) {
 void _create_uniform_buffers(void) {
     for(int ii=0;ii<kNUM_UNIFORM_BUFFERS;++ii) {
         _uniform_buffers[ii] = _create_buffer(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity);
+        assert(_uniform_buffers[ii]);
     }
+}
+void _create_base_meshes(void) {
+    _meshes[_num_meshes++] = _create_mesh(ARRAYSIZE(kCubeVertices), kVtxPosNormTex,
+                                          ARRAYSIZE(kCubeIndices), sizeof(kCubeIndices[0]),
+                                          kCubeVertices, kCubeIndices);
+    _meshes[_num_meshes++] = _create_mesh(ARRAYSIZE(kQuadVertices), kVtxPosTex,
+                                          ARRAYSIZE(kQuadIndices), sizeof(kQuadIndices[0]),
+                                          kQuadVertices, kQuadIndices);
+}
+void _draw_mesh(int mesh_id, int program_id) {
+    const Mesh& mesh = _meshes[mesh_id];
+    glBindVertexArray(mesh.vao);
+    _validate_program(_programs[program_id]);
+    glUseProgram(_programs[program_id]);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uniform_buffers[kViewProjTransformBuffer]);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 1, _uniform_buffers[kWorldTransformBuffer]);
+    glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
 }
 
 private:
@@ -293,6 +469,9 @@ GLuint  _vertex_shaders[kNUM_VERTEX_SHADERS];
 GLuint  _fragment_shaders[kNUM_FRAGMENT_SHADERS];
 GLuint  _programs[kNUM_PROGRAMS];
 GLuint  _uniform_buffers[kNUM_UNIFORM_BUFFERS];
+
+Mesh    _meshes[kMAX_MESHES];
+int     _num_meshes;
 
 };
 
