@@ -16,7 +16,7 @@
     #if TARGET_OS_IPHONE
         #include <OpenGLES/ES2/gl.h>
     #elif TARGET_OS_MAC
-        #include <OpenGL/gl3.h>            
+        #include <OpenGL/gl3.h>
     #endif
     // TODO: flushing the buffer requires Obj-C in OS X. This is a hack to
     // include an Obj-C function
@@ -100,13 +100,13 @@ static const VtxPosNormTex kCubeVertices[] =
     { { 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 1.0f} },
     { { 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {1.0f, 0.0f} },
     { {-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f} },
-    
+
     /* Bottom */
     { {-0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 1.0f} },
     { { 0.5f, -0.5f, -0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 1.0f} },
     { { 0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {0.0f, 0.0f} },
     { {-0.5f, -0.5f,  0.5f}, { 0.0f, -1.0f,  0.0f}, {1.0f, 0.0f} },
-    
+
     /* Left */
     { {-0.5f, -0.5f,  0.5f}, {-1.0f,  0.0f,  0.0f}, {0.0f, 1.0f} },
     { {-0.5f, -0.5f, -0.5f}, {-1.0f,  0.0f,  0.0f}, {1.0f, 1.0f} },
@@ -154,10 +154,10 @@ static const unsigned short kCubeIndices[] =
 
 static const VtxPosTex kQuadVertices[] =
 {
-    { {-0.5f,  0.0f, -0.5f}, {0.0f, 1.0f} },
-    { { 0.5f,  0.0f, -0.5f}, {1.0f, 1.0f} },
-    { { 0.5f,  0.0f,  0.5f}, {1.0f, 0.0f} },
-    { {-0.5f,  0.0f,  0.5f}, {0.0f, 0.0f} },
+    { {-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f} },
+    { { 0.5f, -0.5f, 0.0f}, {1.0f, 1.0f} },
+    { { 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f} },
+    { {-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f} },
 };
 static const unsigned short kQuadIndices[] =
 {
@@ -201,7 +201,7 @@ GLuint _compile_shader(GLenum shader_type, const char* filename) {
             shader = 0;
         }
     } while(result == kMBRetry);
-    
+
     return shader;
 }
 GLuint _create_program(GLuint vertex_shader, GLuint fragment_shader) {
@@ -225,8 +225,10 @@ GLuint _create_program(GLuint vertex_shader, GLuint fragment_shader) {
         snprintf(printBuffer, sizeof(printBuffer), "Link error: %s", statusBuffer);
         debug_output("%s\n", printBuffer);
         glDeleteProgram(program);
+        CheckGLError();
         program = 0;
     }
+    glUseProgram(0);
     return program;
 }
 void _validate_program(GLuint program) {
@@ -316,7 +318,7 @@ void* window(void) { return _window; }
 
 void initialize(void* window) {
 #ifdef _WIN32
-    HWND hWnd = (HWND)window;    
+    HWND hWnd = (HWND)window;
     HDC hDC = GetDC(hWnd);
 
     FRAGMENTFORMATDESCRIPTOR   pfd = {0};
@@ -346,10 +348,10 @@ void initialize(void* window) {
     if(error != GLEW_OK) {
         debug_output("Glew Error: %s\n", glewGetErrorString(error));
     }
-    assert(error == GLEW_OK); 
+    assert(error == GLEW_OK);
     assert(wglewIsSupported("WGL_ARB_extensions_string") == 1);
     assert(wglewIsSupported("WGL_ARB_create_context") == 1);
-    
+
     // Now create the real, OpenGL 3.2 context
     GLint attributes[] = {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
@@ -375,8 +377,15 @@ void initialize(void* window) {
     glClearColor(0.6f, 0.2f, 0.5f, 1.0f);
     glClearDepth(1.0f);
     _load_shaders();
+    _create_uniform_buffers();
     _create_base_meshes();
     _clear(); // Clear once so the first present isn't garbage
+
+
+    glDisable(GL_CULL_FACE);
+    CheckGLError();
+    glDisable(GL_DEPTH_TEST);
+    CheckGLError();
 }
 void shutdown(void) {
     _unload_shaders();
@@ -389,6 +398,8 @@ void render(void) {
 }
 void resize(int width, int height) {
     glViewport(0, 0, width, height);
+    _orthographic_projection = float4x4OrthographicOffCenterLH(0, width, height, 0, 0.0f, 1.0f);
+    _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 0.1f, 10000.0f);
 }
 
 private:
@@ -413,10 +424,12 @@ void _load_shaders(void) {
     glDeleteShader(fs_3d);
 
     GLuint buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
+    assert(buffer_index != GL_INVALID_INDEX);
     glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
     buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
+    assert(buffer_index != GL_INVALID_INDEX);
     glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
-    
+
     // 2D
     GLuint vs_2d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/2D.vsh");
     GLuint fs_2d = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/2D.fsh");
@@ -424,10 +437,12 @@ void _load_shaders(void) {
     glDeleteShader(vs_2d);
     glDeleteShader(fs_2d);
 
-    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
-    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
-    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
-    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
+    buffer_index = glGetUniformBlockIndex(_programs[k2DProgram], "PerFrame");
+    assert(buffer_index != GL_INVALID_INDEX);
+    glUniformBlockBinding(_programs[k2DProgram], buffer_index, 0);
+    buffer_index = glGetUniformBlockIndex(_programs[k2DProgram], "PerObject");
+    assert(buffer_index != GL_INVALID_INDEX);
+    glUniformBlockBinding(_programs[k2DProgram], buffer_index, 1);
 }
 void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)
@@ -464,7 +479,7 @@ private:
 #ifdef _WIN32
 HDC     _dc;
 #endif
-void* _window;
+void*   _window;
 GLuint  _vertex_shaders[kNUM_VERTEX_SHADERS];
 GLuint  _fragment_shaders[kNUM_FRAGMENT_SHADERS];
 GLuint  _programs[kNUM_PROGRAMS];
@@ -472,6 +487,9 @@ GLuint  _uniform_buffers[kNUM_UNIFORM_BUFFERS];
 
 Mesh    _meshes[kMAX_MESHES];
 int     _num_meshes;
+
+float4x4    _perspective_projection;
+float4x4    _orthographic_projection;
 
 };
 
