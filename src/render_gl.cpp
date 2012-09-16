@@ -241,6 +241,9 @@ void render(void) {
     _present();
     _clear();
 }
+void resize(int width, int height) {
+    glViewport(0, 0, width, height);
+}
 
 private:
 void _clear(void) {
@@ -262,6 +265,11 @@ void _load_shaders(void) {
     _programs[k3DProgram] = _create_program(vs_3d, fs_3d);
     glDeleteShader(vs_3d);
     glDeleteShader(fs_3d);
+
+    GLuint buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
+    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
+    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
+    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
 }
 void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)
@@ -273,10 +281,6 @@ void _create_uniform_buffers(void) {
     for(int ii=0;ii<kNUM_UNIFORM_BUFFERS;++ii) {
         _uniform_buffers[ii] = _create_buffer(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity);
     }
-}
-void _bind_uniform_buffers(void) {
-    //GLuint buffer_index = glGetUniformBlockIndex(_programs[kSimpleColor], kUniformBufferBindings[kWorldTransformBuffer]);
-    //glUniformBlockBinding(_programs[kSimpleColor], buffer_index, 0);
 }
 
 private:

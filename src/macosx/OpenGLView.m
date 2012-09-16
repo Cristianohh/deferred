@@ -5,7 +5,8 @@
  */
 
 #import "OpenGLView.h"
-#include <assert.h>
+#include "assert.h"
+#include "application.h"
 
 #define CheckGLError()                              \
     do {                                            \
@@ -79,17 +80,19 @@
 - (void)reshape
 {
     NSRect bounds = [self convertRectToBacking:[self bounds]];
+    SystemEvent event = {0};
+    event.type = kEventResize;
+    event.data.resize.width = (int)bounds.size.width;
+    event.data.resize.height = (int)bounds.size.height;
     
     [[self openGLContext] makeCurrentContext];
     CheckGLError();
     CGLLockContext([[self openGLContext]CGLContextObj]);
     CheckGLError();
     
-    glViewport(0, 0, (int)bounds.size.width, (int)bounds.size.height);
-    CheckGLError();
-    printf("W: %d  H: %d\n", (int)bounds.size.width, (int)bounds.size.height);
+    _app_push_event(event);
     
-    [[self openGLContext] update];
+    [self update];
     CheckGLError();
     CGLUnlockContext([[self openGLContext] CGLContextObj]);
     CheckGLError();

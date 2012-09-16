@@ -17,6 +17,7 @@ public:
     virtual void shutdown(void) = 0;
 
     virtual void render(void) = 0;
+    virtual void resize(int width, int height) = 0;
 
     virtual void* window(void) = 0;
 

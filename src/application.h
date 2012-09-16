@@ -30,6 +30,29 @@ extern int on_init(int argc, const char* argv[]);
 extern int on_frame(void);
 extern void on_shutdown(void);
 
+typedef enum {
+    kEventResize
+} SystemEventType;
+
+typedef struct {
+    SystemEventType type;
+    union {
+        struct {
+            int x;
+            int y;
+        } mouse;
+        struct {
+            int width;
+            int height;
+        } resize;
+    } data;
+} SystemEvent;
+
+/*! @brief Retrives an event from the system queue */
+const SystemEvent* app_pop_event(void);
+
+void _app_push_event(SystemEvent event);
+
 /*! @brief Gets the OS-specific window object
  *  @details This returns the NSWindow* in OS X and the HWND in Windows
  *  @return The window
@@ -39,12 +62,12 @@ void* app_get_window(void);
 /*! @brief Output string to debug output */
 void debug_output(const char* format, ...);
 
-/*! @brief Displays a message box to the user */
 typedef enum {
     kMBOK,
     kMBRetry,
     kMBCancel
 } MessageBoxResult;
+/*! @brief Displays a message box to the user */
 MessageBoxResult message_box(const char* header, const char* message);
 
 #ifdef __cplusplus

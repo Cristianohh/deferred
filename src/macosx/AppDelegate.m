@@ -5,12 +5,90 @@
  */
 
 #import "AppDelegate.h"
+#import <AppKit/AppKit.h>
 #import "OpenGLView.h"
 
+int ApplicationMain(int argc, const char* argv[]) {
+    NSDictionary* infoDictionary = [[NSBundle mainBundle] infoDictionary];
+    Class principalClass = NSClassFromString([infoDictionary objectForKey:@"NSPrincipalClass"]);
+    NSApplication* application = NULL;
+    NSString *mainNibName = NULL;
+    NSNib *mainNib = NULL;
+
+    if([principalClass respondsToSelector:@selector(sharedApplication)] == 0) {
+        NSLog(@"NSPrincipalClass does not respond to `sharedApplication");
+        return 1;
+    }
+    application = [principalClass sharedApplication];
+    mainNibName = [infoDictionary objectForKey:@"NSMainNibFile"];
+    mainNib = [[NSNib alloc] initWithNibNamed:mainNibName bundle:[NSBundle mainBundle]];
+    [mainNib instantiateNibWithOwner:application topLevelObjects:nil];
+
+    /* Start the loop */
+    if([application respondsToSelector:@selector(run)]) {
+        [application performSelectorOnMainThread:@selector(run) withObject:nil waitUntilDone:YES];
+    }
+    return 0;
+    (void)sizeof(argc);
+    (void)sizeof(argv[0]);
+}
+void* app_get_window(void) {
+    return (__bridge void*)[[NSApp delegate] window];
+}
+MessageBoxResult message_box(const char* header, const char* message) {
+    /*convert the strings from char* to CFStringRef */
+    CFStringRef header_ref  = CFStringCreateWithCString(NULL, header, kCFStringEncodingASCII);
+    CFStringRef message_ref = CFStringCreateWithCString(NULL, message, kCFStringEncodingASCII);
+
+    CFOptionFlags result;  /*result code from the message box */
+   
+    /*launch the message box */
+    CFUserNotificationDisplayAlert( 0.0f, /* no timeout */
+                                    kCFUserNotificationNoteAlertLevel, /*change it depending message_type flags ( MB_ICONASTERISK.... etc.) */
+                                    NULL, /*icon url, use default, you can change it depending message_type flags */
+                                    NULL, /*not used */
+                                    NULL, /*localization of strings */
+                                    header_ref, /*header text  */
+                                    message_ref, /*message text */
+                                    NULL, /*default "ok" text in button */
+                                    CFSTR("Cancel"), /*alternate button title */
+                                    CFSTR("Retry"), /*other button title, null--> no other button */
+                                    &result /*response flags */
+                                    );
+
+    /*Clean up the strings */
+    CFRelease( header_ref );
+    CFRelease( message_ref );
+
+    /*Convert the result */
+    switch(result) {
+    case kCFUserNotificationDefaultResponse:
+        return kMBOK;
+    case kCFUserNotificationAlternateResponse:
+        return kMBCancel;
+    case kCFUserNotificationOtherResponse:
+        return kMBRetry;
+    }
+    return (MessageBoxResult)-1;
+}
+
+static SystemEvent  _event_queue[1024];
+static uint         _write_pos = 0;
+static uint         _read_pos = 0;
+
+void _app_push_event(SystemEvent event) {
+    _event_queue[_write_pos%1024] = event;
+    _write_pos++;
+}
+
+const SystemEvent* app_pop_event(void) {
+    if(_read_pos == _write_pos)
+        return NULL;
+    return &_event_queue[(_read_pos++) % 1024];
+}
+
 @interface OpenGLWindow : NSWindow
-
 @property BOOL fullscreen;
-
 @end
 
 @implementation OpenGLWindow
