@@ -92,10 +92,10 @@ void Game::initialize(void) {
     }
 
     // Add a "sun"
-    _lights[0].x = -15.0f;
-    _lights[0].y = 200.0f;
-    _lights[0].z = 20.0f;
-    _lights[0].w = 250.0f;
+    _lights[0].x = 0.0f;
+    _lights[0].y = 3.0f;
+    _lights[0].z = 0.0f;
+    _lights[0].w = 20.0f;
     for(int ii=1;ii<24;++ii) {
         _lights[ii].x = _rand_float(-50.0f, 50.0f);
         _lights[ii].y = _rand_float(3.0f, 5.0f);
