@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include "assert.h"
-
+#include "stb_image.h"
 #include "application.h"
 #include "vec_math.h"
 
@@ -53,6 +53,7 @@ struct Mesh {
 enum UniformBufferType {
     kWorldTransformBuffer,
     kViewProjTransformBuffer,
+    kLightBuffer,
 
     kNUM_UNIFORM_BUFFERS
 };
@@ -73,7 +74,19 @@ enum ProgramType {
     kNUM_PROGRAMS
 };
 
-enum { kMAX_MESHES = 1024 };
+struct RenderCommand {
+    float4x4    transform;
+    MeshID      mesh;
+    TextureID   texture;
+};
+struct LightBuffer
+{
+    float4  lights[12];
+    int     num_lights;
+    int     _padding[3];
+};
+
+enum { kMAX_MESHES = 1024, kMAX_TEXTURES = 64, kMAX_RENDER_COMMANDS = 1024*8 };
 
 static const struct VertexDescription {
     uint32_t slot;
@@ -309,6 +322,11 @@ public:
 RenderGL()
     : _window(NULL)
     , _num_meshes(0)
+    , _num_textures(0)
+    , _num_2d_render_commands(0)
+    , _num_3d_render_commands(0)
+    , _3d_view(float4x4identity)
+    , _2d_view(float4x4identity)
 {
 }
 ~RenderGL() {
@@ -381,10 +399,12 @@ void initialize(void* window) {
     _create_base_meshes();
     _clear(); // Clear once so the first present isn't garbage
 
-
+    glFrontFace(GL_CW);
+    CheckGLError();
+    glEnable(GL_CULL_FACE);
     glDisable(GL_CULL_FACE);
     CheckGLError();
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     CheckGLError();
 }
 void shutdown(void) {
@@ -394,7 +414,41 @@ void shutdown(void) {
 void render(void) {
     _present();
     _clear();
-    _draw_mesh(1, k2DProgram);
+
+    _light_buffer.lights[0].x = -10.0f;
+    _light_buffer.lights[0].y = 7.0f;
+    _light_buffer.lights[0].z = 0.0f;
+    _light_buffer.lights[0].w = 10000.0f;
+    _light_buffer.num_lights = 1;
+
+    // 3D objects
+    float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
+    glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &view_proj, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    
+    glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kLightBuffer]);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(_light_buffer), &_light_buffer, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    
+    glBindBufferBase(GL_UNIFORM_BUFFER, 2, _uniform_buffers[kLightBuffer]);
+    
+    for(int ii=0; ii<_num_3d_render_commands; ++ii) {
+        const RenderCommand& command = _3d_render_commands[ii];
+        _draw_mesh(command.mesh, command.texture, command.transform, k3DProgram);
+    }
+
+    // 2D gui objects
+    view_proj = float4x4multiply(&_2d_view, &_orthographic_projection);
+    glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &view_proj, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    for(int ii=0; ii<_num_2d_render_commands; ++ii) {
+        const RenderCommand& command = _2d_render_commands[ii];
+        _draw_mesh(command.mesh, command.texture, command.transform, k2DProgram);
+    }
+
+    _num_3d_render_commands = _num_2d_render_commands = 0;
 }
 void resize(int width, int height) {
     glViewport(0, 0, width, height);
@@ -402,6 +456,105 @@ void resize(int width, int height) {
     _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 0.1f, 10000.0f);
 }
 
+MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
+                   uint32_t index_count, size_t index_size,
+                   const void* vertices, const void* indices) {
+    MeshID id = _num_meshes++;
+    _meshes[id] = _create_mesh(vertex_count, vertex_type, index_count, index_size, vertices, indices);
+    return id;
+}
+
+MeshID cube_mesh(void) { return _cube_mesh; }
+MeshID quad_mesh(void) { return _quad_mesh; }
+MeshID sphere_mesh(void) { return _sphere_mesh; }
+
+void set_3d_view_matrix(const float4x4& view) {
+    _3d_view = view;
+}
+void set_2d_view_matrix(const float4x4& view) {
+    _2d_view = view;
+}
+void draw_3d(MeshID mesh, TextureID texture, const float4x4& transform) {
+    RenderCommand& command = _3d_render_commands[_num_3d_render_commands++];
+    command.mesh = mesh;
+    command.transform = transform;
+    command.texture = texture;
+}
+void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) {
+    RenderCommand& command = _2d_render_commands[_num_2d_render_commands++];
+    command.mesh = mesh;
+    command.transform = transform;
+    command.texture = texture;
+}
+TextureID load_texture(const char* filename) {
+    int width, height, components;
+    GLenum format;
+    void* tex_data = stbi_load(filename, &width, &height, &components, 0);
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    CheckGLError();
+    glBindTexture(GL_TEXTURE_2D, texture);
+    CheckGLError();
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    switch(components)
+    {
+    case 4:
+        format = GL_RGBA;
+        components = GL_RGBA;
+        break;
+    case 3:
+        format = GL_RGB;
+        components = GL_RGB;
+        break;
+    default: assert(0);
+    }
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, components, width, height, 0, format, GL_UNSIGNED_BYTE, tex_data);
+    CheckGLError();
+    glGenerateMipmap(GL_TEXTURE_2D);
+    CheckGLError();
+    glBindTexture(GL_TEXTURE_2D, 0);
+    CheckGLError();
+
+    stbi_image_free(tex_data);
+
+    _textures[_num_textures] = texture;
+    return _num_textures++;
+}
+
+MeshID load_mesh(const char* filename) {
+    uint32_t nVertexStride;
+    uint32_t nVertexCount;
+    uint32_t nIndexSize;
+    uint32_t nIndexCount;
+    char* pData;
+
+    FILE* pFile = fopen( filename, "rb" );
+    fread( &nVertexStride, sizeof( nVertexStride ), 1, pFile );
+    fread( &nVertexCount, sizeof( nVertexCount ), 1, pFile );
+    fread( &nIndexSize, sizeof( nIndexSize ), 1, pFile );
+    nIndexSize = (nIndexSize == 32 ) ? 4 : 2;
+    fread( &nIndexCount, sizeof( nIndexCount ), 1, pFile );
+
+    pData   = new char[ (nVertexStride * nVertexCount) + (nIndexCount * nIndexSize) ];
+
+    fread( pData, nVertexStride, nVertexCount, pFile );
+    fread( pData + (nVertexStride * nVertexCount), nIndexSize, nIndexCount, pFile );
+    fclose( pFile );
+
+    MeshID mesh = create_mesh(nVertexCount, kVtxPosNormTex, nIndexCount, nIndexSize, pData, pData + (nVertexStride * nVertexCount));
+    delete [] pData;
+
+    return mesh;
+}
 private:
 void _clear(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -429,6 +582,9 @@ void _load_shaders(void) {
     buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
     assert(buffer_index != GL_INVALID_INDEX);
     glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
+    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "LightBuffer");
+    assert(buffer_index != GL_INVALID_INDEX);
+    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 2);
 
     // 2D
     GLuint vs_2d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/2D.vsh");
@@ -451,24 +607,33 @@ void _unload_shaders(void) {
         glDeleteShader(_fragment_shaders[ii]);
 }
 void _create_uniform_buffers(void) {
-    for(int ii=0;ii<kNUM_UNIFORM_BUFFERS;++ii) {
-        _uniform_buffers[ii] = _create_buffer(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity);
-        assert(_uniform_buffers[ii]);
-    }
+    _uniform_buffers[kViewProjTransformBuffer] = _create_buffer(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity);
+    assert(_uniform_buffers[kViewProjTransformBuffer]);
+    _uniform_buffers[kWorldTransformBuffer] = _create_buffer(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity);
+    assert(_uniform_buffers[kWorldTransformBuffer]);
+    
+    _uniform_buffers[kLightBuffer] = _create_buffer(GL_UNIFORM_BUFFER, sizeof(LightBuffer), &_light_buffer);
+    assert(_uniform_buffers[kLightBuffer]);
+    
 }
 void _create_base_meshes(void) {
-    _meshes[_num_meshes++] = _create_mesh(ARRAYSIZE(kCubeVertices), kVtxPosNormTex,
-                                          ARRAYSIZE(kCubeIndices), sizeof(kCubeIndices[0]),
-                                          kCubeVertices, kCubeIndices);
-    _meshes[_num_meshes++] = _create_mesh(ARRAYSIZE(kQuadVertices), kVtxPosTex,
-                                          ARRAYSIZE(kQuadIndices), sizeof(kQuadIndices[0]),
-                                          kQuadVertices, kQuadIndices);
+    _cube_mesh = create_mesh(ARRAYSIZE(kCubeVertices), kVtxPosNormTex,
+                             ARRAYSIZE(kCubeIndices), sizeof(kCubeIndices[0]),
+                             kCubeVertices, kCubeIndices);
+    _quad_mesh = create_mesh(ARRAYSIZE(kQuadVertices), kVtxPosTex,
+                             ARRAYSIZE(kQuadIndices), sizeof(kQuadIndices[0]),
+                             kQuadVertices, kQuadIndices);
+    _sphere_mesh = load_mesh("assets/sphere.mesh");
 }
-void _draw_mesh(int mesh_id, int program_id) {
+void _draw_mesh(MeshID mesh_id, TextureID texture_id, const float4x4& transform, int program_id) {
     const Mesh& mesh = _meshes[mesh_id];
     glBindVertexArray(mesh.vao);
     _validate_program(_programs[program_id]);
     glUseProgram(_programs[program_id]);
+    glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kWorldTransformBuffer]);
+    glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &transform, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, _textures[texture_id]);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uniform_buffers[kViewProjTransformBuffer]);
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, _uniform_buffers[kWorldTransformBuffer]);
     glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
@@ -487,9 +652,24 @@ GLuint  _uniform_buffers[kNUM_UNIFORM_BUFFERS];
 
 Mesh    _meshes[kMAX_MESHES];
 int     _num_meshes;
+MeshID  _cube_mesh;
+MeshID  _quad_mesh;
+MeshID  _sphere_mesh;
+
+GLuint  _textures[kMAX_TEXTURES];
+int     _num_textures;
 
 float4x4    _perspective_projection;
+float4x4    _3d_view;
 float4x4    _orthographic_projection;
+float4x4    _2d_view;
+
+RenderCommand   _3d_render_commands[kMAX_RENDER_COMMANDS];
+int             _num_3d_render_commands;
+RenderCommand   _2d_render_commands[kMAX_RENDER_COMMANDS];
+int             _num_2d_render_commands;
+
+LightBuffer _light_buffer;
 
 };
 

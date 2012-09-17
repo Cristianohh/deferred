@@ -9,6 +9,8 @@
 #ifndef __render_h__
 #define __render_h__
 
+#include <stdint.h>
+#include <stddef.h>
 #include "vec_math.h"
 
 struct VtxPosNormTex {
@@ -27,6 +29,9 @@ enum VertexType {
     kNUM_VERTEX_TYPES
 };
 
+typedef int32_t MeshID;
+typedef int32_t TextureID;
+
 class Render {
 public:
     virtual ~Render() {}
@@ -37,7 +42,22 @@ public:
     virtual void render(void) = 0;
     virtual void resize(int width, int height) = 0;
 
+    virtual MeshID load_mesh(const char* filename) = 0;
+    virtual MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
+                               uint32_t index_count, size_t index_size,
+                               const void* vertices, const void* indices) = 0;
+    virtual TextureID load_texture(const char* filename) = 0;
+
     virtual void* window(void) = 0;
+
+    virtual MeshID cube_mesh(void) = 0;
+    virtual MeshID quad_mesh(void) = 0;
+    virtual MeshID sphere_mesh(void) = 0;
+
+    virtual void set_3d_view_matrix(const float4x4& view) = 0;
+    virtual void set_2d_view_matrix(const float4x4& view) = 0;
+    virtual void draw_3d(MeshID mesh, TextureID texture, const float4x4& transform) = 0;
+    virtual void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) = 0;
 
     static Render* create(void);
     static void destroy(Render* render);

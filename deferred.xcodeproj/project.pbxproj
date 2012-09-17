@@ -27,6 +27,7 @@
 		27CF509016028273009DBE5A /* render_gl.m in Sources */ = {isa = PBXBuildFile; fileRef = 27CF508F16028273009DBE5A /* render_gl.m */; };
 		27DEFE02160408D7003C3972 /* game.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27DEFE00160408D7003C3972 /* game.cpp */; };
 		27DEFE0516040903003C3972 /* render.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27DEFE0416040903003C3972 /* render.cpp */; };
+		27FA8ED31606AC8400B3B985 /* stb_image.c in Sources */ = {isa = PBXBuildFile; fileRef = 27FA8ECE1606AC8400B3B985 /* stb_image.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -66,6 +67,8 @@
 		27DEFE00160408D7003C3972 /* game.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = game.cpp; sourceTree = "<group>"; };
 		27DEFE01160408D7003C3972 /* game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game.h; sourceTree = "<group>"; };
 		27DEFE0416040903003C3972 /* render.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = render.cpp; sourceTree = "<group>"; };
+		27FA8ECE1606AC8400B3B985 /* stb_image.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = stb_image.c; sourceTree = "<group>"; };
+		27FA8ECF1606AC8400B3B985 /* stb_image.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stb_image.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +88,7 @@
 			isa = PBXGroup;
 			children = (
 				2719DB8B160511F800485229 /* assets */,
+				27FA8EC61606AC8400B3B985 /* external */,
 				273AB3E216026C5F007C7682 /* src */,
 				2707F84216026C020014C2E1 /* Frameworks */,
 				2707F84016026C020014C2E1 /* Products */,
@@ -177,6 +181,15 @@
 				27ADE8AF16027B1E00D888DE /* application_test.cpp */,
 			);
 			path = tests;
+			sourceTree = "<group>";
+		};
+		27FA8EC61606AC8400B3B985 /* external */ = {
+			isa = PBXGroup;
+			children = (
+				27FA8ECE1606AC8400B3B985 /* stb_image.c */,
+				27FA8ECF1606AC8400B3B985 /* stb_image.h */,
+			);
+			path = external;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -275,6 +288,7 @@
 				27B5E1651602DFE900C0ECC0 /* fps.c in Sources */,
 				27DEFE02160408D7003C3972 /* game.cpp in Sources */,
 				27DEFE0516040903003C3972 /* render.cpp in Sources */,
+				27FA8ED31606AC8400B3B985 /* stb_image.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -318,12 +332,12 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_CXX0X_EXTENSIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = YES;
+				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
 				COPY_PHASE_STRIP = NO;
-				GCC_C_LANGUAGE_STANDARD = ansi;
+				GCC_C_LANGUAGE_STANDARD = gnu89;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
@@ -366,13 +380,13 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_CXX0X_EXTENSIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = YES;
+				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = NO;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CLANG_WARN__EXIT_TIME_DESTRUCTORS = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_C_LANGUAGE_STANDARD = ansi;
+				GCC_C_LANGUAGE_STANDARD = gnu89;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
