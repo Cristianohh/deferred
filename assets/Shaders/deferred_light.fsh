@@ -4,7 +4,12 @@ uniform sampler2D color_texture;
 uniform sampler2D normal_texture;
 uniform sampler2D position_texture;
 
-uniform vec4 kLight;
+layout(std140) uniform LightBuffer
+{
+    vec4 kLights[24];
+    int  kNumLights;
+    int  __padding[3];
+};
 
 in vec4 int_Pos;
 
@@ -19,20 +24,18 @@ void main()
     vec3 albedo = texture(color_texture, uv).rgb;
     vec3 normal = texture(normal_texture, uv).rgb;
 
-    vec3 light_dir = world_pos - kLight.rgb;
-    light_dir = normalize(-light_dir);
-    
-    float dist = distance(world_pos, kLight.rgb);
-
-    if(dist > kLight.w)
-        discard;
-    
-    normal = normalize(normal);
     normal *= 2.0f;
     normal -= 1.0f;
+    normal = normalize(normal);
     
-    float n_l = dot(light_dir, normal);
-    float attenuation = 1 - pow( clamp(dist/kLight.w, 0.0f, 1.0f), 2);
-    out_Color = vec4(albedo * clamp(n_l, 0.0f, 1.0f) * attenuation, 1.0f);
-    //out_Color = vec4(albedo, 1.0f);
+    for(int ii=0;ii<kNumLights;++ii) {
+        vec3 light_pos = kLights[ii].xyz;
+        float dist = distance(world_pos, light_pos);
+        
+        vec3 light_dir = world_pos - light_pos;
+        light_dir = normalize(-light_dir);
+        float n_l = dot(light_dir, normal);
+        float attenuation = 1 - pow( clamp(dist/kLights[ii].w, 0.0f, 1.0f), 2);
+        out_Color += vec4(albedo * clamp(n_l, 0.0f, 1.0f) * attenuation, 1.0f);
+    }
 }

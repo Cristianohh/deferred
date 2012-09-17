@@ -682,13 +682,10 @@ void _render_deferred(void) {
         glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
         
         const Mesh& mesh = _meshes[_quad_mesh];
-        for(int ii=0;ii<_light_buffer.num_lights;++ii) {
-            const float4& light = _light_buffer.lights[ii];
+        for(int ii=0;ii<1;++ii) {
             float4x4 transform = float4x4Scale(2.0f, 2.0f, 1.0f);
     
             glBindVertexArray(mesh.vao);
-            loc = glGetUniformLocation(_programs[kDeferredLightProgram], "kLight");
-            glUniform4fv(loc, 1, (float*)&light);
             glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kWorldTransformBuffer]);
             CheckGLError();
             glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &transform, GL_DYNAMIC_DRAW);
@@ -907,6 +904,9 @@ void _load_shaders(void) {
     buffer_index = glGetUniformBlockIndex(_programs[kDeferredLightProgram], "PerObject");
     assert(buffer_index != GL_INVALID_INDEX);
     glUniformBlockBinding(_programs[kDeferredLightProgram], buffer_index, 1);
+    buffer_index = glGetUniformBlockIndex(_programs[kDeferredLightProgram], "LightBuffer");
+    assert(buffer_index != GL_INVALID_INDEX);
+    glUniformBlockBinding(_programs[kDeferredLightProgram], buffer_index, 2);
 
     // 2D
     GLuint vs_2d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/2D.vsh");
