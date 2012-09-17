@@ -401,7 +401,7 @@ void initialize(void* window) {
     CheckGLError();
 #endif
     _window = window;
-    glClearColor(0.6f, 0.2f, 0.5f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClearDepth(1.0f);
     _load_shaders();
     _create_uniform_buffers();
@@ -442,7 +442,7 @@ void initialize(void* window) {
     
     glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
     CheckGLError();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, _width, _height);
     CheckGLError();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _position_buffer);
     CheckGLError();
@@ -485,7 +485,7 @@ void initialize(void* window) {
     CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _position_texture);
     CheckGLError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
     CheckGLError();
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     CheckGLError();
@@ -536,7 +536,7 @@ void render(void) {
     }
 
     // Setup the frame buffer
-    if(0 || _deferred) {
+    if(1 || _deferred) {
         glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
         CheckGLError();
         glViewport(0, 0, _width, _height);
@@ -595,7 +595,7 @@ void render(void) {
 
     glDisable(GL_DEPTH_TEST);
 
-    if(0 || _deferred) {
+    if(1 || _deferred) {
         // Render the scene from the render target
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
@@ -679,7 +679,7 @@ void _render_deferred(void) {
         CheckGLError();
         glActiveTexture(GL_TEXTURE2);
         CheckGLError();
-        glBindTexture(GL_TEXTURE_2D, _textures[_depth_texture]);
+        glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
         CheckGLError();
         int loc = glGetUniformLocation(_programs[kDeferredLightProgram], "color_texture");
         glUniform1i(loc, 0);
@@ -738,44 +738,44 @@ void resize(int width, int height) {
 #if 1
     // Resize render targets
     glBindRenderbuffer(GL_RENDERBUFFER, _color_buffer);
-        CheckGLError();
+    CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-        CheckGLError();
+    CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, _normal_buffer);
-        CheckGLError();
+    CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-        CheckGLError();
+    CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
-        CheckGLError();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-        CheckGLError();
+    CheckGLError();
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, _width, _height);
+    CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
-        CheckGLError();
+    CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, _width, _height);
-        CheckGLError();
-    
-        CheckGLError();
+    CheckGLError();
+
+    CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
-        CheckGLError();
+    CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        CheckGLError();
+    CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
-        CheckGLError();
+    CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-        CheckGLError();
+    CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
-        CheckGLError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-        CheckGLError();
+    CheckGLError();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
+    CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_depth_texture]);
-        CheckGLError();
+    CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _width, _height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        CheckGLError();
-    
+    CheckGLError();
+
     glBindTexture(GL_TEXTURE_2D, 0);
-        CheckGLError();
+    CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        CheckGLError();
+    CheckGLError();
 #endif
 }
 

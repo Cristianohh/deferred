@@ -17,6 +17,7 @@ layout(location=2) in vec2 in_TexCoord;
 out vec3 int_WorldPos;
 out vec3 int_Normal;
 out vec2 int_TexCoord;
+out vec2 int_Depth;
 
 void main()
 {
@@ -26,4 +27,6 @@ void main()
     int_WorldPos = world_pos.xyz;
     int_Normal = mat3(kWorld) * in_Normal;
     int_TexCoord = in_TexCoord;
+	int_Depth.x = gl_Position.z;
+	int_Depth.y = gl_Position.w;
 }
