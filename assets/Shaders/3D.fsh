@@ -18,6 +18,8 @@ out vec4 out_Color;
 void main()
 {
     out_Color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    vec4 albedo = texture(diffuseTex, int_TexCoord);
+    
     for(int ii=0;ii<kNumLights;++ii) {
         vec3 light_pos = kLights[ii].xyz;
         float dist = distance(int_WorldPos, light_pos);
@@ -27,6 +29,6 @@ void main()
         light_dir = normalize(-light_dir);
         float n_l = dot(light_dir, normalize(int_Normal));
         float attenuation = 1 - pow( clamp(dist/kLights[ii].w, 0.0f, 1.0f), 2);
-        out_Color += texture(diffuseTex, int_TexCoord) * clamp(n_l, 0.0f, 1.0f) * attenuation;
+        out_Color += albedo * clamp(n_l, 0.0f, 1.0f) * attenuation;
     }
 }
