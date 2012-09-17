@@ -8,7 +8,7 @@ layout(std140) uniform LightBuffer
 {
     vec4 kLights[24];
     int  kNumLights;
-    int  __padding[3];
+    int  _padding[3];
 };
 
 in vec4 int_Pos;
@@ -31,6 +31,9 @@ void main()
     for(int ii=0;ii<kNumLights;++ii) {
         vec3 light_pos = kLights[ii].xyz;
         float dist = distance(world_pos, light_pos);
+
+		if(dist > kLights[ii].w)
+			continue;
         
         vec3 light_dir = world_pos - light_pos;
         light_dir = normalize(-light_dir);

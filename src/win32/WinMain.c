@@ -20,11 +20,83 @@ static const char _class_name[] = "deferred";
 /* Variables */
 static HWND _hwnd = NULL;
 static int  _fullscreen = 0;
+static char         _keys[KEY_MAX_KEYS] = {0};
+static SystemEvent  _event_queue[1024];
+static uint32_t     _write_pos = 0;
+static uint32_t     _read_pos = 0;
+
+void _app_push_event(SystemEvent event) {
+    _event_queue[_write_pos%1024] = event;
+    _write_pos++;
+}
+int app_is_key_down(Key key) { return _keys[key]; }
+
+const SystemEvent* app_pop_event(void) {
+    if(_read_pos == _write_pos)
+        return NULL;
+    return &_event_queue[(_read_pos++) % 1024];
+}
+
+static Key convert_keycode(uint8_t key)
+{   
+    if(key >= 'A' && key <= 'Z')
+        return (key - 'A') + KEY_A;
+    
+    if(key >= '0' && key <= '9')
+        return (key - '0') + KEY_0;
+
+    if(key >= VK_F1 && key <= VK_F12)
+        return (key - VK_F1) + KEY_F1;
+
+    switch(key)
+    {
+    case VK_ESCAPE:
+        return KEY_ESCAPE;
+
+    case VK_SPACE:  
+        return KEY_SPACE;
+
+    case VK_SHIFT:
+    case VK_LSHIFT:
+    case VK_RSHIFT:
+        return KEY_SHIFT;
+    case VK_CONTROL:
+    case VK_LCONTROL:
+    case VK_RCONTROL:
+        return KEY_CTRL;
+    case VK_MENU:
+    case VK_LMENU:
+    case VK_RMENU:
+        return KEY_ALT;
+
+    case VK_LEFT:
+        return KEY_LEFT;
+    case VK_RIGHT:
+        return KEY_RIGHT;
+    case VK_UP:
+        return KEY_UP;
+    case VK_DOWN:
+        return KEY_DOWN;
+
+    default:
+        return -1;
+    }
+}
 
 /*
  * Functions
  */
 void* app_get_window(void) { return _hwnd; }
+MessageBoxResult message_box(const char* header, const char* message) {
+    int result = MessageBox(_hwnd, message, header, MB_RETRYCANCEL);
+
+    if(result == IDCANCEL) 
+        return kMBCancel;
+    if(result == IDRETRY)
+        return kMBRetry;
+
+    return kMBOK;
+}
 
 static LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam );
 
@@ -120,21 +192,32 @@ static void _toggle_fullscreen(void)
 
 LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam ) 
 {
+    Key key;
     switch(message) {
     case WM_CREATE: 
         return 0;
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
+        key = convert_keycode((uint8_t)wParam);
         switch(wParam) {
-        case VK_ESCAPE:
-            PostQuitMessage(0);
-            return 0;
         case VK_RETURN:
             if ((HIWORD(lParam) & KF_ALTDOWN)) {
                 _toggle_fullscreen();
             }
             return 0;
         }
+        if(_keys[key] == 0) {
+            SystemEvent event;
+            event.type = kEventKeyDown;
+            event.data.key = key;
+            _app_push_event(event);
+        }
+        _keys[key] = 1;
+        break;
+    case WM_KEYUP:
+    case WM_SYSKEYUP:
+        key = convert_keycode((uint8_t)wParam);
+        _keys[key] = 0;
         break;
     case WM_MENUCHAR: /* identify alt+enter, make it not beep since we're handling it: */
         if( LOWORD(wParam) & VK_RETURN )
@@ -143,6 +226,40 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     case WM_CLOSE:
         PostQuitMessage(0);
         return 0;
+    case WM_ERASEBKGND:
+    case WM_SIZING:
+    case WM_SIZE:
+        {
+            SystemEvent event;
+            RECT rect;
+            int width;
+            int height;
+            GetClientRect(_hwnd, &rect);
+            width = rect.right - rect.left;
+            height = rect.bottom - rect.top;
+            event.data.resize.width = width;
+            event.data.resize.height = height;
+            event.type = kEventResize;
+            _app_push_event(event);
+            return 0;
+        }
+        return 0;
+    case WM_EXITSIZEMOVE:
+        {
+            SystemEvent event;
+            RECT rect;
+            int width;
+            int height;
+            GetClientRect(_hwnd, &rect);
+            width = rect.right - rect.left;
+            height = rect.bottom - rect.top;
+            event.data.resize.width = width;
+            event.data.resize.height = height;
+            event.type = kEventResize;
+            _app_push_event(event);
+            return 0;
+        }
+        break;
     }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }

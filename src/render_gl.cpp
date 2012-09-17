@@ -288,6 +288,7 @@ static Mesh _create_mesh(uint32_t vertex_count, VertexType vertex_type,
 
     GLuint vao;
     glGenVertexArrays(1, &vao);
+    assert(vao);
     CheckGLError();
     glBindVertexArray(vao);
     CheckGLError();
@@ -335,6 +336,7 @@ RenderGL()
     , _deferred(0)
     , _debug(0)
 {
+    _light_buffer.num_lights = 0;
 }
 ~RenderGL() {
 }
@@ -346,19 +348,19 @@ void initialize(void* window) {
     HWND hWnd = (HWND)window;
     HDC hDC = GetDC(hWnd);
 
-    FRAGMENTFORMATDESCRIPTOR   pfd = {0};
+    PIXELFORMATDESCRIPTOR   pfd = {0};
 	pfd.nSize       = sizeof(pfd);
 	pfd.nVersion    = 1;
 	pfd.dwFlags     = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
-	pfd.iFragmentType  = PFD_TYPE_RGBA;
+	pfd.iPixelType  = PFD_TYPE_RGBA;
 	pfd.cColorBits  = 24;
 	pfd.cDepthBits  = 24;
 	pfd.iLayerType  = PFD_MAIN_PLANE;
 
-    int fragment_format = ChooseFragmentFormat(hDC, &pfd);
-    assert(fragment_format);
+    int pixel_format = ChoosePixelFormat(hDC, &pfd);
+    assert(pixel_format);
 
-    int result = SetFragmentFormat(hDC, fragment_format, &pfd);
+    int result = SetPixelFormat(hDC, pixel_format, &pfd);
     assert(result);
 
     // Create a dummy OpenGL 1.1 context to use for Glew initialization
@@ -408,11 +410,13 @@ void initialize(void* window) {
 
     glFrontFace(GL_CW);
     CheckGLError();
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
     CheckGLError();
     glEnable(GL_DEPTH_TEST);
     CheckGLError();
 
+
+#if 1
     glGenFramebuffers(1, &_frame_buffer);
     glGenRenderbuffers(1, &_color_buffer);
     glGenRenderbuffers(1, &_depth_buffer);
@@ -517,6 +521,7 @@ void initialize(void* window) {
     _depth_texture = _num_textures++;
     _textures[_num_textures] = _position_texture;
     _position_texture = _num_textures++;
+#endif
 }
 void shutdown(void) {
     _unload_shaders();
@@ -531,7 +536,7 @@ void render(void) {
     }
 
     // Setup the frame buffer
-    if(1 || _deferred) {
+    if(0 || _deferred) {
         glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
         CheckGLError();
         glViewport(0, 0, _width, _height);
@@ -550,15 +555,22 @@ void render(void) {
     // 3D objects
     float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
     glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
+    CheckGLError();
     glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &view_proj, GL_DYNAMIC_DRAW);
+    CheckGLError();
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    
+    CheckGLError();
+
     glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kLightBuffer]);
+    CheckGLError();
     glBufferData(GL_UNIFORM_BUFFER, sizeof(_light_buffer), &_light_buffer, GL_DYNAMIC_DRAW);
+    CheckGLError();
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    
+    CheckGLError();
+
     glBindBufferBase(GL_UNIFORM_BUFFER, 2, _uniform_buffers[kLightBuffer]);
-    
+    CheckGLError();
+
     for(int ii=0; ii<_num_3d_render_commands; ++ii) {
         const RenderCommand& command = _3d_render_commands[ii];
         _draw_mesh(command.mesh, command.texture, command.transform, k3DProgram);
@@ -580,10 +592,10 @@ void render(void) {
         CheckGLError();
         glEnable(GL_CULL_FACE);
     }
-    
+
     glDisable(GL_DEPTH_TEST);
 
-    if(1 || _deferred) {
+    if(0 || _deferred) {
         // Render the scene from the render target
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
@@ -676,6 +688,16 @@ void _render_deferred(void) {
         loc = glGetUniformLocation(_programs[kDeferredLightProgram], "position_texture");
         glUniform1i(loc, 2);
 
+        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kLightBuffer]);
+        CheckGLError();
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(_light_buffer), &_light_buffer, GL_DYNAMIC_DRAW);
+        CheckGLError();
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        CheckGLError();
+
+        glBindBufferBase(GL_UNIFORM_BUFFER, 2, _uniform_buffers[kLightBuffer]);
+        CheckGLError();
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
         glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
@@ -695,6 +717,7 @@ void _render_deferred(void) {
             glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
             CheckGLError();
         }
+        glActiveTexture(GL_TEXTURE0);
         glDisable(GL_BLEND);
         glUseProgram(0);
     }
@@ -712,27 +735,48 @@ void resize(int width, int height) {
     _orthographic_projection = float4x4OrthographicOffCenterLH(0, width, height, 0, 0.0f, 1.0f);
     _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 0.1f, 10000.0f);
 
+#if 1
     // Resize render targets
     glBindRenderbuffer(GL_RENDERBUFFER, _color_buffer);
+        CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
+        CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, _normal_buffer);
+        CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
+        CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
+        CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
+        CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
+        CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, _width, _height);
+        CheckGLError();
     
+        CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
+        CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
+        CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
+        CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
+        CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
+        CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_depth_texture]);
+        CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _width, _height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        CheckGLError();
     
     glBindTexture(GL_TEXTURE_2D, 0);
+        CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        CheckGLError();
+#endif
 }
 
 MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
@@ -936,6 +980,7 @@ void _load_shaders(void) {
     buffer_index = glGetUniformBlockIndex(_programs[kDebugProgram], "PerObject");
     assert(buffer_index != GL_INVALID_INDEX);
     glUniformBlockBinding(_programs[kDebugProgram], buffer_index, 1);
+        CheckGLError();
 }
 void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)

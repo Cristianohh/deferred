@@ -4,7 +4,7 @@ layout(std140) uniform LightBuffer
 {
     vec4 kLights[24];
     int  kNumLights;
-    int  __padding[3];
+    int  _padding[3];
 };
 
 uniform sampler2D diffuseTex;

@@ -13,6 +13,12 @@
     <Filter Include="external">
       <UniqueIdentifier>{c1fa8c3e-46b5-4ef7-a56e-08ecaca363a0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="assets">
+      <UniqueIdentifier>{e3dc5e14-bb96-47b4-9a6d-3d564c2fa2ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets\shaders">
+      <UniqueIdentifier>{cb0f7aab-2c94-48dc-8858-85ff55a68d78}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\tests\timer_test.cpp">
@@ -54,6 +60,9 @@
     <ClCompile Include="src\render.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="external\stb_image.c">
+      <Filter>external</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application.h">
@@ -89,5 +98,60 @@
     <ClInclude Include="src\game.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="external\stb_image.h">
+      <Filter>external</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\brick.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\grass.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\metal.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\texture.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\wood.jpg">
+      <Filter>assets</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\sphere.mesh">
+      <Filter>assets</Filter>
+    </None>
+    <None Include="assets\Shaders\2D.fsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\2D.vsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\3D.fsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\3D.vsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\debug.fsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\debug.vsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\deferred.fsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\deferred.vsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\deferred_light.fsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\deferred_light.vsh">
+      <Filter>assets\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="external\glew.c" />
+    <ClCompile Include="external\stb_image.c" />
     <ClCompile Include="src\application.c" />
     <ClCompile Include="src\fps.c" />
     <ClCompile Include="src\game.cpp">
@@ -44,6 +45,7 @@
     <ClInclude Include="external\GL\glew.h" />
     <ClInclude Include="external\GL\glxew.h" />
     <ClInclude Include="external\GL\wglew.h" />
+    <ClInclude Include="external\stb_image.h" />
     <ClInclude Include="src\application.h" />
     <ClInclude Include="src\assert.h">
       <SubType>
@@ -57,6 +59,26 @@
     <ClInclude Include="src\render.h" />
     <ClInclude Include="src\timer.h" />
     <ClInclude Include="src\unit_test.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\brick.jpg" />
+    <Image Include="assets\grass.jpg" />
+    <Image Include="assets\metal.jpg" />
+    <Image Include="assets\texture.jpg" />
+    <Image Include="assets\wood.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\Shaders\2D.fsh" />
+    <None Include="assets\Shaders\2D.vsh" />
+    <None Include="assets\Shaders\3D.fsh" />
+    <None Include="assets\Shaders\3D.vsh" />
+    <None Include="assets\Shaders\debug.fsh" />
+    <None Include="assets\Shaders\debug.vsh" />
+    <None Include="assets\Shaders\deferred.fsh" />
+    <None Include="assets\Shaders\deferred.vsh" />
+    <None Include="assets\Shaders\deferred_light.fsh" />
+    <None Include="assets\Shaders\deferred_light.vsh" />
+    <None Include="assets\sphere.mesh" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>
@@ -141,7 +163,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <MinimalRebuild>false</MinimalRebuild>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -167,7 +189,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <MinimalRebuild>false</MinimalRebuild>
       <ExceptionHandling>false</ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -195,7 +217,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
@@ -223,7 +245,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <TreatWarningAsError>true</TreatWarningAsError>
+      <TreatWarningAsError>false</TreatWarningAsError>
       <ExceptionHandling>false</ExceptionHandling>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
     </ClCompile>
