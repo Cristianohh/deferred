@@ -22,12 +22,11 @@ void main()
         vec3 light_pos = kLights[ii].xyz;
         float dist = distance(int_WorldPos, light_pos);
         if(dist > kLights[ii].w)
-        {
-        }
+            continue;
         vec3 light_dir = int_WorldPos - light_pos;
         light_dir = normalize(-light_dir);
         float n_l = dot(light_dir, normalize(int_Normal));
-        float attenuation = 1.0f/dist*dist;
+        float attenuation = 1 - pow( clamp(dist/kLights[ii].w, 0.0f, 1.0f), 2);
         out_Color += texture(diffuseTex, int_TexCoord) * clamp(n_l, 0.0f, 1.0f) * attenuation;
     }
 }

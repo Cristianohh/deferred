@@ -8,9 +8,17 @@
 #define __game_h__
 
 #include "timer.h"
+#include "vec_math.h"
 #include "fps.h"
+#include "render.h"
 
 class Render;
+
+struct Object {
+    Transform   transform;
+    MeshID      mesh;
+    TextureID   texture;
+};
 
 class Game {
 public:
@@ -19,12 +27,23 @@ public:
     void initialize(void);
     void shutdown(void);
     int on_frame(void);
+    
+private:
+    void _control_camera(void);
+    void _add_object(const Object& o);
 
 private:
     FPSCounter  _fps;
     Timer       _timer;
     Render*     _render;
     int         _frame_count;
+    float       _delta_time;
+
+    Transform   _camera;
+
+    Object      _objects[1024];
+    int         _num_objects;
+    float4      _lights[12];
 };
 
 #endif /* include guard */

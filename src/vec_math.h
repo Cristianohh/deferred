@@ -24,10 +24,11 @@ typedef struct float4 float4;
 typedef struct float3x3 float3x3;
 typedef struct float4x4 float4x4;
 typedef float4 quaternion;
+typedef struct Transform Transform;
 
 /*
  * Struct definition
- */ 
+ */
 struct float2
 {
     float x;
@@ -63,11 +64,7 @@ struct float4x4
 /*
  * float3 functions
  */
-static float3 float3zero(void)
-{
-    float3 zero = { 0,0,0 };
-    return zero;
-}
+static const float3 float3zero = { 0,0,0 };
 
 /* Vector operations */
 static float3 float3add(const float3* a, const float3* b)
@@ -130,7 +127,7 @@ static float float3lengthSq(const float3* v)
 {
     return v->x*v->x + v->y*v->y + v->z*v->z;
 }
-static float float3length(const float3* v) 
+static float float3length(const float3* v)
 {
     return sqrtf(float3lengthSq(v));
 }
@@ -217,7 +214,7 @@ static float float4lengthSq(const float4* v)
 {
     return (v->x*v->x + v->y*v->y + v->z*v->z + v->w*v->w);
 }
-static float float4length(const float4* v) 
+static float float4length(const float4* v)
 {
     return sqrtf(float4lengthSq(v));
 }
@@ -763,7 +760,7 @@ static float4x4 float4x4RotationX(float rad)
     float       s = sinf( rad );
     float4x4    m = { { 1.0f, 0.0f, 0.0f, 0.0f},
                       { 0.0f,    c,    s, 0.0f},
-                      { 0.0f,   -s,    c, 0.0f}, 
+                      { 0.0f,   -s,    c, 0.0f},
                       { 0.0f, 0.0f, 0.0f, 1.0f} };
     return m;
 }
@@ -827,7 +824,7 @@ static float4x4 float4x4Scale(float x, float y, float z)
 }
 static float4x4 float4x4translation(float x, float y, float z)
 {
-    float4x4 m = 
+    float4x4 m =
     {
         {1.0f, 0.0f, 0.0f, 0.0f},
         {0.0f, 1.0f, 0.0f, 0.0f},
@@ -838,7 +835,7 @@ static float4x4 float4x4translation(float x, float y, float z)
 }
 static float4x4 float4x4translationVector(const float3* t)
 {
-    float4x4 m = 
+    float4x4 m =
     {
         {1.0f, 0.0f, 0.0f, 0.0f},
         {0.0f, 1.0f, 0.0f, 0.0f},
@@ -952,11 +949,8 @@ static float4x4 float4x4OrthographicRH(float width, float height, float nearPlan
 /*
  * Quaternion math
  */
-static quaternion quaternionIdentity(void)
-{
-    quaternion q = {0,0,0,1};
-    return q;
-}
+static const quaternion quaternionIdentity  = {0,0,0,1};
+
 static quaternion quaternionFromAxisAngle(const float3* axis, float angle)
 {
     quaternion q;
@@ -1038,6 +1032,58 @@ static quaternion quaternionMultiply(const quaternion* l, const quaternion* r)
                     r->w*l->z + r->z*l->w + r->x*l->y - r->y*l->x,
                     r->w*l->w - r->x*l->x - r->y*l->y - r->z*l->z };
     return q;
+}
+
+/*
+ * Transform
+ */
+struct Transform
+{
+    quaternion  orientation;
+    float3      position;
+    float       scale;
+};
+
+/*static const Transform TransformZero =
+{
+    quaternionIdentity,
+    float3zero,
+    1.0f
+};*/
+
+static Transform TransformZero(void) {
+    Transform t = {
+        quaternionIdentity,
+        float3zero,
+        1.0f
+    };
+    return t;
+}
+
+static float4x4 TransformGetMatrix(const Transform* t)
+{
+    quaternion q = t->orientation;
+    float xx = q.x * q.x;
+    float yy = q.y * q.y;
+    float zz = q.z * q.z;
+
+    float xy = q.x * q.y;
+    float zw = q.z * q.w;
+    float xz = q.x * q.z;
+    float yw = q.y * q.w;
+    float yz = q.y * q.z;
+    float xw = q.x * q.w;
+
+    float s = t->scale;
+
+    float4x4 ret =
+    {
+        { (1 - 2*(yy+zz))*s, (    2*(xy+zw))*s, (    2*(xz-yw))*s, 0.0f },
+        { (    2*(xy-zw))*s, (1 - 2*(xx+zz))*s, (    2*(yz+xw))*s, 0.0f },
+        { (    2*(xz+yw))*s, (    2*(yz-xw))*s, (1 - 2*(xx+yy))*s, 0.0f },
+        {     t->position.x,     t->position.y,     t->position.z, 1.0f },
+    };
+    return ret;
 }
 
 #endif /* Include guard */

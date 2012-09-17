@@ -70,6 +70,7 @@ enum FragmentShaderType {
 enum ProgramType {
     k3DProgram,
     k2DProgram,
+    kDebugProgram,
 
     kNUM_PROGRAMS
 };
@@ -415,12 +416,6 @@ void render(void) {
     _present();
     _clear();
 
-    _light_buffer.lights[0].x = -10.0f;
-    _light_buffer.lights[0].y = 7.0f;
-    _light_buffer.lights[0].z = 0.0f;
-    _light_buffer.lights[0].w = 10000.0f;
-    _light_buffer.num_lights = 1;
-
     // 3D objects
     float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
     glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
@@ -437,6 +432,20 @@ void render(void) {
         const RenderCommand& command = _3d_render_commands[ii];
         _draw_mesh(command.mesh, command.texture, command.transform, k3DProgram);
     }
+    if(_debug) {
+        glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+        CheckGLError();
+        for(int ii=0;ii<_light_buffer.num_lights;++ii) {
+            const float4& light = _light_buffer.lights[ii];
+            float4x4 transform = float4x4Scale(light.w, light.w, light.w);
+            transform.r3.x = light.x;
+            transform.r3.y = light.y;
+            transform.r3.z = light.z;
+            _draw_mesh(_sphere_mesh, 0, transform, kDebugProgram);
+        }
+        glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+        CheckGLError();
+    }
 
     // 2D gui objects
     view_proj = float4x4multiply(&_2d_view, &_orthographic_projection);
@@ -449,6 +458,7 @@ void render(void) {
     }
 
     _num_3d_render_commands = _num_2d_render_commands = 0;
+    _light_buffer.num_lights = 0;
 }
 void resize(int width, int height) {
     glViewport(0, 0, width, height);
@@ -467,6 +477,7 @@ MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
 MeshID cube_mesh(void) { return _cube_mesh; }
 MeshID quad_mesh(void) { return _quad_mesh; }
 MeshID sphere_mesh(void) { return _sphere_mesh; }
+void toggle_debug_graphics(void) { _debug = !_debug; }
 
 void set_3d_view_matrix(const float4x4& view) {
     _3d_view = view;
@@ -486,6 +497,10 @@ void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) {
     command.transform = transform;
     command.texture = texture;
 }
+
+void draw_light(const float4& light) {
+    _light_buffer.lights[_light_buffer.num_lights++] = light;
+}
 TextureID load_texture(const char* filename) {
     int width, height, components;
     GLenum format;
@@ -499,8 +514,8 @@ TextureID load_texture(const char* filename) {
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -599,6 +614,21 @@ void _load_shaders(void) {
     buffer_index = glGetUniformBlockIndex(_programs[k2DProgram], "PerObject");
     assert(buffer_index != GL_INVALID_INDEX);
     glUniformBlockBinding(_programs[k2DProgram], buffer_index, 1);
+
+    
+    // 2D
+    GLuint vs_debug = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/debug.vsh");
+    GLuint fs_debug = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/debug.fsh");
+    _programs[kDebugProgram] = _create_program(vs_debug, fs_debug);
+    glDeleteShader(vs_debug);
+    glDeleteShader(fs_debug);
+
+    buffer_index = glGetUniformBlockIndex(_programs[kDebugProgram], "PerFrame");
+    assert(buffer_index != GL_INVALID_INDEX);
+    glUniformBlockBinding(_programs[kDebugProgram], buffer_index, 0);
+    buffer_index = glGetUniformBlockIndex(_programs[kDebugProgram], "PerObject");
+    assert(buffer_index != GL_INVALID_INDEX);
+    glUniformBlockBinding(_programs[kDebugProgram], buffer_index, 1);
 }
 void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)
@@ -670,6 +700,8 @@ RenderCommand   _2d_render_commands[kMAX_RENDER_COMMANDS];
 int             _num_2d_render_commands;
 
 LightBuffer _light_buffer;
+
+int         _debug;
 
 };
 
