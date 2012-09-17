@@ -43,7 +43,7 @@ private:
 
     Object      _objects[1024];
     int         _num_objects;
-    float4      _lights[12];
+    float4      _lights[24];
 };
 
 #endif /* include guard */

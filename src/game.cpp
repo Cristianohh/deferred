@@ -95,8 +95,8 @@ void Game::initialize(void) {
     _lights[0].x = -15.0f;
     _lights[0].y = 200.0f;
     _lights[0].z = 20.0f;
-    _lights[0].w = 300.0f;
-    for(int ii=1;ii<12;++ii) {
+    _lights[0].w = 250.0f;
+    for(int ii=1;ii<24;++ii) {
         _lights[ii].x = _rand_float(-50.0f, 50.0f);
         _lights[ii].y = _rand_float(3.0f, 5.0f);
         _lights[ii].z = _rand_float(-50.0f, 50.0f);
@@ -121,6 +121,8 @@ int Game::on_frame(void) {
                 return 1;
             if(event->data.key == KEY_F1)
                 _render->toggle_debug_graphics();
+            if(event->data.key == KEY_F2)
+                _render->toggle_deferred();
             break;
         default:
             break;
@@ -142,7 +144,7 @@ int Game::on_frame(void) {
         const Object& o = _objects[ii];
         _render->draw_3d(o.mesh, o.texture, TransformGetMatrix(&o.transform));
     }
-    for(int ii=0;ii<12;++ii) {
+    for(int ii=0;ii<24;++ii) {
         _render->draw_light(_lights[ii]);
     }
     _render->render();

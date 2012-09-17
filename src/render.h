@@ -61,6 +61,7 @@ public:
     virtual void draw_light(const float4& light) = 0;
 
     virtual void toggle_debug_graphics(void) = 0;
+    virtual void toggle_deferred(void) = 0;
 
     static Render* create(void);
     static void destroy(Render* render);
