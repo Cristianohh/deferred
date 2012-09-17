@@ -23,12 +23,16 @@ void main()
     light_dir = normalize(-light_dir);
     
     float dist = distance(world_pos, kLight.rgb);
+
+    if(dist > kLight.w)
+        discard;
     
+    normal = normalize(normal);
     normal *= 2.0f;
     normal -= 1.0f;
-    normal = normalize(normal);
     
     float n_l = dot(light_dir, normal);
     float attenuation = 1 - pow( clamp(dist/kLight.w, 0.0f, 1.0f), 2);
     out_Color = vec4(albedo * clamp(n_l, 0.0f, 1.0f) * attenuation, 1.0f);
+    //out_Color = vec4(albedo, 1.0f);
 }

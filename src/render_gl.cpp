@@ -638,6 +638,7 @@ void _render_deferred(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     if(_debug) {
         glDisable(GL_CULL_FACE);
@@ -675,15 +676,15 @@ void _render_deferred(void) {
         loc = glGetUniformLocation(_programs[kDeferredLightProgram], "position_texture");
         glUniform1i(loc, 2);
 
+        glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
-        const Mesh& mesh = _meshes[_sphere_mesh];
+        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
+        
+        const Mesh& mesh = _meshes[_quad_mesh];
         for(int ii=0;ii<_light_buffer.num_lights;++ii) {
             const float4& light = _light_buffer.lights[ii];
-            float4x4 transform = float4x4Scale(light.w, light.w, light.w);
-            transform.r3.x = light.x;
-            transform.r3.y = light.y;
-            transform.r3.z = light.z;
-            //transform = float4x4Scale(2.0f, -2.0f, 1.0f);
+            float4x4 transform = float4x4Scale(2.0f, 2.0f, 1.0f);
     
             glBindVertexArray(mesh.vao);
             loc = glGetUniformLocation(_programs[kDeferredLightProgram], "kLight");
@@ -697,6 +698,7 @@ void _render_deferred(void) {
             glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
             CheckGLError();
         }
+        glDisable(GL_BLEND);
         glUseProgram(0);
     }
 
