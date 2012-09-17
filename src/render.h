@@ -13,6 +13,8 @@
 #include <stddef.h>
 #include "vec_math.h"
 
+#define MAX_LIGHTS 512
+
 struct VtxPosNormTex {
     float3    pos;
     float3    norm;
@@ -58,7 +60,7 @@ public:
     virtual void set_2d_view_matrix(const float4x4& view) = 0;
     virtual void draw_3d(MeshID mesh, TextureID texture, const float4x4& transform) = 0;
     virtual void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) = 0;
-    virtual void draw_light(const float4& light) = 0;
+    virtual void draw_light(const float4& light, const float4& color) = 0;
 
     virtual void toggle_debug_graphics(void) = 0;
     virtual void toggle_deferred(void) = 0;

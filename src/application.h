@@ -81,6 +81,8 @@ typedef enum {
     KEY_CTRL,
     KEY_ALT,
 
+    KEY_ENTER,
+
     KEY_SYS, /* Windows/Command key */
     
     KEY_UP,

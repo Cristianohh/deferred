@@ -2,7 +2,8 @@
 
 layout(std140) uniform LightBuffer
 {
-    vec4 kLights[24];
+    vec4 kLights[512];
+	vec4 kColors[512];
     int  kNumLights;
     int  _padding[3];
 };
@@ -23,11 +24,14 @@ void main()
     for(int ii=0;ii<kNumLights;++ii) {
         vec3 light_pos = kLights[ii].xyz;
         float dist = distance(int_WorldPos, light_pos);
+
+		if(dist > kLights[ii].w)
+			continue;
         
         vec3 light_dir = int_WorldPos - light_pos;
         light_dir = normalize(-light_dir);
         float n_l = dot(light_dir, normalize(int_Normal));
         float attenuation = 1 - pow( clamp(dist/kLights[ii].w, 0.0f, 1.0f), 2);
-        out_Color += albedo * clamp(n_l, 0.0f, 1.0f) * attenuation;
+        out_Color += albedo * kColors[ii] * clamp(n_l, 0.0f, 1.0f) * attenuation;
     }
 }

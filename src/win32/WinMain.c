@@ -69,6 +69,9 @@ static Key convert_keycode(uint8_t key)
     case VK_RMENU:
         return KEY_ALT;
 
+    case VK_RETURN:
+        return KEY_ENTER;
+
     case VK_LEFT:
         return KEY_LEFT;
     case VK_RIGHT:
@@ -206,6 +209,8 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             }
             return 0;
         }
+        if(key == -1)
+            break;
         if(_keys[key] == 0) {
             SystemEvent event;
             event.type = kEventKeyDown;
@@ -217,6 +222,8 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     case WM_KEYUP:
     case WM_SYSKEYUP:
         key = convert_keycode((uint8_t)wParam);
+        if(key == -1)
+            break;
         _keys[key] = 0;
         break;
     case WM_MENUCHAR: /* identify alt+enter, make it not beep since we're handling it: */
@@ -228,6 +235,7 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         return 0;
     case WM_ERASEBKGND:
     case WM_SIZING:
+        return 0;
     case WM_SIZE:
         {
             SystemEvent event;

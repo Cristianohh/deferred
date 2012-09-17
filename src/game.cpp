@@ -44,10 +44,7 @@ void Game::initialize(void) {
 
     srand((uint32_t)_timer.start_time);
 
-    TextureID textures[3];
-    textures[0] = _render->load_texture("assets/brick.jpg");
-    textures[1] = _render->load_texture("assets/metal.jpg");
-    textures[2] = _render->load_texture("assets/wood.jpg");
+    //int wood_tex = _render->load_texture("assets/wood.jpg");
 
     Object o;
     // Ground
@@ -71,6 +68,14 @@ void Game::initialize(void) {
     o.texture = _render->load_texture("assets/grass.jpg");
     _add_object(o);
 
+    
+    TextureID textures[3] = {0};
+    textures[0] = _render->load_texture("assets/metal.jpg");
+    textures[1] = _render->load_texture("assets/brick.jpg");
+    textures[2] = _render->load_texture("assets/wood.jpg");
+
+    int brick_tex = textures[0];
+
     for(int ii=0; ii<32;++ii) {
         o.transform = TransformZero();
         o.transform.scale = _rand_float(0.5f, 5.0f);
@@ -92,15 +97,15 @@ void Game::initialize(void) {
     }
 
     // Add a "sun"
-    _lights[0].x = 0.0f;
-    _lights[0].y = 300.0f;
-    _lights[0].z = 0.0f;
-    _lights[0].w = 2000.0f;
-    for(int ii=1;ii<24;++ii) {
+    for(int ii=0;ii<MAX_LIGHTS;++ii) {
         _lights[ii].x = _rand_float(-50.0f, 50.0f);
-        _lights[ii].y = _rand_float(3.0f, 5.0f);
+        _lights[ii].y = _rand_float(1.0f, 4.0f);
         _lights[ii].z = _rand_float(-50.0f, 50.0f);
-        _lights[ii].w = 10.0f;
+        _lights[ii].w = 8.0f;
+        _colors[ii].x = _rand_float(0.0f, 1.0f);
+        _colors[ii].y = _rand_float(0.0f, 1.0f);
+        _colors[ii].z = _rand_float(0.0f, 1.0f);
+        _colors[ii].w = 1.0f;
     }
 }
 void Game::shutdown(void) {
@@ -144,8 +149,8 @@ int Game::on_frame(void) {
         const Object& o = _objects[ii];
         _render->draw_3d(o.mesh, o.texture, TransformGetMatrix(&o.transform));
     }
-    for(int ii=0;ii<24;++ii) {
-        _render->draw_light(_lights[ii]);
+    for(int ii=0;ii<MAX_LIGHTS;++ii) {
+        _render->draw_light(_lights[ii], _colors[ii]);
     }
     _render->render();
 
