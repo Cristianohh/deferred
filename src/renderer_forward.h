@@ -24,6 +24,7 @@ void init(void) {
     _world_uniform = glGetUniformLocation(_program, "kWorld");
     _viewproj_uniform = glGetUniformLocation(_program, "kViewProj");
     _diffuse_uniform = glGetUniformLocation(_program, "kDiffuseTex");
+    _camera_position_uniform = glGetUniformLocation(_program, "kCameraPosition");
     _light_buffer_uniform = glGetUniformBlockIndex(_program, "LightBuffer");
 
     _light_buffer_buffer = _create_buffer(GL_UNIFORM_BUFFER, sizeof(LightBuffer), &_light_buffer);
@@ -36,7 +37,8 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             const Renderable* renderables, int num_renderables,
             const Light* lights, int num_lights)
 {
-    float4x4 view_proj = float4x4multiply(&view, &proj);
+    float4x4 inv_view = float4x4inverse(&view);
+    float4x4 view_proj = float4x4multiply(&inv_view, &proj);
     memcpy(_light_buffer.lights, lights, num_lights*sizeof(Light));
     _light_buffer.num_lights = num_lights;
 
@@ -48,6 +50,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
     glUseProgram(_program);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, _light_buffer_buffer);
     glUniformMatrix4fv(_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
+    glUniform3fv(_camera_position_uniform, 1, (float*)&view.r3);
     for(int ii=0;ii<num_renderables;++ii) {
         const Renderable& r = renderables[ii];
         glUniformMatrix4fv(_world_uniform, 1, GL_FALSE, (float*)&r.transform);
@@ -66,6 +69,7 @@ GLuint  _program;
 GLuint  _viewproj_uniform;
 GLuint  _world_uniform;
 GLuint  _diffuse_uniform;
+GLuint  _camera_position_uniform;
 
 GLuint  _light_buffer_uniform;
 GLuint  _light_buffer_buffer;

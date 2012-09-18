@@ -42,6 +42,7 @@ void init(void) {
         _light_gbuffer_uniform = glGetUniformLocation(_light_program, "GBuffer");
         _light_light_uniform = glGetUniformLocation(_light_program, "kLight");
         _light_inv_viewproj_uniform = glGetUniformLocation(_light_program, "kInverseViewProj");
+        _light_cam_pos_uniform = glGetUniformLocation(_light_program, "kCameraPosition");
     }
 }
 void shutdown(void) {
@@ -59,8 +60,8 @@ void resize(int width, int height) {
     glViewport(0, 0, width, height);
 
     glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
     CheckGLError();
 
     glBindRenderbuffer(GL_RENDERBUFFER, _gbuffer[0]);
@@ -109,7 +110,8 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             const Renderable* renderables, int num_renderables,
             const Light* lights, int num_lights)
 {
-    float4x4 view_proj = float4x4multiply(&view, &proj);
+    float4x4 inv_view = float4x4inverse(&view);
+    float4x4 view_proj = float4x4multiply(&inv_view, &proj);
     { // Render geometry
         glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -120,7 +122,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glUseProgram(_geom_program);
 
         glUniformMatrix4fv(_geom_proj_uniform, 1, GL_FALSE, (float*)&proj);
-        glUniformMatrix4fv(_geom_view_uniform, 1, GL_FALSE, (float*)&view);
+        glUniformMatrix4fv(_geom_view_uniform, 1, GL_FALSE, (float*)&inv_view);
         for(int ii=0;ii<num_renderables;++ii) {
             const Renderable& r = renderables[ii];
             glUniformMatrix4fv(_geom_world_uniform, 1, GL_FALSE, (float*)&r.transform);
@@ -153,6 +155,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         float4x4 inv_viewproj = float4x4inverse(&view_proj);
         glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
         glUniformMatrix4fv(_light_inv_viewproj_uniform, 1, GL_FALSE, (float*)&inv_viewproj);
+        glUniform3fv(_light_cam_pos_uniform, 1, (float*)&view.r3);
         for(int ii=0;ii<num_lights;++ii) {
             Light light = lights[ii];
             float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
@@ -160,11 +163,16 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             transform.r3.y = light.pos.y;
             transform.r3.z = light.pos.z;
 
+            float3 v = float3subtract((float3*)&transform.r3, (float3*)&light.pos);
+            if(float3lengthSq(&v) < light.pos.w*light.pos.w) {
+                glCullFace(GL_FRONT);
+            }
             glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);
             glUniform4fv(_light_light_uniform, 2, (float*)&light);
             glBindVertexArray(_sphere_mesh.vao);
             _validate_program(_light_program);
             glDrawElements(GL_TRIANGLES, (GLsizei)_sphere_mesh.index_count, _sphere_mesh.index_format, NULL);
+            glCullFace(GL_BACK);
         }
 
         glActiveTexture(GL_TEXTURE0);
@@ -194,6 +202,7 @@ GLuint  _light_viewproj_uniform;
 GLuint  _light_light_uniform;
 GLuint  _light_gbuffer_uniform;
 GLuint  _light_inv_viewproj_uniform;
+GLuint  _light_cam_pos_uniform;
 
 GLuint  _frame_buffer;
 GLuint  _depth_buffer;

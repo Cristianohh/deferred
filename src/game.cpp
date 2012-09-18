@@ -138,7 +138,7 @@ int Game::on_frame(void) {
     // Frame
     _control_camera();
     float4x4 view = TransformGetMatrix(&_camera);
-    _render->set_3d_view_matrix(float4x4inverse(&view));
+    _render->set_3d_view_matrix(view);
 
     for(int ii=0;ii<_num_objects;++ii) {
         const Object& o = _objects[ii];
