@@ -416,95 +416,7 @@ void initialize(void* window) {
     glEnable(GL_DEPTH_TEST);
     CheckGLError();
 
-    glGenFramebuffers(1, &_frame_buffer);
-    glGenRenderbuffers(1, &_color_buffer);
-    glGenRenderbuffers(1, &_depth_buffer);
-    glGenRenderbuffers(1, &_normal_buffer);
-    glGenRenderbuffers(1, &_position_buffer);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
-    CheckGLError();
-
-    glBindRenderbuffer(GL_RENDERBUFFER, _color_buffer);
-    CheckGLError();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    CheckGLError();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _color_buffer);
-    CheckGLError();
-
-    glBindRenderbuffer(GL_RENDERBUFFER, _normal_buffer);
-    CheckGLError();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    CheckGLError();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, _normal_buffer);
-    CheckGLError();
-    
-    glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
-    CheckGLError();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, _width, _height);
-    CheckGLError();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _position_buffer);
-    CheckGLError();
-
-    glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
-    CheckGLError();
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, _width, _height);
-    CheckGLError();
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
-    CheckGLError();
-
-    glGenTextures(1, &_color_texture);
-    CheckGLError();
-    glBindTexture(GL_TEXTURE_2D, _color_texture);
-    CheckGLError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    CheckGLError();
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _color_texture, 0);
-    CheckGLError();
-
-    glGenTextures(1, &_normal_texture);
-    CheckGLError();
-    glBindTexture(GL_TEXTURE_2D, _normal_texture);
-    CheckGLError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    CheckGLError();
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _normal_texture, 0);
-    CheckGLError();
-    
-
-    glGenTextures(1, &_position_texture);
-    CheckGLError();
-    glBindTexture(GL_TEXTURE_2D, _position_texture);
-    CheckGLError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    CheckGLError();
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _position_texture, 0);
-    CheckGLError();
-
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if( status != GL_FRAMEBUFFER_COMPLETE) {
-        debug_output("FBO initialization failed\n");
-    }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    
-    _textures[_num_textures] = _color_texture;
-    _color_texture = _num_textures++;
-    _textures[_num_textures] = _normal_texture;
-    _normal_texture = _num_textures++;
-    _textures[_num_textures] = _position_texture;
-    _position_texture = _num_textures++;
+    _create_gbuffer();
 }
 void shutdown(void) {
     _unload_shaders();
@@ -556,7 +468,7 @@ void render(void) {
 
     for(int ii=0; ii<_num_3d_render_commands; ++ii) {
         const RenderCommand& command = _3d_render_commands[ii];
-        _draw_mesh(command.mesh, command.texture, command.transform, k3DProgram);
+        _draw_mesh(command.mesh, _textures[command.texture], command.transform, k3DProgram);
     }
 
     if(_debug) {
@@ -619,7 +531,7 @@ void _render_deferred(void) {
     
     for(int ii=0; ii<_num_3d_render_commands; ++ii) {
         const RenderCommand& command = _3d_render_commands[ii];
-        _draw_mesh(command.mesh, command.texture, command.transform, kDeferredProgram);
+        _draw_mesh(command.mesh, _textures[command.texture], command.transform, kDeferredProgram);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -633,11 +545,11 @@ void _render_deferred(void) {
     CheckGLError();
     _validate_program(_programs[kDeferredLightProgram]);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
+    glBindTexture(GL_TEXTURE_2D, _color_texture);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
+    glBindTexture(GL_TEXTURE_2D, _normal_texture);
     glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
+    glBindTexture(GL_TEXTURE_2D, _position_texture);
 
     int loc = glGetUniformLocation(_programs[kDeferredLightProgram], "GBuffer");
     int i[] = {0,1,2};
@@ -688,7 +600,6 @@ void _render_deferred(void) {
         _draw_mesh(_quad_mesh, _normal_texture, t, k2DProgram);
         t.r3.x = 0.5f;
         _draw_mesh(_quad_mesh, _position_texture, t, k2DProgram);
-
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -705,40 +616,7 @@ void resize(int width, int height) {
     _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 0.1f, 10000.0f);
 
     // Resize render targets
-    glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
-    glViewport(0, 0, width, height);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, _color_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _color_buffer);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, _normal_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, _normal_buffer);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, _width, _height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _position_buffer);
-
-    glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, _width, _height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
-
-    glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textures[_color_texture], 0);
-
-    glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _textures[_normal_texture], 0);
-
-    glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _textures[_position_texture], 0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    _resize_gbuffer();
 }
 
 MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
@@ -968,7 +846,7 @@ void _create_base_meshes(void) {
                              kQuadVertices, kQuadIndices);
     _sphere_mesh = load_mesh("assets/sphere.mesh");
 }
-void _draw_mesh(MeshID mesh_id, TextureID texture_id, const float4x4& transform, int program_id) {
+void _draw_mesh(MeshID mesh_id, GLuint texture, const float4x4& transform, int program_id) {
     const Mesh& mesh = _meshes[mesh_id];
     glBindVertexArray(mesh.vao);
     _validate_program(_programs[program_id]);
@@ -976,10 +854,73 @@ void _draw_mesh(MeshID mesh_id, TextureID texture_id, const float4x4& transform,
     glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kWorldTransformBuffer]);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &transform, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, _textures[texture_id]);
+    glBindTexture(GL_TEXTURE_2D, texture);
     glBindBufferBase(GL_UNIFORM_BUFFER, 0, _uniform_buffers[kViewProjTransformBuffer]);
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, _uniform_buffers[kWorldTransformBuffer]);
     glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+}
+void _resize_gbuffer(void) {
+    glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
+    glViewport(0, 0, _width, _height);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, _color_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _color_buffer);
+    CheckGLError();
+
+    glBindRenderbuffer(GL_RENDERBUFFER, _normal_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, _normal_buffer);
+    CheckGLError();
+    
+    glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _position_buffer);
+    CheckGLError();
+
+    glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, _width, _height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
+    CheckGLError();
+
+    glBindTexture(GL_TEXTURE_2D, _color_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _color_texture, 0);
+    CheckGLError();
+
+    glBindTexture(GL_TEXTURE_2D, _normal_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _normal_texture, 0);
+    CheckGLError();
+    
+    glBindTexture(GL_TEXTURE_2D, _position_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _position_texture, 0);
+    CheckGLError();
+
+    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if( status != GL_FRAMEBUFFER_COMPLETE) {
+        debug_output("FBO initialization failed\n");
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+void _create_gbuffer(void) {
+
+    glGenFramebuffers(1, &_frame_buffer);
+    glGenRenderbuffers(1, &_color_buffer);
+    glGenRenderbuffers(1, &_depth_buffer);
+    glGenRenderbuffers(1, &_normal_buffer);
+    glGenRenderbuffers(1, &_position_buffer);
+
+    glGenTextures(1, &_color_texture);
+    glGenTextures(1, &_normal_texture);
+    glGenTextures(1, &_position_texture);
 }
 
 private:

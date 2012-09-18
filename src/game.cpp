@@ -14,8 +14,6 @@
 /*
  * Internal
  */
-static int _texture = 0;
-
 static float _rand_float(float min, float max) {
     float r = rand()/(float)RAND_MAX;
     float delta = max-min;
@@ -31,8 +29,10 @@ Game::Game()
 {
     _fps.frame = 0;
     _camera = TransformZero();
-    _camera.position.z = -5.0f;
-    _camera.position.y = 3.0f;
+    _camera.position.z = -60.0f;
+    _camera.position.y = 15.0f;
+    float3 axis = {1.0f, 0.0f, 0.0f};
+    _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
 }
 void Game::initialize(void) {
     timer_init(&_timer);
@@ -40,11 +40,7 @@ void Game::initialize(void) {
     _render = Render::create();
     _render->initialize(app_get_window());
 
-    _texture = _render->load_texture("assets/texture.jpg");
-
-    srand((uint32_t)_timer.start_time);
-
-    //int wood_tex = _render->load_texture("assets/wood.jpg");
+    //srand((uint32_t)_timer.start_time);
 
     Object o;
     // Ground
