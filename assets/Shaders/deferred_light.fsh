@@ -19,14 +19,12 @@ void main()
 
     normal *= 2.0f;
     normal -= 1.0f;
-    //normal = normalize(normal);
 
-    vec3 light_pos = kLight[0].xyz;
-    float dist = distance(world_pos, light_pos);
-    
-    vec3 light_dir = world_pos - light_pos;
+    vec3 light_dir = world_pos - kLight[0].xyz;
+    float dist = length(light_dir);
     light_dir = normalize(-light_dir);
     float n_l = dot(light_dir, normal);
+
     float attenuation = 1 - pow( clamp(dist/kLight[0].w, 0.0f, 1.0f), 2);
     out_Color = vec4(albedo * kLight[1].rgb * clamp(n_l, 0.0f, 1.0f) * attenuation, 1.0f);
 }

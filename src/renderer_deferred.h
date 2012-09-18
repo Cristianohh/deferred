@@ -68,12 +68,12 @@ void resize(int width, int height) {
     CheckGLError();
 
     glBindRenderbuffer(GL_RENDERBUFFER, _gbuffer[1]);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, _gbuffer[1]);
     CheckGLError();
     
     glBindRenderbuffer(GL_RENDERBUFFER, _gbuffer[2]);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _gbuffer[2]);
     CheckGLError();
 
@@ -85,14 +85,14 @@ void resize(int width, int height) {
     CheckGLError();
 
     glBindTexture(GL_TEXTURE_2D, _gbuffer_tex[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _gbuffer_tex[1], 0);
     CheckGLError();
     
     glBindTexture(GL_TEXTURE_2D, _gbuffer_tex[2]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _gbuffer_tex[2], 0);
@@ -151,14 +151,14 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         
         glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
         for(int ii=0;ii<num_lights;++ii) {
-            const Light& light = lights[ii];
+            Light light = lights[ii];
             float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
             transform.r3.x = light.pos.x;
             transform.r3.y = light.pos.y;
             transform.r3.z = light.pos.z;
 
-            glUniform4fv(_light_light_uniform, 2, (float*)&light);
             glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);
+            glUniform4fv(_light_light_uniform, 2, (float*)&light);
             glBindVertexArray(_sphere_mesh.vao);
             _validate_program(_light_program);
             glDrawElements(GL_TRIANGLES, (GLsizei)_sphere_mesh.index_count, _sphere_mesh.index_format, NULL);

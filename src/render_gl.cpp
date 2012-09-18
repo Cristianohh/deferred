@@ -111,6 +111,7 @@ RenderGL()
     , _height(128)
     , _deferred(1)
     , _debug(0)
+    , _num_renderables(0)
 {
     _light_buffer.num_lights = 0;
 }
@@ -184,11 +185,8 @@ void initialize(void* window) {
     _clear(); // Clear once so the first present isn't garbage
 
     glFrontFace(GL_CW);
-    CheckGLError();
     glEnable(GL_CULL_FACE);
-    CheckGLError();
     glEnable(GL_DEPTH_TEST);
-    CheckGLError();
 
     _create_framebuffer();
 
