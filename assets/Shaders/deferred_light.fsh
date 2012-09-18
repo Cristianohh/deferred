@@ -39,7 +39,8 @@ void main()
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos.xyz);
     vec3 reflection = reflect(dir_to_cam, normal);
     float rDotL     = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
-    vec3 spec       = vec3(min(1.0f, pow(rDotL, 128.0f)));
+    //vec3 spec       = vec3(min(1.0f, pow(rDotL, 1024)));
+    vec3 spec       = vec3(0.0f);
 
     float attenuation = 1 - pow( clamp(dist/kLight[0].w, 0.0f, 1.0f), 2);
 

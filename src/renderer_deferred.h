@@ -60,8 +60,8 @@ void resize(int width, int height) {
     glViewport(0, 0, width, height);
 
     glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
     CheckGLError();
 
     glBindRenderbuffer(GL_RENDERBUFFER, _gbuffer[0]);
@@ -75,7 +75,7 @@ void resize(int width, int height) {
     CheckGLError();
     
     glBindRenderbuffer(GL_RENDERBUFFER, _gbuffer[2]);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA16F, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _gbuffer[2]);
     CheckGLError();
 
