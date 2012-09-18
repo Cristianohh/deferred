@@ -39,6 +39,14 @@ typedef struct {
     TextureID   texture;
 } RenderCommand;
 
+typedef struct {
+    float4x4    transform;
+    GLuint  vao;
+    GLsizei index_count;
+    GLenum  index_format;
+    GLuint  texture;
+} Renderable;
+
 static GLuint _compile_shader(GLenum shader_type, const char* filename) {
     MessageBoxResult result = kMBOK;
     GLint status = GL_TRUE;

@@ -7,14 +7,27 @@
 #ifndef __renderer_forward_renderer_forward__
 #define __renderer_forward_renderer_forward__
 
-#ifdef __cplusplus
-extern "C" { // Use C linkage
-#endif 
 
-/* TODO: Add public declarations here */
+#include "render_gl_helper.h"
+#include "renderer.h"
 
-#ifdef __cplusplus
+class RendererForward : public Renderer {
+public:
+
+void init(void) {
 }
-#endif
+void shutdown(void) {
+}
+void render(const float4x4& view_proj, GLuint frame_buffer,
+            const Renderable* renderables, int num_renderables,
+            const Light* lights, int num_lights)
+{
+
+}
+
+private:
+
+};
+
 
 #endif /* include guard */

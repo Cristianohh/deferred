@@ -31,7 +31,10 @@
 #include "vec_math.h"
 #include "geometry.h"
 #include "render_gl_helper.h"
-#include "deferred_gl.h"
+
+#include "renderer.h"
+#include "renderer_deferred.h"
+#include "renderer_forward.h"
 
 #define CheckGLError()                  \
     do {                                \
@@ -189,16 +192,19 @@ void initialize(void* window) {
 
     glFrontFace(GL_CW);
     CheckGLError();
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     CheckGLError();
     glEnable(GL_DEPTH_TEST);
     CheckGLError();
 
     _create_gbuffer();
 
-    _deferred_renderer.init();    
+    _forward_renderer.init();
+    _deferred_renderer.init();
+    _deferred_renderer.set_sphere_mesh(_meshes[_sphere_mesh]);
 }
 void shutdown(void) {
+    _forward_renderer.shutdown();
     _deferred_renderer.shutdown();
     _unload_shaders();
     glDeleteBuffers(kNUM_UNIFORM_BUFFERS, _uniform_buffers);
@@ -207,6 +213,12 @@ void render(void) {
     _present();
     _clear();
     if(_deferred) {
+        glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
+        CheckGLError();
+        glViewport(0, 0, _width, _height);
+        CheckGLError();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
         _render_deferred();
         return;
     }
@@ -298,6 +310,37 @@ void render(void) {
 }
 void _render_deferred(void) {
     float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
+    if(view_proj.r0.x != 0.0f) {
+        Renderable renderables[1024];
+        for(int ii=0;ii<_num_3d_render_commands;++ii) {
+            const RenderCommand& command = _3d_render_commands[ii];
+            const Mesh& mesh = _meshes[command.mesh];
+
+            Renderable& r = renderables[ii];
+            r.texture = _textures[command.texture];
+            r.vao = mesh.vao;
+            r.index_count = mesh.index_count;
+            r.index_format = mesh.index_format;
+            r.transform = command.transform;
+        }
+
+        _deferred_renderer.render(view_proj, _frame_buffer,
+                                  renderables, _num_3d_render_commands,
+                                  _light_buffer.lights, _light_buffer.num_lights);
+        
+        // Render the scene from the render target
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
+        glDisable(GL_CULL_FACE);
+        _draw_mesh(_quad_mesh, _color_texture, float4x4Scale(2.0f, -2.0f, 1.0f), k2DProgram);
+        glEnable(GL_CULL_FACE);
+        
+        _num_3d_render_commands = _num_2d_render_commands = 0;
+        _light_buffer.num_lights = 0;
+
+        return;
+    }
     {
         static int view_proj_loc = glGetUniformLocation(_deferred_program, "kViewProj");
         static int world_loc = glGetUniformLocation(_deferred_program, "kWorld");
@@ -318,10 +361,18 @@ void _render_deferred(void) {
             const RenderCommand& command = _3d_render_commands[ii];
             const Mesh& mesh = _meshes[command.mesh];
 
-            glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&command.transform);
-            glBindTexture(GL_TEXTURE_2D, _textures[command.texture]);
-            glBindVertexArray(mesh.vao);
-            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+            Renderable r;
+            r.texture = _textures[command.texture];
+            r.vao = mesh.vao;
+            r.index_count = mesh.index_count;
+            r.index_format = mesh.index_format;
+            r.transform = command.transform;
+            
+            glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&r.transform);
+            glBindTexture(GL_TEXTURE_2D, r.texture);
+            glBindVertexArray(r.vao);
+            glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
+
         }
         
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -401,6 +452,7 @@ void resize(int width, int height) {
 
     // Resize render targets
     _resize_gbuffer();
+    _forward_renderer.resize(width, height);
     _deferred_renderer.resize(width, height);
 }
 
@@ -641,6 +693,7 @@ void _draw_mesh(MeshID mesh_id, GLuint texture, const float4x4& transform, int p
     glBindBufferBase(GL_UNIFORM_BUFFER, 1, _uniform_buffers[kWorldTransformBuffer]);
     glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
 }
+
 void _resize_gbuffer(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
     glViewport(0, 0, _width, _height);
@@ -757,7 +810,8 @@ GLuint  _deferred_program;
 int     _width;
 int     _height;
 
-DeferredGL  _deferred_renderer;
+RendererDeferred    _deferred_renderer;
+RendererForward     _forward_renderer;
 
 };
 

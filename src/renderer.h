@@ -7,14 +7,19 @@
 #ifndef __renderer_renderer__
 #define __renderer_renderer__
 
-#ifdef __cplusplus
-extern "C" { // Use C linkage
-#endif 
 
-/* TODO: Add public declarations here */
+class Renderer {
+public:
 
-#ifdef __cplusplus
-}
-#endif
+virtual ~Renderer() { }
+virtual void init(void) = 0;
+virtual void shutdown(void) = 0;
+virtual void resize(int, int) { }
+virtual void render(const float4x4& view_proj, GLuint frame_buffer,
+                    const Renderable* renderables, int num_renderables,
+                    const Light* lights, int num_lights) = 0;
+
+};
+
 
 #endif /* include guard */
