@@ -1,11 +1,14 @@
 #version 330
 
-layout(std140) uniform LightBuffer
+struct Light 
 {
-    struct {
         vec4 pos;
         vec4 color;
-    } kLight[255];
+};
+
+layout(std140) uniform LightBuffer
+{
+    Light kLight[255];
     int  kNumLights;
     int  _padding[3];
 };
