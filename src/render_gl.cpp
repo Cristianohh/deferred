@@ -532,7 +532,7 @@ void render(void) {
     }
 
     // Setup the frame buffer
-    if(1 || _deferred) {
+    if(1) {
         glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
         CheckGLError();
         glViewport(0, 0, _width, _height);
@@ -591,7 +591,7 @@ void render(void) {
 
     glDisable(GL_DEPTH_TEST);
 
-    if(1 || _deferred) {
+    if(1) {
         // Render the scene from the render target
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
@@ -619,18 +619,10 @@ void render(void) {
 void _render_deferred(void) {
     // Setup the frame buffer
     glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
-    CheckGLError();
-    glViewport(0, 0, _width, _height);
-    CheckGLError();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    CheckGLError();
     glActiveTexture(GL_TEXTURE0);
-    CheckGLError();
-    //glEnable(GL_TEXTURE_2D);
-    CheckGLError();
     GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
     glDrawBuffers(ARRAYSIZE(buffers), buffers);
-    CheckGLError();
 
     // 3D objects
     float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
@@ -644,12 +636,69 @@ void _render_deferred(void) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //glDisable(GL_CULL_FACE);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+
+    // Render the scene from the render target
+    glUseProgram(_programs[kDeferredLightProgram]);
+    CheckGLError();
+    _validate_program(_programs[kDeferredLightProgram]);
+    glActiveTexture(GL_TEXTURE0);
+    CheckGLError();
+    glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
+    CheckGLError();
+    glActiveTexture(GL_TEXTURE1);
+    CheckGLError();
+    glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
+    CheckGLError();
+    glActiveTexture(GL_TEXTURE2);
+    CheckGLError();
+    glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
+    CheckGLError();
+    int loc = glGetUniformLocation(_programs[kDeferredLightProgram], "color_texture");
+    glUniform1i(loc, 0);
+    loc = glGetUniformLocation(_programs[kDeferredLightProgram], "normal_texture");
+    glUniform1i(loc, 1);
+    loc = glGetUniformLocation(_programs[kDeferredLightProgram], "position_texture");
+    glUniform1i(loc, 2);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+        
+    int light_loc = glGetUniformLocation(_programs[kDeferredLightProgram], "kLight");
+    int color_loc = glGetUniformLocation(_programs[kDeferredLightProgram], "kColor");
+    const Mesh& mesh = _meshes[_sphere_mesh];
+    for(int ii=0;ii<_light_buffer.num_lights;++ii) {
+        const float4& light = _light_buffer.lights[ii];
+        const float4& color = _light_buffer.colors[ii];
+        float4x4 transform = float4x4Scale(light.w, light.w, light.w);
+        transform.r3.x = light.x;
+        transform.r3.y = light.y;
+        transform.r3.z = light.z;
+
+        glUniform4fv(light_loc, 1, (float*)&light);
+        glUniform4fv(color_loc, 1, (float*)&color);
+    
+        glBindVertexArray(mesh.vao);
+        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kWorldTransformBuffer]);
+        CheckGLError();
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &transform, GL_DYNAMIC_DRAW);
+        CheckGLError();
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+        CheckGLError();
+        glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+        CheckGLError();
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glDisable(GL_BLEND);
+    glUseProgram(0);
+
+    
     if(_debug) {
-        glDisable(GL_CULL_FACE);
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
         glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
         glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
         float4x4 t = float4x4Scale(1.0f, -1.0f, 1.0f);
@@ -661,64 +710,6 @@ void _render_deferred(void) {
         t.r3.x = 0.5f;
         _draw_mesh(_quad_mesh, _position_texture, t, k2DProgram);
 
-    } else {
-        // Render the scene from the render target
-        glDepthMask(GL_NEVER);
-        glUseProgram(_programs[kDeferredLightProgram]);
-        CheckGLError();
-        _validate_program(_programs[kDeferredLightProgram]);
-        glActiveTexture(GL_TEXTURE0);
-        CheckGLError();
-        glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
-        CheckGLError();
-        glActiveTexture(GL_TEXTURE1);
-        CheckGLError();
-        glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
-        CheckGLError();
-        glActiveTexture(GL_TEXTURE2);
-        CheckGLError();
-        glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
-        CheckGLError();
-        int loc = glGetUniformLocation(_programs[kDeferredLightProgram], "color_texture");
-        glUniform1i(loc, 0);
-        loc = glGetUniformLocation(_programs[kDeferredLightProgram], "normal_texture");
-        glUniform1i(loc, 1);
-        loc = glGetUniformLocation(_programs[kDeferredLightProgram], "position_texture");
-        glUniform1i(loc, 2);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-        
-        int light_loc = glGetUniformLocation(_programs[kDeferredLightProgram], "kLight");
-        int color_loc = glGetUniformLocation(_programs[kDeferredLightProgram], "kColor");
-        const Mesh& mesh = _meshes[_sphere_mesh];
-        for(int ii=0;ii<_light_buffer.num_lights;++ii) {
-            const float4& light = _light_buffer.lights[ii];
-            const float4& color = _light_buffer.colors[ii];
-            float4x4 transform = float4x4Scale(light.w, light.w, light.w);
-            transform.r3.x = light.x;
-            transform.r3.y = light.y;
-            transform.r3.z = light.z;
-            //transform = float4x4Scale(10.0f, 10.0f, 10.0f);
-
-            glUniform4fv(light_loc, 1, (float*)&light);
-            glUniform4fv(color_loc, 1, (float*)&color);
-    
-            glBindVertexArray(mesh.vao);
-            glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kWorldTransformBuffer]);
-            CheckGLError();
-            glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &transform, GL_DYNAMIC_DRAW);
-            CheckGLError();
-            glBindBuffer(GL_UNIFORM_BUFFER, 0);
-            CheckGLError();
-            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
-            CheckGLError();
-        }
-        glActiveTexture(GL_TEXTURE0);
-        glDisable(GL_BLEND);
-        glUseProgram(0);
-        
-        glDepthMask(GL_GREATER);
     }
 
     glEnable(GL_DEPTH_TEST);
@@ -736,65 +727,39 @@ void resize(int width, int height) {
 
     // Resize render targets
     glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
+    glViewport(0, 0, width, height);
 
     glBindRenderbuffer(GL_RENDERBUFFER, _color_buffer);
-    CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    CheckGLError();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _color_buffer);
-    CheckGLError();
 
     glBindRenderbuffer(GL_RENDERBUFFER, _normal_buffer);
-    CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    CheckGLError();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, _normal_buffer);
-    CheckGLError();
 
     glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
-    CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, _width, _height);
-    CheckGLError();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _position_buffer);
-    CheckGLError();
 
     glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
-    CheckGLError();
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, _width, _height);
-    CheckGLError();
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
-    CheckGLError();
 
     glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
-    CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    CheckGLError();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _textures[_color_texture], 0);
-    CheckGLError();
 
     glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
-    CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-    CheckGLError();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _textures[_normal_texture], 0);
-    CheckGLError();
 
     glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
-    CheckGLError();
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, _width, _height, 0, GL_RGBA, GL_FLOAT, NULL);
-    CheckGLError();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _textures[_position_texture], 0);
-    CheckGLError();
-    //glBindTexture(GL_TEXTURE_2D, _textures[_depth_texture]);
-    //CheckGLError();
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _width, _height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    //CheckGLError();
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
-    CheckGLError();
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
-    CheckGLError();
 }
 
 MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
