@@ -1,8 +1,6 @@
 #version 330
 
-uniform sampler2D color_texture;
-uniform sampler2D normal_texture;
-uniform sampler2D position_texture;
+uniform sampler2D GBuffer[3];
 
 uniform vec4 kLight;
 uniform vec4 kColor;
@@ -16,9 +14,9 @@ void main()
     vec2 pos  = int_Pos.xy/int_Pos.w;
     vec2 uv =  pos *0.5+0.5;
 
-    vec3 albedo = texture(color_texture, uv).rgb;
-    vec3 normal = texture(normal_texture, uv).rgb;
-    vec3 world_pos = texture(position_texture, uv).rgb;
+    vec3 albedo = texture(GBuffer[0], uv).rgb;
+    vec3 normal = texture(GBuffer[1], uv).rgb;
+    vec3 world_pos = texture(GBuffer[2], uv).rgb;
 
     normal *= 2.0f;
     normal -= 1.0f;

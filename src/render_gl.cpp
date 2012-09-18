@@ -334,7 +334,7 @@ RenderGL()
     , _2d_view(float4x4identity)
     , _width(128)
     , _height(128)
-    , _deferred(0)
+    , _deferred(1)
     , _debug(0)
 {
     _light_buffer.num_lights = 0;
@@ -493,19 +493,6 @@ void initialize(void* window) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _position_texture, 0);
     CheckGLError();
 
-    glGenTextures(1, &_depth_texture);
-    CheckGLError();
-    glBindTexture(GL_TEXTURE_2D, _depth_texture);
-    CheckGLError();
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, _width, _height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    CheckGLError();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    CheckGLError();
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_texture, 0);
-    CheckGLError();
-
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if( status != GL_FRAMEBUFFER_COMPLETE) {
         debug_output("FBO initialization failed\n");
@@ -646,23 +633,15 @@ void _render_deferred(void) {
     CheckGLError();
     _validate_program(_programs[kDeferredLightProgram]);
     glActiveTexture(GL_TEXTURE0);
-    CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_color_texture]);
-    CheckGLError();
     glActiveTexture(GL_TEXTURE1);
-    CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_normal_texture]);
-    CheckGLError();
     glActiveTexture(GL_TEXTURE2);
-    CheckGLError();
     glBindTexture(GL_TEXTURE_2D, _textures[_position_texture]);
-    CheckGLError();
-    int loc = glGetUniformLocation(_programs[kDeferredLightProgram], "color_texture");
-    glUniform1i(loc, 0);
-    loc = glGetUniformLocation(_programs[kDeferredLightProgram], "normal_texture");
-    glUniform1i(loc, 1);
-    loc = glGetUniformLocation(_programs[kDeferredLightProgram], "position_texture");
-    glUniform1i(loc, 2);
+
+    int loc = glGetUniformLocation(_programs[kDeferredLightProgram], "GBuffer");
+    int i[] = {0,1,2};
+    glUniform1iv(loc, 3, i);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -1046,7 +1025,6 @@ GLuint  _position_buffer;
 
 GLuint  _color_texture;
 GLuint  _normal_texture;
-GLuint  _depth_texture;
 GLuint  _position_texture;
 
 int     _width;
