@@ -11,11 +11,13 @@ out vec4 GBuffer[3];
 
 void main()
 {
-    GBuffer[0] = vec4(texture(kDiffuseTex, int_TexCoord).rgb, 1.0f);
+    float spec_intensity = 0.8f;
+    float spec_power = 0.5f;
+
+    GBuffer[0] = vec4(texture(kDiffuseTex, int_TexCoord).rgb, spec_intensity);
     vec3 norm = normalize(int_Normal);
     norm += 1.0f;
     norm *= 0.5f;
-    GBuffer[1] = vec4(norm, 1.0f);
+    GBuffer[1] = vec4(norm, spec_power);
     GBuffer[2] = vec4(int_Depth.x/int_Depth.y);
-    //GBuffer[2] = vec4(int_WorldPos, 1.0f);
 }
