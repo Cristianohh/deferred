@@ -37,6 +37,7 @@
 		2707F84716026C020014C2E1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		2707F84816026C020014C2E1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		2719DB8B160511F800485229 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
+		2735A818160829B800B60C41 /* geometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geometry.h; sourceTree = "<group>"; };
 		273AB3ED16026C5F007C7682 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		275A241A1605127C005FA2BC /* vec_math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec_math.h; sourceTree = "<group>"; };
 		278F9E081602862200F90E06 /* timer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = timer.c; sourceTree = "<group>"; };
@@ -133,6 +134,7 @@
 				27B5E1641602DFE900C0ECC0 /* fps.h */,
 				27DEFE00160408D7003C3972 /* game.cpp */,
 				27DEFE01160408D7003C3972 /* game.h */,
+				2735A818160829B800B60C41 /* geometry.h */,
 				273AB3ED16026C5F007C7682 /* main.cpp */,
 				27CF508D1602805B009DBE5A /* render.h */,
 				27DEFE0416040903003C3972 /* render.cpp */,
