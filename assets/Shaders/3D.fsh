@@ -5,7 +5,7 @@ layout(std140) uniform LightBuffer
     struct {
         vec4 pos;
         vec4 color;
-    } kLight[256];
+    } kLight[255];
     int  kNumLights;
     int  _padding[3];
 };
@@ -27,8 +27,9 @@ void main()
         vec3 light_pos = kLight[ii].pos.xyz;
         float dist = distance(int_WorldPos, light_pos);
 
-		if(dist > kLight[ii].pos.w)
-			continue;
+		if(dist > kLight[ii].pos.w) {
+            continue; // TODO: This causes rendering artifacts on Intel
+        }
         
         vec3 light_dir = int_WorldPos - light_pos;
         light_dir = normalize(-light_dir);

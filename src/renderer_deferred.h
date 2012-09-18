@@ -27,7 +27,8 @@ void init(void) {
         glDeleteShader(vs);
         glDeleteShader(fs);
         _geom_world_uniform = glGetUniformLocation(_geom_program, "kWorld");
-        _geom_viewproj_uniform = glGetUniformLocation(_geom_program, "kViewProj");
+        _geom_proj_uniform = glGetUniformLocation(_geom_program, "kProj");
+        _geom_view_uniform = glGetUniformLocation(_geom_program, "kView");
         _geom_diffuse_uniform = glGetUniformLocation(_geom_program, "kDiffuseTex");
     }    
     { // Deferred lighting
@@ -103,10 +104,11 @@ void resize(int width, int height) {
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-void render(const float4x4& view_proj, GLuint frame_buffer,
+void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             const Renderable* renderables, int num_renderables,
             const Light* lights, int num_lights)
 {
+    float4x4 view_proj = float4x4multiply(&view, &proj);
     { // Render geometry
         glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -116,7 +118,8 @@ void render(const float4x4& view_proj, GLuint frame_buffer,
 
         glUseProgram(_geom_program);
 
-        glUniformMatrix4fv(_geom_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
+        glUniformMatrix4fv(_geom_proj_uniform, 1, GL_FALSE, (float*)&proj);
+        glUniformMatrix4fv(_geom_view_uniform, 1, GL_FALSE, (float*)&view);
         for(int ii=0;ii<num_renderables;++ii) {
             const Renderable& r = renderables[ii];
             glUniformMatrix4fv(_geom_world_uniform, 1, GL_FALSE, (float*)&r.transform);
@@ -170,6 +173,7 @@ void render(const float4x4& view_proj, GLuint frame_buffer,
 void set_sphere_mesh(const Mesh& mesh) {
     _sphere_mesh = mesh;
 }
+GLuint gbuffer_tex(int index) { return _gbuffer_tex[index]; }
 
 private:
 
@@ -177,7 +181,8 @@ Mesh    _sphere_mesh;
 
 GLuint  _geom_program;
 GLuint  _geom_world_uniform;
-GLuint  _geom_viewproj_uniform;
+GLuint  _geom_view_uniform;
+GLuint  _geom_proj_uniform;
 GLuint  _geom_diffuse_uniform;
 
 GLuint  _light_program;

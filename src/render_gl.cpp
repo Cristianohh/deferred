@@ -207,35 +207,46 @@ void render(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
     _clear();
 
-    float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
-
-    Renderable renderables[1024];
-    for(int ii=0;ii<_num_3d_render_commands;++ii) {
-        const RenderCommand& command = _3d_render_commands[ii];
-        const Mesh& mesh = _meshes[command.mesh];
-
-        Renderable& r = renderables[ii];
-        r.texture = _textures[command.texture];
-        r.vao = mesh.vao;
-        r.index_count = mesh.index_count;
-        r.index_format = mesh.index_format;
-        r.transform = command.transform;
-    }
+    float4x4 view = _3d_view;
+    float4x4 proj = _perspective_projection;
 
     if(_deferred)
-        _deferred_renderer.render(view_proj, _frame_buffer,
-                                  renderables, _num_3d_render_commands,
+        _deferred_renderer.render(view, proj, _frame_buffer,
+                                  _renderables, _num_renderables,
                                   _light_buffer.lights, _light_buffer.num_lights);
     else
-        _forward_renderer.render(view_proj, _frame_buffer,
-                                 renderables, _num_3d_render_commands,
+        _forward_renderer.render(view, proj, _frame_buffer,
+                                 _renderables, _num_renderables,
                                  _light_buffer.lights, _light_buffer.num_lights);
 
     // Render the scene from the render target
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    _render_fullscreen(_color_texture);
+    if(_deferred && _debug) {
+        glDisable(GL_DEPTH_TEST);
+        const Mesh& mesh = _meshes[_fullscreen_quad_mesh];
+        float4x4 translate = float4x4Scale(0.5f, 0.5f, 0.5f);
+        translate.r3.x = -0.5f;
+        translate.r3.y = -0.5f;
+        glUseProgram(_2d_program);
+        glBindVertexArray(mesh.vao);
+        _validate_program(_2d_program);
+        glUniformMatrix4fv(_2d_viewproj_uniform, 1, GL_FALSE, (float*)&float4x4identity);
+        for(int ii=0;ii<3;++ii) {
+            if(ii == 1)
+                translate.r3.y = 0.5f;
+            if(ii == 2)
+                translate.r3.x = 0.5f;
+            glBindTexture(GL_TEXTURE_2D, _deferred_renderer.gbuffer_tex(ii));
+            glUniformMatrix4fv(_2d_world_uniform, 1, GL_FALSE, (float*)&translate);
+            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+        }
+        glEnable(GL_DEPTH_TEST);
+    } else {
+        _render_fullscreen(_color_texture);
+    }
     
     _num_3d_render_commands = _num_2d_render_commands = 0;
+    _num_renderables = 0;
     _light_buffer.num_lights = 0;
 }
 void resize(int width, int height) {
@@ -288,16 +299,17 @@ void set_2d_view_matrix(const float4x4& view) {
     _2d_view = view;
 }
 void draw_3d(MeshID mesh, TextureID texture, const float4x4& transform) {
-    RenderCommand& command = _3d_render_commands[_num_3d_render_commands++];
-    command.mesh = mesh;
-    command.transform = transform;
-    command.texture = texture;
+    const Mesh& m = _meshes[mesh];
+    Renderable& r = _renderables[_num_renderables];
+    r.texture = _textures[texture];
+    r.vao = m.vao;
+    r.index_count = m.index_count;
+    r.index_format = m.index_format;
+    r.transform = transform;
+
+    _num_renderables++;
 }
-void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) {
-    RenderCommand& command = _2d_render_commands[_num_2d_render_commands++];
-    command.mesh = mesh;
-    command.transform = transform;
-    command.texture = texture;
+void draw_2d(MeshID, TextureID, const float4x4&) {
 }
 
 void draw_light(const float4& light, const float4& color) {
@@ -475,6 +487,9 @@ RenderCommand   _3d_render_commands[kMAX_RENDER_COMMANDS];
 int             _num_3d_render_commands;
 RenderCommand   _2d_render_commands[kMAX_RENDER_COMMANDS];
 int             _num_2d_render_commands;
+
+Renderable  _renderables[kMAX_RENDER_COMMANDS];
+int         _num_renderables;
 
 LightBuffer _light_buffer;
 

@@ -32,10 +32,11 @@ void shutdown(void) {
     glDeleteProgram(_program);
     glDeleteBuffers(1, &_light_buffer_buffer);
 }
-void render(const float4x4& view_proj, GLuint frame_buffer,
+void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             const Renderable* renderables, int num_renderables,
             const Light* lights, int num_lights)
 {
+    float4x4 view_proj = float4x4multiply(&view, &proj);
     memcpy(_light_buffer.lights, lights, num_lights*sizeof(Light));
     _light_buffer.num_lights = num_lights;
 

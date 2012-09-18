@@ -15,7 +15,7 @@ virtual ~Renderer() { }
 virtual void init(void) = 0;
 virtual void shutdown(void) = 0;
 virtual void resize(int, int) { }
-virtual void render(const float4x4& view_proj, GLuint frame_buffer,
+virtual void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
                     const Renderable* renderables, int num_renderables,
                     const Light* lights, int num_lights) = 0;
 
