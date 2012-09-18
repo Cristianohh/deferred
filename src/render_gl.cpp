@@ -31,7 +31,7 @@
 #include "vec_math.h"
 #include "geometry.h"
 #include "render_gl_helper.h"
-
+#include "deferred_gl.h"
 
 #define CheckGLError()                  \
     do {                                \
@@ -195,8 +195,11 @@ void initialize(void* window) {
     CheckGLError();
 
     _create_gbuffer();
+
+    _deferred_renderer.init();    
 }
 void shutdown(void) {
+    _deferred_renderer.shutdown();
     _unload_shaders();
     glDeleteBuffers(kNUM_UNIFORM_BUFFERS, _uniform_buffers);
 }
@@ -398,6 +401,7 @@ void resize(int width, int height) {
 
     // Resize render targets
     _resize_gbuffer();
+    _deferred_renderer.resize(width, height);
 }
 
 MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
@@ -752,6 +756,8 @@ GLuint  _deferred_program;
 
 int     _width;
 int     _height;
+
+DeferredGL  _deferred_renderer;
 
 };
 
