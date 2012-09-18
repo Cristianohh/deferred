@@ -515,14 +515,10 @@ void render(void) {
     _num_3d_render_commands = _num_2d_render_commands = 0;
     _light_buffer.num_lights = 0;
 }
-void _render_deferred(void) {
+void _render_deferred(void) {    
+    static int view_proj_loc = glGetUniformLocation(_deferred_program, "kViewProj");
+    static int world_loc = glGetUniformLocation(_deferred_program, "kWorld");
 
-    static int light_loc = glGetUniformLocation(_deferred_light_program, "kLight");
-    static int color_loc = glGetUniformLocation(_deferred_light_program, "kColor");
-    static int view_proj_loc = glGetUniformLocation(_deferred_light_program, "kViewProj");
-    static int world_loc = glGetUniformLocation(_deferred_light_program, "kWorld");
-    static int loc = glGetUniformLocation(_deferred_light_program, "GBuffer");
-    
     // Setup the frame buffer
     glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -532,76 +528,88 @@ void _render_deferred(void) {
 
     // 3D objects
     float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
-    glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &view_proj, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    
+    glUseProgram(_deferred_program);
+    glValidateProgram(_deferred_program);
+
+    glUniformMatrix4fv(view_proj_loc, 1, GL_FALSE, (float*)&view_proj);
     for(int ii=0; ii<_num_3d_render_commands; ++ii) {
         const RenderCommand& command = _3d_render_commands[ii];
-        _draw_mesh(command.mesh, _textures[command.texture], command.transform, kDeferredProgram);
+        const Mesh& mesh = _meshes[command.mesh];
+
+        glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&command.transform);
+        glBindTexture(GL_TEXTURE_2D, _textures[command.texture]);
+        glBindVertexArray(mesh.vao);
+        glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
 
-    // Render the scene from the render target
-    glUseProgram(_deferred_light_program);
-    CheckGLError();
-    _validate_program(_deferred_light_program);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, _color_texture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, _normal_texture);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, _position_texture);
+    {        
+        static int light_loc = glGetUniformLocation(_deferred_light_program, "kLight");
+        static int color_loc = glGetUniformLocation(_deferred_light_program, "kColor");
+        static int view_proj_loc = glGetUniformLocation(_deferred_light_program, "kViewProj");
+        static int world_loc = glGetUniformLocation(_deferred_light_program, "kWorld");
+        static int loc = glGetUniformLocation(_deferred_light_program, "GBuffer");
 
-    int i[] = {0,1,2};
-    glUniform1iv(loc, 3, i);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-        
-    glUniformMatrix4fv(view_proj_loc, 1, GL_FALSE, (float*)&view_proj);
-    
-    const Mesh& mesh = _meshes[_sphere_mesh];
-    for(int ii=0;ii<_light_buffer.num_lights;++ii) {
-        const float4& light = _light_buffer.lights[ii];
-        const float4& color = _light_buffer.colors[ii];
-        float4x4 transform = float4x4Scale(light.w, light.w, light.w);
-        transform.r3.x = light.x;
-        transform.r3.y = light.y;
-        transform.r3.z = light.z;
-
-        glUniform4fv(light_loc, 1, (float*)&light);
-        glUniform4fv(color_loc, 1, (float*)&color);
-        glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&transform);
-        
-        glBindVertexArray(mesh.vao);
-        glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+        // Render the scene from the render target
+        glUseProgram(_deferred_light_program);
         CheckGLError();
-    }
-    glActiveTexture(GL_TEXTURE0);
-    glDisable(GL_BLEND);
-    glUseProgram(0);
+        _validate_program(_deferred_light_program);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, _color_texture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, _normal_texture);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, _position_texture);
 
-    
-    if(_debug) {
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
-        float4x4 t = float4x4Scale(1.0f, -1.0f, 1.0f);
-        t.r3.x = -0.5f;
-        t.r3.y = -0.5f;
-        _draw_mesh(_quad_mesh, _color_texture, t, k2DProgram);
-        t.r3.y = 0.5f;
-        _draw_mesh(_quad_mesh, _normal_texture, t, k2DProgram);
-        t.r3.x = 0.5f;
-        _draw_mesh(_quad_mesh, _position_texture, t, k2DProgram);
-    }
+        int i[] = {0,1,2};
+        glUniform1iv(loc, 3, i);
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE);
+            
+        glUniformMatrix4fv(view_proj_loc, 1, GL_FALSE, (float*)&view_proj);
+
+        const Mesh& mesh = _meshes[_sphere_mesh];
+        for(int ii=0;ii<_light_buffer.num_lights;++ii) {
+            const float4& light = _light_buffer.lights[ii];
+            const float4& color = _light_buffer.colors[ii];
+            float4x4 transform = float4x4Scale(light.w, light.w, light.w);
+            transform.r3.x = light.x;
+            transform.r3.y = light.y;
+            transform.r3.z = light.z;
+
+            glUniform4fv(light_loc, 1, (float*)&light);
+            glUniform4fv(color_loc, 1, (float*)&color);
+            glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&transform);
+            
+            glBindVertexArray(mesh.vao);
+            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+        }
+        glActiveTexture(GL_TEXTURE0);
+        glDisable(GL_BLEND);
+        glUseProgram(0);
+
+
+        if(_debug) {
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_CULL_FACE);
+            glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
+            float4x4 t = float4x4Scale(1.0f, -1.0f, 1.0f);
+            t.r3.x = -0.5f;
+            t.r3.y = -0.5f;
+            _draw_mesh(_quad_mesh, _color_texture, t, k2DProgram);
+            t.r3.y = 0.5f;
+            _draw_mesh(_quad_mesh, _normal_texture, t, k2DProgram);
+            t.r3.x = 0.5f;
+            _draw_mesh(_quad_mesh, _position_texture, t, k2DProgram);
+        }
+
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+    }
 
     _num_3d_render_commands = _num_2d_render_commands = 0;
     _light_buffer.num_lights = 0;
@@ -764,31 +772,19 @@ void _load_shaders(void) {
     // Deferred
     GLuint vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred.vsh");
     GLuint fs_deferred = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred.fsh");
-    _programs[kDeferredProgram] = _create_program(vs_deferred, fs_deferred);
+    //_programs[kDeferredProgram] = _create_program(vs_deferred, fs_deferred);
+    _deferred_program = _create_program(vs_deferred, fs_deferred);
     glDeleteShader(vs_deferred);
     glDeleteShader(fs_deferred);
 
-    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerFrame");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 0);
-    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerObject");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 1);
-    
-    // Deferred light
-//    vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred_light.vsh");
-//    fs_deferred = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred_light.fsh");
-//    _programs[kDeferredLightProgram] = _create_program(vs_deferred, fs_deferred);
-//    glDeleteShader(vs_deferred);
-//    glDeleteShader(fs_deferred);
-//
-//    buffer_index = glGetUniformBlockIndex(_programs[kDeferredLightProgram], "PerFrame");
+//    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerFrame");
 //    assert(buffer_index != GL_INVALID_INDEX);
-//    glUniformBlockBinding(_programs[kDeferredLightProgram], buffer_index, 0);
-//    buffer_index = glGetUniformBlockIndex(_programs[kDeferredLightProgram], "PerObject");
+//    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 0);
+//    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerObject");
 //    assert(buffer_index != GL_INVALID_INDEX);
-//    glUniformBlockBinding(_programs[kDeferredLightProgram], buffer_index, 1);
+//    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 1);
 
+    // Deferred light
     vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred_light.vsh");
     fs_deferred = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred_light.fsh");
     _deferred_light_program = _create_program(vs_deferred, fs_deferred);
@@ -974,6 +970,7 @@ GLuint  _normal_texture;
 GLuint  _position_texture;
 
 GLuint  _deferred_light_program;
+GLuint  _deferred_program;
 
 int     _width;
 int     _height;
