@@ -5,7 +5,7 @@ uniform sampler2D kDiffuseTex;
 in vec3 int_WorldPos;
 in vec3 int_Normal;
 in vec2 int_TexCoord;
-in vec2 int_Depth;
+in vec3 int_Depth;
 
 out vec4 GBuffer[3];
 
@@ -16,5 +16,7 @@ void main()
     norm += 1.0f;
     norm *= 0.5f;
     GBuffer[1] = vec4(norm, 1.0f);
-    GBuffer[2] = vec4(int_WorldPos, 1.0f);
+    GBuffer[2] = vec4(int_Depth.x/int_Depth.y);
+    GBuffer[2].g = int_Depth.z;
+    //GBuffer[2] = vec4(int_WorldPos, 1.0f);
 }

@@ -252,7 +252,7 @@ void resize(int width, int height) {
     _height = height;
     glViewport(0, 0, width, height);
     _orthographic_projection = float4x4OrthographicOffCenterLH(0, width, height, 0, 0.0f, 1.0f);
-    _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 0.1f, 10000.0f);
+    _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 1.0f, 10000.0f);
 
     // Resize render targets
     _resize_framebuffer();

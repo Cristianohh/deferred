@@ -210,6 +210,8 @@ const SystemEvent* app_pop_event(void) {
 - (void)keyDown:(NSEvent *)theEvent
 {
     Key key = _convert_keycode([theEvent keyCode]);
+    if(key == -1)
+        return;
     if(_keys[key] == 0) {
         SystemEvent event;
         event.type = kEventKeyDown;
@@ -221,6 +223,8 @@ const SystemEvent* app_pop_event(void) {
 - (void)keyUp:(NSEvent *)theEvent
 {
     Key key = _convert_keycode([theEvent keyCode]);
+    if(key == -1)
+        return;
     _keys[key] = 0;
 }
 - (void)flagsChanged:(NSEvent *)theEvent

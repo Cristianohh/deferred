@@ -41,6 +41,7 @@ void init(void) {
         _light_viewproj_uniform = glGetUniformLocation(_light_program, "kViewProj");
         _light_gbuffer_uniform = glGetUniformLocation(_light_program, "GBuffer");
         _light_light_uniform = glGetUniformLocation(_light_program, "kLight");
+        _light_inv_viewproj_uniform = glGetUniformLocation(_light_program, "kInverseViewProj");
     }
 }
 void shutdown(void) {
@@ -92,7 +93,7 @@ void resize(int width, int height) {
     CheckGLError();
     
     glBindTexture(GL_TEXTURE_2D, _gbuffer_tex[2]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _gbuffer_tex[2], 0);
@@ -145,11 +146,13 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         int i[] = {0,1,2};
         glUniform1iv(_light_gbuffer_uniform, 3, i);
 
-        glEnable(GL_BLEND);
+        //glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
         glDisable(GL_DEPTH_TEST);
         
+        float4x4 inv_viewproj = float4x4inverse(&view_proj);
         glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
+        glUniformMatrix4fv(_light_inv_viewproj_uniform, 1, GL_FALSE, (float*)&inv_viewproj);
         for(int ii=0;ii<num_lights;++ii) {
             Light light = lights[ii];
             float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
@@ -190,6 +193,7 @@ GLuint  _light_world_uniform;
 GLuint  _light_viewproj_uniform;
 GLuint  _light_light_uniform;
 GLuint  _light_gbuffer_uniform;
+GLuint  _light_inv_viewproj_uniform;
 
 GLuint  _frame_buffer;
 GLuint  _depth_buffer;
