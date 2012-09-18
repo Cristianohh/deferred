@@ -41,6 +41,7 @@ void Game::initialize(void) {
     _render->initialize(app_get_window());
 
     //srand((uint32_t)_timer.start_time);
+    srand(42);
 
     Object o;
     // Ground

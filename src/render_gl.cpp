@@ -84,8 +84,7 @@ struct RenderCommand {
 };
 struct LightBuffer
 {
-    float4  lights[MAX_LIGHTS];
-    float4  colors[MAX_LIGHTS];
+    Light   lights[MAX_LIGHTS];
     int     num_lights;
     int     _padding[3];
 };
@@ -476,7 +475,7 @@ void render(void) {
         glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
         CheckGLError();
         for(int ii=0;ii<_light_buffer.num_lights;++ii) {
-            const float4& light = _light_buffer.lights[ii];
+            const float4& light = _light_buffer.lights[ii].pos;
             float4x4 transform = float4x4Scale(light.w, light.w, light.w);
             transform.r3.x = light.x;
             transform.r3.y = light.y;
@@ -515,39 +514,40 @@ void render(void) {
     _num_3d_render_commands = _num_2d_render_commands = 0;
     _light_buffer.num_lights = 0;
 }
-void _render_deferred(void) {    
-    static int view_proj_loc = glGetUniformLocation(_deferred_program, "kViewProj");
-    static int world_loc = glGetUniformLocation(_deferred_program, "kWorld");
-
-    // Setup the frame buffer
-    glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glActiveTexture(GL_TEXTURE0);
-    GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(ARRAYSIZE(buffers), buffers);
-
-    // 3D objects
+void _render_deferred(void) {
     float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
-    glUseProgram(_deferred_program);
-    glValidateProgram(_deferred_program);
+    {
+        static int view_proj_loc = glGetUniformLocation(_deferred_program, "kViewProj");
+        static int world_loc = glGetUniformLocation(_deferred_program, "kWorld");
 
-    glUniformMatrix4fv(view_proj_loc, 1, GL_FALSE, (float*)&view_proj);
-    for(int ii=0; ii<_num_3d_render_commands; ++ii) {
-        const RenderCommand& command = _3d_render_commands[ii];
-        const Mesh& mesh = _meshes[command.mesh];
+        // Setup the frame buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glActiveTexture(GL_TEXTURE0);
+        GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+        glDrawBuffers(ARRAYSIZE(buffers), buffers);
 
-        glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&command.transform);
-        glBindTexture(GL_TEXTURE_2D, _textures[command.texture]);
-        glBindVertexArray(mesh.vao);
-        glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+        // 3D objects
+        glUseProgram(_deferred_program);
+        glValidateProgram(_deferred_program);
+
+        glUniformMatrix4fv(view_proj_loc, 1, GL_FALSE, (float*)&view_proj);
+        for(int ii=0; ii<_num_3d_render_commands; ++ii) {
+            const RenderCommand& command = _3d_render_commands[ii];
+            const Mesh& mesh = _meshes[command.mesh];
+
+            glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&command.transform);
+            glBindTexture(GL_TEXTURE_2D, _textures[command.texture]);
+            glBindVertexArray(mesh.vao);
+            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
+        }
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
     }
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDisable(GL_DEPTH_TEST);
-
     {        
         static int light_loc = glGetUniformLocation(_deferred_light_program, "kLight");
-        static int color_loc = glGetUniformLocation(_deferred_light_program, "kColor");
         static int view_proj_loc = glGetUniformLocation(_deferred_light_program, "kViewProj");
         static int world_loc = glGetUniformLocation(_deferred_light_program, "kWorld");
         static int loc = glGetUniformLocation(_deferred_light_program, "GBuffer");
@@ -573,15 +573,13 @@ void _render_deferred(void) {
 
         const Mesh& mesh = _meshes[_sphere_mesh];
         for(int ii=0;ii<_light_buffer.num_lights;++ii) {
-            const float4& light = _light_buffer.lights[ii];
-            const float4& color = _light_buffer.colors[ii];
-            float4x4 transform = float4x4Scale(light.w, light.w, light.w);
-            transform.r3.x = light.x;
-            transform.r3.y = light.y;
-            transform.r3.z = light.z;
+            const Light& light = _light_buffer.lights[ii];
+            float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
+            transform.r3.x = light.pos.x;
+            transform.r3.y = light.pos.y;
+            transform.r3.z = light.pos.z;
 
-            glUniform4fv(light_loc, 1, (float*)&light);
-            glUniform4fv(color_loc, 1, (float*)&color);
+            glUniform4fv(light_loc, 2, (float*)&light);
             glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&transform);
             
             glBindVertexArray(mesh.vao);
@@ -589,8 +587,6 @@ void _render_deferred(void) {
         }
         glActiveTexture(GL_TEXTURE0);
         glDisable(GL_BLEND);
-        glUseProgram(0);
-
 
         if(_debug) {
             glDisable(GL_DEPTH_TEST);
@@ -606,7 +602,7 @@ void _render_deferred(void) {
             t.r3.x = 0.5f;
             _draw_mesh(_quad_mesh, _position_texture, t, k2DProgram);
         }
-
+        glDepthMask(GL_TRUE);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
     }
@@ -665,9 +661,9 @@ void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) {
 }
 
 void draw_light(const float4& light, const float4& color) {
-    _light_buffer.lights[_light_buffer.num_lights] = light;
-    _light_buffer.colors[_light_buffer.num_lights] = color;
-    _light_buffer.num_lights++;
+    int index = _light_buffer.num_lights++;
+    _light_buffer.lights[index].pos = light;
+    _light_buffer.lights[index].color = color;
 }
 TextureID load_texture(const char* filename) {
     int width, height, components;

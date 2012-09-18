@@ -2,8 +2,7 @@
 
 uniform sampler2D GBuffer[3];
 
-uniform vec4 kLight;
-uniform vec4 kColor;
+uniform vec4 kLight[2];
 
 in vec4 int_Pos;
 
@@ -20,15 +19,14 @@ void main()
 
     normal *= 2.0f;
     normal -= 1.0f;
-    normal = normalize(normal);
+    //normal = normalize(normal);
 
-    vec3 light_pos = kLight.xyz;
+    vec3 light_pos = kLight[0].xyz;
     float dist = distance(world_pos, light_pos);
-	    
+    
     vec3 light_dir = world_pos - light_pos;
     light_dir = normalize(-light_dir);
     float n_l = dot(light_dir, normal);
-    float attenuation = 1 - pow( clamp(dist/kLight.w, 0.0f, 1.0f), 2);
-    out_Color = vec4(albedo * kColor.rgb * clamp(n_l, 0.0f, 1.0f) * attenuation, 1.0f);
-
+    float attenuation = 1 - pow( clamp(dist/kLight[0].w, 0.0f, 1.0f), 2);
+    out_Color = vec4(albedo * kLight[1].rgb * clamp(n_l, 0.0f, 1.0f) * attenuation, 1.0f);
 }

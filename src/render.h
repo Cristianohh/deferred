@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include "vec_math.h"
 
-#define MAX_LIGHTS 512
+#define MAX_LIGHTS 256
 
 struct VtxPosNormTex {
     float3    pos;
@@ -29,6 +29,10 @@ enum VertexType {
     kVtxPosTex,
 
     kNUM_VERTEX_TYPES
+};
+struct Light {
+    float4  pos;
+    float4  color;
 };
 
 typedef int32_t MeshID;

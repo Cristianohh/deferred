@@ -2,8 +2,10 @@
 
 layout(std140) uniform LightBuffer
 {
-    vec4 kLights[512];
-	vec4 kColors[512];
+    struct {
+        vec4 pos;
+        vec4 color;
+    } kLight[256];
     int  kNumLights;
     int  _padding[3];
 };
@@ -22,16 +24,16 @@ void main()
     vec4 albedo = texture(diffuseTex, int_TexCoord);
     
     for(int ii=0;ii<kNumLights;++ii) {
-        vec3 light_pos = kLights[ii].xyz;
+        vec3 light_pos = kLight[ii].pos.xyz;
         float dist = distance(int_WorldPos, light_pos);
 
-		if(dist > kLights[ii].w)
+		if(dist > kLight[ii].pos.w)
 			continue;
         
         vec3 light_dir = int_WorldPos - light_pos;
         light_dir = normalize(-light_dir);
         float n_l = dot(light_dir, normalize(int_Normal));
-        float attenuation = 1 - pow( clamp(dist/kLights[ii].w, 0.0f, 1.0f), 2);
-        out_Color += albedo * kColors[ii] * clamp(n_l, 0.0f, 1.0f) * attenuation;
+        float attenuation = 1 - pow( clamp(dist/kLight[ii].pos.w, 0.0f, 1.0f), 2);
+        out_Color += albedo * kLight[ii].color * clamp(n_l, 0.0f, 1.0f) * attenuation;
     }
 }
