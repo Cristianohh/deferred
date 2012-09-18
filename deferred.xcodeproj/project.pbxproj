@@ -40,6 +40,8 @@
 		2735A818160829B800B60C41 /* geometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geometry.h; sourceTree = "<group>"; };
 		273AB3ED16026C5F007C7682 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		275A241A1605127C005FA2BC /* vec_math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec_math.h; sourceTree = "<group>"; };
+		275F567816082A0C00FB9F9E /* render_gl_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render_gl_helper.h; sourceTree = "<group>"; };
+		275F567B16082B8300FB9F9E /* deferred_gl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = deferred_gl.h; sourceTree = "<group>"; };
 		278F9E081602862200F90E06 /* timer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = timer.c; sourceTree = "<group>"; };
 		278F9E091602862200F90E06 /* timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = timer.h; sourceTree = "<group>"; };
 		278F9E0C1602862700F90E06 /* timer_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = timer_test.cpp; sourceTree = "<group>"; };
@@ -146,6 +148,8 @@
 				27ADE8AD16027ACD00D888DE /* unit_test.h */,
 				27ADE8AB16027ACD00D888DE /* tests */,
 				273AB3E316026C5F007C7682 /* macosx */,
+				275F567816082A0C00FB9F9E /* render_gl_helper.h */,
+				275F567B16082B8300FB9F9E /* deferred_gl.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
