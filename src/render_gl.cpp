@@ -111,6 +111,7 @@ RenderGL()
     , _height(128)
     , _deferred(1)
     , _debug(0)
+    , _num_renderables(0)
 {
     _light_buffer.num_lights = 0;
 }
