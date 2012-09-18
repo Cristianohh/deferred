@@ -363,11 +363,24 @@ void _render_deferred(void) {
                                   _light_buffer.lights, _light_buffer.num_lights);
         
         // Render the scene from the render target
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
+        
         glDisable(GL_CULL_FACE);
-        _draw_mesh(_quad_mesh, _color_texture, float4x4Scale(2.0f, -2.0f, 1.0f), k2DProgram);
+        glUseProgram(_2d_program);
+        int loc = glGetUniformLocation(_2d_program, "kWorld");
+        CheckGLError();
+        glUniformMatrix4fv(loc, 1, GL_FALSE, (float*)&float4x4identity);
+        CheckGLError();
+        loc = glGetUniformLocation(_2d_program, "kViewProj");
+        CheckGLError();
+        glUniformMatrix4fv(loc, 1, GL_FALSE, (float*)&float4x4identity);
+        CheckGLError();
+        glBindTexture(GL_TEXTURE_2D, _color_texture);
+        CheckGLError();
+        glBindVertexArray(_meshes[_quad_mesh].vao);
+        CheckGLError();
+        _validate_program(_2d_program);
+        glDrawElements(GL_TRIANGLES, (GLsizei)_meshes[_quad_mesh].index_count, _meshes[_quad_mesh].index_format, NULL);
+        CheckGLError();
         glEnable(GL_CULL_FACE);
         
         _num_3d_render_commands = _num_2d_render_commands = 0;
@@ -375,107 +388,6 @@ void _render_deferred(void) {
 
         return;
     }
-    {
-        static int view_proj_loc = glGetUniformLocation(_deferred_program, "kViewProj");
-        static int world_loc = glGetUniformLocation(_deferred_program, "kWorld");
-
-        // Setup the frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glActiveTexture(GL_TEXTURE0);
-        GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-        glDrawBuffers(ARRAYSIZE(buffers), buffers);
-
-        // 3D objects
-        glUseProgram(_deferred_program);
-        glValidateProgram(_deferred_program);
-
-        glUniformMatrix4fv(view_proj_loc, 1, GL_FALSE, (float*)&view_proj);
-        for(int ii=0; ii<_num_3d_render_commands; ++ii) {
-            const RenderCommand& command = _3d_render_commands[ii];
-            const Mesh& mesh = _meshes[command.mesh];
-
-            Renderable r;
-            r.texture = _textures[command.texture];
-            r.vao = mesh.vao;
-            r.index_count = mesh.index_count;
-            r.index_format = mesh.index_format;
-            r.transform = command.transform;
-            
-            glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&r.transform);
-            glBindTexture(GL_TEXTURE_2D, r.texture);
-            glBindVertexArray(r.vao);
-            glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
-
-        }
-        
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-    }
-    {        
-        static int light_loc = glGetUniformLocation(_deferred_light_program, "kLight");
-        static int view_proj_loc = glGetUniformLocation(_deferred_light_program, "kViewProj");
-        static int world_loc = glGetUniformLocation(_deferred_light_program, "kWorld");
-        static int loc = glGetUniformLocation(_deferred_light_program, "GBuffer");
-
-        // Render the scene from the render target
-        glUseProgram(_deferred_light_program);
-        CheckGLError();
-        _validate_program(_deferred_light_program);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, _color_texture);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, _normal_texture);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, _position_texture);
-
-        int i[] = {0,1,2};
-        glUniform1iv(loc, 3, i);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-            
-        glUniformMatrix4fv(view_proj_loc, 1, GL_FALSE, (float*)&view_proj);
-
-        const Mesh& mesh = _meshes[_sphere_mesh];
-        for(int ii=0;ii<_light_buffer.num_lights;++ii) {
-            const Light& light = _light_buffer.lights[ii];
-            float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
-            transform.r3.x = light.pos.x;
-            transform.r3.y = light.pos.y;
-            transform.r3.z = light.pos.z;
-
-            glUniform4fv(light_loc, 2, (float*)&light);
-            glUniformMatrix4fv(world_loc, 1, GL_FALSE, (float*)&transform);
-            
-            glBindVertexArray(mesh.vao);
-            glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);
-        }
-        glActiveTexture(GL_TEXTURE0);
-        glDisable(GL_BLEND);
-
-        if(_debug) {
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_CULL_FACE);
-            glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
-            glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
-            float4x4 t = float4x4Scale(1.0f, -1.0f, 1.0f);
-            t.r3.x = -0.5f;
-            t.r3.y = -0.5f;
-            _draw_mesh(_quad_mesh, _color_texture, t, k2DProgram);
-            t.r3.y = 0.5f;
-            _draw_mesh(_quad_mesh, _normal_texture, t, k2DProgram);
-            t.r3.x = 0.5f;
-            _draw_mesh(_quad_mesh, _position_texture, t, k2DProgram);
-        }
-        glDepthMask(GL_TRUE);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_CULL_FACE);
-    }
-
-    _num_3d_render_commands = _num_2d_render_commands = 0;
-    _light_buffer.num_lights = 0;
 }
 void resize(int width, int height) {
     _width = width;
@@ -620,75 +532,82 @@ void _present(void) {
 #endif
 }
 void _load_shaders(void) {
-    // 3D
-    GLuint vs_3d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/3D.vsh");
-    GLuint fs_3d = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/3D.fsh");
-    _programs[k3DProgram] = _create_program(vs_3d, fs_3d);
-    glDeleteShader(vs_3d);
-    glDeleteShader(fs_3d);
-
-    GLuint buffer_index;
-//    GLuint buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
-//    assert(buffer_index != GL_INVALID_INDEX);
-//    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
-//    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
-//    assert(buffer_index != GL_INVALID_INDEX);
-//    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
-//    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "LightBuffer");
-//    assert(buffer_index != GL_INVALID_INDEX);
-//    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 2);
-
-    // Deferred
-    GLuint vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred.vsh");
-    GLuint fs_deferred = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred.fsh");
-    //_programs[kDeferredProgram] = _create_program(vs_deferred, fs_deferred);
-    _deferred_program = _create_program(vs_deferred, fs_deferred);
-    glDeleteShader(vs_deferred);
-    glDeleteShader(fs_deferred);
-
-//    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerFrame");
-//    assert(buffer_index != GL_INVALID_INDEX);
-//    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 0);
-//    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerObject");
-//    assert(buffer_index != GL_INVALID_INDEX);
-//    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 1);
-
-    // Deferred light
-    vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred_light.vsh");
-    fs_deferred = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred_light.fsh");
-    _deferred_light_program = _create_program(vs_deferred, fs_deferred);
-    glDeleteShader(vs_deferred);
-    glDeleteShader(fs_deferred);
-
-    // 2D
+    
     GLuint vs_2d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/2D.vsh");
     GLuint fs_2d = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/2D.fsh");
-    _programs[k2DProgram] = _create_program(vs_2d, fs_2d);
+    _2d_program = _create_program(vs_2d, fs_2d);
     glDeleteShader(vs_2d);
     glDeleteShader(fs_2d);
 
-    buffer_index = glGetUniformBlockIndex(_programs[k2DProgram], "PerFrame");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[k2DProgram], buffer_index, 0);
-    buffer_index = glGetUniformBlockIndex(_programs[k2DProgram], "PerObject");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[k2DProgram], buffer_index, 1);
-
-    
-    // Debug
-    GLuint vs_debug = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/debug.vsh");
-    GLuint fs_debug = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/debug.fsh");
-    _programs[kDebugProgram] = _create_program(vs_debug, fs_debug);
-    glDeleteShader(vs_debug);
-    glDeleteShader(fs_debug);
-
-    buffer_index = glGetUniformBlockIndex(_programs[kDebugProgram], "PerFrame");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[kDebugProgram], buffer_index, 0);
-    buffer_index = glGetUniformBlockIndex(_programs[kDebugProgram], "PerObject");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[kDebugProgram], buffer_index, 1);
-        CheckGLError();
+//    // 3D
+//    GLuint vs_3d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/3D.vsh");
+//    GLuint fs_3d = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/3D.fsh");
+//    _programs[k3DProgram] = _create_program(vs_3d, fs_3d);
+//    glDeleteShader(vs_3d);
+//    glDeleteShader(fs_3d);
+//
+//    GLuint buffer_index;
+////    GLuint buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
+////    assert(buffer_index != GL_INVALID_INDEX);
+////    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
+////    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
+////    assert(buffer_index != GL_INVALID_INDEX);
+////    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
+////    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "LightBuffer");
+////    assert(buffer_index != GL_INVALID_INDEX);
+////    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 2);
+//
+//    // Deferred
+//    GLuint vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred.vsh");
+//    GLuint fs_deferred = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred.fsh");
+//    //_programs[kDeferredProgram] = _create_program(vs_deferred, fs_deferred);
+//    _deferred_program = _create_program(vs_deferred, fs_deferred);
+//    glDeleteShader(vs_deferred);
+//    glDeleteShader(fs_deferred);
+//
+////    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerFrame");
+////    assert(buffer_index != GL_INVALID_INDEX);
+////    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 0);
+////    buffer_index = glGetUniformBlockIndex(_programs[kDeferredProgram], "PerObject");
+////    assert(buffer_index != GL_INVALID_INDEX);
+////    glUniformBlockBinding(_programs[kDeferredProgram], buffer_index, 1);
+//
+//    // Deferred light
+//    vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred_light.vsh");
+//    fs_deferred = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred_light.fsh");
+//    _deferred_light_program = _create_program(vs_deferred, fs_deferred);
+//    glDeleteShader(vs_deferred);
+//    glDeleteShader(fs_deferred);
+//
+//    // 2D
+//    GLuint vs_2d = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/2D.vsh");
+//    GLuint fs_2d = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/2D.fsh");
+//    _programs[k2DProgram] = _create_program(vs_2d, fs_2d);
+//    glDeleteShader(vs_2d);
+//    glDeleteShader(fs_2d);
+//
+//    buffer_index = glGetUniformBlockIndex(_programs[k2DProgram], "PerFrame");
+//    assert(buffer_index != GL_INVALID_INDEX);
+//    glUniformBlockBinding(_programs[k2DProgram], buffer_index, 0);
+//    buffer_index = glGetUniformBlockIndex(_programs[k2DProgram], "PerObject");
+//    assert(buffer_index != GL_INVALID_INDEX);
+//    glUniformBlockBinding(_programs[k2DProgram], buffer_index, 1);
+//
+//    
+//    // Debug
+//    GLuint vs_debug = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/debug.vsh");
+//    GLuint fs_debug = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/debug.fsh");
+//    _programs[kDebugProgram] = _create_program(vs_debug, fs_debug);
+//    glDeleteShader(vs_debug);
+//    glDeleteShader(fs_debug);
+//
+//    buffer_index = glGetUniformBlockIndex(_programs[kDebugProgram], "PerFrame");
+//    assert(buffer_index != GL_INVALID_INDEX);
+//    glUniformBlockBinding(_programs[kDebugProgram], buffer_index, 0);
+//    buffer_index = glGetUniformBlockIndex(_programs[kDebugProgram], "PerObject");
+//    assert(buffer_index != GL_INVALID_INDEX);
+//    glUniformBlockBinding(_programs[kDebugProgram], buffer_index, 1);
+//        CheckGLError();
 }
 void _unload_shaders(void) {
     for(int ii=0;ii<kNUM_VERTEX_SHADERS;++ii)
@@ -719,7 +638,7 @@ void _draw_mesh(MeshID mesh_id, GLuint texture, const float4x4& transform, int p
     const Mesh& mesh = _meshes[mesh_id];
     glBindVertexArray(mesh.vao);
     _validate_program(_programs[program_id]);
-    glUseProgram(_programs[program_id]);
+    glUseProgram(_2d_program);
     glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kWorldTransformBuffer]);
     glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &transform, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
@@ -738,16 +657,6 @@ void _resize_gbuffer(void) {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _color_buffer);
     CheckGLError();
 
-    glBindRenderbuffer(GL_RENDERBUFFER, _normal_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_RENDERBUFFER, _normal_buffer);
-    CheckGLError();
-    
-    glBindRenderbuffer(GL_RENDERBUFFER, _position_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, _width, _height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _position_buffer);
-    CheckGLError();
-
     glBindRenderbuffer(GL_RENDERBUFFER, _depth_buffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, _width, _height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _depth_buffer);
@@ -758,20 +667,6 @@ void _resize_gbuffer(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _color_texture, 0);
-    CheckGLError();
-
-    glBindTexture(GL_TEXTURE_2D, _normal_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _normal_texture, 0);
-    CheckGLError();
-    
-    glBindTexture(GL_TEXTURE_2D, _position_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_HALF_FLOAT, NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _position_texture, 0);
     CheckGLError();
 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -785,12 +680,8 @@ void _create_gbuffer(void) {
     glGenFramebuffers(1, &_frame_buffer);
     glGenRenderbuffers(1, &_color_buffer);
     glGenRenderbuffers(1, &_depth_buffer);
-    glGenRenderbuffers(1, &_normal_buffer);
-    glGenRenderbuffers(1, &_position_buffer);
 
     glGenTextures(1, &_color_texture);
-    glGenTextures(1, &_normal_texture);
-    glGenTextures(1, &_position_texture);
 }
 
 private:
@@ -829,18 +720,12 @@ int _debug;
 int _deferred;
 
 GLuint  _frame_buffer;
+GLuint  _color_buffer;
 GLuint  _depth_buffer;
 
-GLuint  _color_buffer;
-GLuint  _normal_buffer;
-GLuint  _position_buffer;
-
 GLuint  _color_texture;
-GLuint  _normal_texture;
-GLuint  _position_texture;
 
-GLuint  _deferred_light_program;
-GLuint  _deferred_program;
+GLuint  _2d_program;
 
 int     _width;
 int     _height;
