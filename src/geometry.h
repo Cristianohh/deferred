@@ -75,6 +75,14 @@ static const VtxPosTex kQuadVertices[] =
     { { 0.5f,  0.5f, 0.0f}, {1.0f, 0.0f} },
     { {-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f} },
 };
+
+static const VtxPosTex kFullscreenQuadVertices[] =
+{
+    { {-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f} },
+    { { 1.0f, -1.0f, 0.0f}, {1.0f, 0.0f} },
+    { { 1.0f,  1.0f, 0.0f}, {1.0f, 1.0f} },
+    { {-1.0f,  1.0f, 0.0f}, {0.0f, 1.0f} },
+};
 static const unsigned short kQuadIndices[] =
 {
     3,1,0,
