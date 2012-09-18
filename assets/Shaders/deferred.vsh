@@ -11,7 +11,7 @@ layout(location=2) in vec2 in_TexCoord;
 out vec3 int_WorldPos;
 out vec3 int_Normal;
 out vec2 int_TexCoord;
-out vec3 int_Depth;
+out vec2 int_Depth;
 
 void main()
 {
@@ -25,5 +25,4 @@ void main()
     
 	int_Depth.x = gl_Position.z;
 	int_Depth.y = gl_Position.w;
-    int_Depth.z = view_pos.z;
 }

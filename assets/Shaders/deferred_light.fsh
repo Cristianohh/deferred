@@ -19,13 +19,13 @@ void main()
     float depth = texture(GBuffer[2], uv).r;
 
     vec4 world_pos = vec4(1.0f);
-    world_pos.x = uv.x * 2.0f - 1.0f;
-    world_pos.y = -(uv.x * 2.0f - 1.0f);
+    world_pos.xy = pos.xy;
     world_pos.z = depth;
+
     world_pos = kInverseViewProj * world_pos;
     //world_pos = world_pos * kInverseViewProj;
 
-    //world_pos /= world_pos.w;
+    world_pos /= world_pos.w;
 
     normal *= 2.0f;
     normal -= 1.0f;
@@ -42,5 +42,5 @@ void main()
     out_Color = vec4(albedo * kLight[1].rgb * clamp(n_l, 0.0f, 1.0f) * attenuation, 1.0f);
     //out_Color = vec4(uv, 1.0f, 1.0f);
     //out_Color = vec4(depth);
-    out_Color = vec4(world_pos.xyz, 1.0f);
+    //out_Color = vec4(world_pos.xyz, 1.0f);
 }

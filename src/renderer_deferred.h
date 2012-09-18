@@ -146,7 +146,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         int i[] = {0,1,2};
         glUniform1iv(_light_gbuffer_uniform, 3, i);
 
-        //glEnable(GL_BLEND);
+        glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
         glDisable(GL_DEPTH_TEST);
         
