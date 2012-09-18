@@ -56,7 +56,12 @@
       <SubType>
       </SubType>
     </ClInclude>
+    <ClInclude Include="src\geometry.h" />
     <ClInclude Include="src\render.h" />
+    <ClInclude Include="src\renderer.h" />
+    <ClInclude Include="src\renderer_deferred.h" />
+    <ClInclude Include="src\renderer_forward.h" />
+    <ClInclude Include="src\render_gl_helper.h" />
     <ClInclude Include="src\timer.h" />
     <ClInclude Include="src\unit_test.h" />
   </ItemGroup>
@@ -70,6 +75,7 @@
   <ItemGroup>
     <None Include="assets\Shaders\2D.fsh" />
     <None Include="assets\Shaders\2D.vsh" />
+    <None Include="assets\Shaders\2D_fullscreen.vsh" />
     <None Include="assets\Shaders\3D.fsh" />
     <None Include="assets\Shaders\3D.vsh" />
     <None Include="assets\Shaders\debug.fsh" />

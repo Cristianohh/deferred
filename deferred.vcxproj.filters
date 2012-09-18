@@ -101,6 +101,21 @@
     <ClInclude Include="external\stb_image.h">
       <Filter>external</Filter>
     </ClInclude>
+    <ClInclude Include="src\geometry.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render_gl_helper.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer_deferred.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer_forward.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\brick.jpg">
@@ -151,6 +166,9 @@
       <Filter>assets\shaders</Filter>
     </None>
     <None Include="assets\Shaders\deferred_light.vsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\2D_fullscreen.vsh">
       <Filter>assets\shaders</Filter>
     </None>
   </ItemGroup>
