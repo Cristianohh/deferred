@@ -74,8 +74,6 @@ void Game::initialize(void) {
     textures[1] = _render->load_texture("assets/brick.jpg");
     textures[2] = _render->load_texture("assets/wood.jpg");
 
-    int brick_tex = textures[0];
-
     for(int ii=0; ii<32;++ii) {
         o.transform = TransformZero();
         o.transform.scale = _rand_float(0.5f, 5.0f);
@@ -155,7 +153,7 @@ int Game::on_frame(void) {
     _render->render();
 
     // End of frame stuff
-    if(++_frame_count % 64 == 0)
+    if(++_frame_count % 16 == 0)
         debug_output("%.1f FPS\n", get_fps(&_fps));
     return 0;
 }
