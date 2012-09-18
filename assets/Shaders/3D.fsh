@@ -10,7 +10,7 @@ layout(std140) uniform LightBuffer
     int  _padding[3];
 };
 
-uniform sampler2D diffuseTex;
+uniform sampler2D kDiffuseTex;
 
 in vec3 int_WorldPos;
 in vec3 int_Normal;
@@ -21,7 +21,7 @@ out vec4 out_Color;
 void main()
 {
     out_Color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
-    vec4 albedo = texture(diffuseTex, int_TexCoord);
+    vec4 albedo = texture(kDiffuseTex, int_TexCoord);
     
     for(int ii=0;ii<kNumLights;++ii) {
         vec3 light_pos = kLight[ii].pos.xyz;

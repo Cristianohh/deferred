@@ -76,12 +76,6 @@ enum ProgramType {
     kNUM_PROGRAMS
 };
 
-struct LightBuffer
-{
-    Light   lights[MAX_LIGHTS];
-    int     num_lights;
-    int     _padding[3];
-};
 
 enum { kMAX_MESHES = 1024, kMAX_TEXTURES = 64, kMAX_RENDER_COMMANDS = 1024*8 };
 
@@ -223,6 +217,46 @@ void render(void) {
         return;
     }
 
+    float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
+    if(view_proj.r0.x != 0.0f) {
+    
+        glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
+        CheckGLError();
+        glViewport(0, 0, _width, _height);
+        CheckGLError();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        Renderable renderables[1024];
+        for(int ii=0;ii<_num_3d_render_commands;++ii) {
+            const RenderCommand& command = _3d_render_commands[ii];
+            const Mesh& mesh = _meshes[command.mesh];
+
+            Renderable& r = renderables[ii];
+            r.texture = _textures[command.texture];
+            r.vao = mesh.vao;
+            r.index_count = mesh.index_count;
+            r.index_format = mesh.index_format;
+            r.transform = command.transform;
+        }
+
+        _forward_renderer.render(view_proj, _frame_buffer,
+                                 renderables, _num_3d_render_commands,
+                                 _light_buffer.lights, _light_buffer.num_lights);
+
+        // Render the scene from the render target
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
+        glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &float4x4identity, GL_DYNAMIC_DRAW);
+        glDisable(GL_CULL_FACE);
+        _draw_mesh(_quad_mesh, _color_texture, float4x4Scale(2.0f, -2.0f, 1.0f), k2DProgram);
+        glEnable(GL_CULL_FACE);
+        
+        _num_3d_render_commands = _num_2d_render_commands = 0;
+        _light_buffer.num_lights = 0;
+
+        return;
+    }
+
     // Setup the frame buffer
     if(1) {
         glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
@@ -241,7 +275,7 @@ void render(void) {
     }
 
     // 3D objects
-    float4x4 view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
+    view_proj = float4x4multiply(&_3d_view, &_perspective_projection);
     glBindBuffer(GL_UNIFORM_BUFFER, _uniform_buffers[kViewProjTransformBuffer]);
     CheckGLError();
     glBufferData(GL_UNIFORM_BUFFER, sizeof(float4x4), &view_proj, GL_DYNAMIC_DRAW);
@@ -593,15 +627,16 @@ void _load_shaders(void) {
     glDeleteShader(vs_3d);
     glDeleteShader(fs_3d);
 
-    GLuint buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
-    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
-    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "LightBuffer");
-    assert(buffer_index != GL_INVALID_INDEX);
-    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 2);
+    GLuint buffer_index;
+//    GLuint buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerFrame");
+//    assert(buffer_index != GL_INVALID_INDEX);
+//    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 0);
+//    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "PerObject");
+//    assert(buffer_index != GL_INVALID_INDEX);
+//    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 1);
+//    buffer_index = glGetUniformBlockIndex(_programs[k3DProgram], "LightBuffer");
+//    assert(buffer_index != GL_INVALID_INDEX);
+//    glUniformBlockBinding(_programs[k3DProgram], buffer_index, 2);
 
     // Deferred
     GLuint vs_deferred = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred.vsh");

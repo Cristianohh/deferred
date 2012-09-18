@@ -47,6 +47,12 @@ typedef struct {
     GLuint  texture;
 } Renderable;
 
+typedef struct {
+    Light   lights[MAX_LIGHTS];
+    int     num_lights;
+    int     _padding[3];
+} LightBuffer;
+
 static GLuint _compile_shader(GLenum shader_type, const char* filename) {
     MessageBoxResult result = kMBOK;
     GLint status = GL_TRUE;
