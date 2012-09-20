@@ -28,21 +28,30 @@ void main()
 
     normal *= 2.0f;
     normal -= 1.0f;
-
-    vec3 light_dir = kLight[0].xyz - world_pos.xyz;
-    float dist = length(light_dir);
-        
-    light_dir = normalize(light_dir);
-
-    float n_l = dot(light_dir, normal);
     
-    vec3 dir_to_cam = normalize(kCameraPosition - world_pos.xyz);
-    vec3 reflection = reflect(dir_to_cam, normal);
-    float rDotL     = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
-    //vec3 spec       = vec3(min(1.0f, pow(rDotL, 1024)));
-    vec3 spec       = vec3(0.0f);
+    if(kLight[1].a == 0.0f) {
+        vec3 light_dir = kLight[0].xyz;
+        
+        light_dir = normalize(light_dir);
+        float n_l = dot(light_dir, normal);
 
-    float attenuation = 1 - pow( clamp(dist/kLight[0].w, 0.0f, 1.0f), 2);
+        out_Color = vec4(albedo * kLight[1].rgb * clamp(n_l, 0.0f, 1.0f), 1.0f);
+    } else if(kLight[1].a == 1.0f) {
+        vec3 light_dir = kLight[0].xyz - world_pos.xyz;
+        float dist = length(light_dir);
+            
+        light_dir = normalize(light_dir);
 
-    out_Color = vec4(albedo * kLight[1].rgb * clamp(n_l, 0.0f, 1.0f) * attenuation + spec*kLight[1].rgb, 1.0f);
+        float n_l = dot(light_dir, normal);
+        
+        vec3 dir_to_cam = normalize(kCameraPosition - world_pos.xyz);
+        vec3 reflection = reflect(dir_to_cam, normal);
+        float rDotL     = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
+        //vec3 spec       = vec3(min(1.0f, pow(rDotL, 1024)));
+        vec3 spec       = vec3(0.0f);
+
+        float attenuation = 1 - pow( clamp(dist/kLight[0].w, 0.0f, 1.0f), 2);
+
+        out_Color = vec4(albedo * kLight[1].rgb * clamp(n_l, 0.0f, 1.0f) * attenuation + spec*kLight[1].rgb, 1.0f);
+    }
 }

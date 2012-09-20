@@ -65,7 +65,7 @@ void Game::initialize(void) {
     o.texture = _render->load_texture("assets/grass.jpg");
     _add_object(o);
 
-    
+
     TextureID textures[3] = {0};
     textures[0] = _render->load_texture("assets/metal.jpg");
     textures[1] = _render->load_texture("assets/brick.jpg");
@@ -92,15 +92,23 @@ void Game::initialize(void) {
     }
 
     // Add a "sun"
-    for(int ii=0;ii<MAX_LIGHTS;++ii) {
+    _lights[0].x = 0.0f;
+    _lights[0].y = 1.0f;
+    _lights[0].z = 0.0f;
+    _lights[0].w = 8.0f;
+    _colors[0].x = 0.9f;
+    _colors[0].y = 0.9f;
+    _colors[0].z = 0.9f;
+    _colors[0].w = kDirectionalLight;
+    for(int ii=1;ii<MAX_LIGHTS;++ii) {
         _lights[ii].x = _rand_float(-50.0f, 50.0f);
         _lights[ii].y = _rand_float(1.0f, 4.0f);
         _lights[ii].z = _rand_float(-50.0f, 50.0f);
-        _lights[ii].w = 8.0f;
+        _lights[ii].w = 3.0f;
         _colors[ii].x = _rand_float(0.0f, 1.0f);
         _colors[ii].y = _rand_float(0.0f, 1.0f);
         _colors[ii].z = _rand_float(0.0f, 1.0f);
-        _colors[ii].w = 1.0f;
+        _colors[ii].w = kPointLight;
     }
 }
 void Game::shutdown(void) {
@@ -145,7 +153,7 @@ int Game::on_frame(void) {
         _render->draw_3d(o.mesh, o.texture, TransformGetMatrix(&o.transform));
     }
     for(int ii=0;ii<MAX_LIGHTS;++ii) {
-        _render->draw_light(_lights[ii], _colors[ii]);
+        _render->draw_light(_lights[ii], _colors[ii], _colors[ii].w);
     }
     _render->render();
 

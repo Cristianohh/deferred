@@ -158,21 +158,34 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glUniform3fv(_light_cam_pos_uniform, 1, (float*)&view.r3);
         for(int ii=0;ii<num_lights;++ii) {
             Light light = lights[ii];
-            float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
-            transform.r3.x = light.pos.x;
-            transform.r3.y = light.pos.y;
-            transform.r3.z = light.pos.z;
+            if(light.color.w == kDirectionalLight) {
+            
+                glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&float4x4identity);
+                glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&float4x4identity);
+                glUniform4fv(_light_light_uniform, 2, (float*)&light);
+                
+                glBindVertexArray(_fullscreen_mesh.vao);
+                _validate_program(_light_program);
+                glDrawElements(GL_TRIANGLES, (GLsizei)_fullscreen_mesh.index_count, _fullscreen_mesh.index_format, NULL);
+                
+                glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
+            } else if(light.color.w == kPointLight) {
+                float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
+                transform.r3.x = light.pos.x;
+                transform.r3.y = light.pos.y;
+                transform.r3.z = light.pos.z;
 
-            float3 v = float3subtract((float3*)&transform.r3, (float3*)&light.pos);
-            if(float3lengthSq(&v) < light.pos.w*light.pos.w) {
-                glCullFace(GL_FRONT);
+                float3 v = float3subtract((float3*)&transform.r3, (float3*)&light.pos);
+                if(float3lengthSq(&v) < light.pos.w*light.pos.w) {
+                    glCullFace(GL_FRONT);
+                }
+                glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);
+                glUniform4fv(_light_light_uniform, 2, (float*)&light);
+                glBindVertexArray(_sphere_mesh.vao);
+                _validate_program(_light_program);
+                glDrawElements(GL_TRIANGLES, (GLsizei)_sphere_mesh.index_count, _sphere_mesh.index_format, NULL);
+                glCullFace(GL_BACK);
             }
-            glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);
-            glUniform4fv(_light_light_uniform, 2, (float*)&light);
-            glBindVertexArray(_sphere_mesh.vao);
-            _validate_program(_light_program);
-            glDrawElements(GL_TRIANGLES, (GLsizei)_sphere_mesh.index_count, _sphere_mesh.index_format, NULL);
-            glCullFace(GL_BACK);
         }
 
         glActiveTexture(GL_TEXTURE0);
@@ -181,14 +194,15 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
-void set_sphere_mesh(const Mesh& mesh) {
-    _sphere_mesh = mesh;
-}
+void set_sphere_mesh(const Mesh& mesh) { _sphere_mesh = mesh; }
+void set_fullscreen_mesh(const Mesh& mesh) { _fullscreen_mesh = mesh; }
+
 GLuint gbuffer_tex(int index) { return _gbuffer_tex[index]; }
 
 private:
 
 Mesh    _sphere_mesh;
+Mesh    _fullscreen_mesh;
 
 GLuint  _geom_program;
 GLuint  _geom_world_uniform;

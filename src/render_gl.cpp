@@ -193,6 +193,7 @@ void initialize(void* window) {
     _forward_renderer.init();
     _deferred_renderer.init();
     _deferred_renderer.set_sphere_mesh(_meshes[_sphere_mesh]);
+    _deferred_renderer.set_fullscreen_mesh(_meshes[_fullscreen_quad_mesh]);
 }
 void shutdown(void) {
     _forward_renderer.shutdown();
@@ -310,10 +311,11 @@ void draw_3d(MeshID mesh, TextureID texture, const float4x4& transform) {
 void draw_2d(MeshID, TextureID, const float4x4&) {
 }
 
-void draw_light(const float4& light, const float4& color) {
+void draw_light(const float4& light, const float4& color, LightType type) {
     int index = _light_buffer.num_lights++;
     _light_buffer.lights[index].pos = light;
     _light_buffer.lights[index].color = color;
+    _light_buffer.lights[index].color.w = type;
 }
 TextureID load_texture(const char* filename) {
     int width, height, components;
