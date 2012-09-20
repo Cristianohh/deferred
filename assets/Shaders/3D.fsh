@@ -8,7 +8,7 @@ struct Light
 
 layout(std140) uniform LightBuffer
 {
-    Light kLight[255];
+    Light kLight[511];
     int  kNumLights;
     int  _padding[3];
 };
@@ -44,7 +44,7 @@ void main()
             float dist = length(light_dir);
 
             if(dist > kLight[ii].pos.w) {
-               // continue; // TODO: This causes rendering artifacts on Intel
+                continue; // TODO: This causes rendering artifacts on Intel
             }
             
             light_dir = normalize(light_dir);

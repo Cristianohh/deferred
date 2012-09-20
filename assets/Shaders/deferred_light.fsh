@@ -39,6 +39,9 @@ void main()
     } else if(kLight[1].a == 1.0f) {
         vec3 light_dir = kLight[0].xyz - world_pos.xyz;
         float dist = length(light_dir);
+
+        //if(dist > kLight[0].w)
+        //    discard;
             
         light_dir = normalize(light_dir);
 
