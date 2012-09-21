@@ -25,6 +25,8 @@ void init(void) {
     _viewproj_uniform = glGetUniformLocation(_program, "kViewProj");
     _diffuse_uniform = glGetUniformLocation(_program, "kDiffuseTex");
     _camera_position_uniform = glGetUniformLocation(_program, "kCameraPosition");
+    _world_view_uniform = glGetUniformLocation(_program, "kWorldView");
+    _normal_uniform = glGetUniformLocation(_program, "kNormalTex");
     _light_buffer_uniform = glGetUniformBlockIndex(_program, "LightBuffer");
 
     _light_buffer_buffer = _create_buffer(GL_UNIFORM_BUFFER, sizeof(LightBuffer), &_light_buffer);
@@ -53,13 +55,24 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
     glUniform3fv(_camera_position_uniform, 1, (float*)&view.r3);
     for(int ii=0;ii<num_renderables;++ii) {
         const Renderable& r = renderables[ii];
+        float4x4 model_view = float4x4multiply(&view, &r.transform);
+        glUniformMatrix3fv(_world_view_uniform, 1, GL_FALSE, (float*)&model_view);
         glUniformMatrix4fv(_world_uniform, 1, GL_FALSE, (float*)&r.transform);
+        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, r.texture);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, r.normal_texture);
+        glUniform1i(_diffuse_uniform, 0);
+        glUniform1i(_normal_uniform, 1);
         glBindVertexArray(r.vao);
         _validate_program(_program);
         glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
     }
     
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -70,6 +83,8 @@ GLuint  _viewproj_uniform;
 GLuint  _world_uniform;
 GLuint  _diffuse_uniform;
 GLuint  _camera_position_uniform;
+GLuint  _world_view_uniform;
+GLuint  _normal_uniform;
 
 GLuint  _light_buffer_uniform;
 GLuint  _light_buffer_buffer;

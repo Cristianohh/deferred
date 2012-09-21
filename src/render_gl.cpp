@@ -323,10 +323,11 @@ void set_3d_view_matrix(const float4x4& view) {
 void set_2d_view_matrix(const float4x4& view) {
     _2d_view = view;
 }
-void draw_3d(MeshID mesh, TextureID texture, const float4x4& transform) {
+void draw_3d(MeshID mesh, TextureID texture, TextureID normal_texture, const float4x4& transform) {
     const Mesh& m = _meshes[mesh];
     Renderable& r = _renderables[_num_renderables];
     r.texture = _textures[texture];
+    r.normal_texture = _textures[normal_texture];
     r.vao = m.vao;
     r.index_count = m.index_count;
     r.index_format = m.index_format;

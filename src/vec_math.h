@@ -436,6 +436,16 @@ static float3x3 float3x3Scale(float x, float y, float z)
                   0,0,z};
     return m;
 }
+static float3x3 float3x3fromFloat4x4(const float4x4* m)
+{
+    float3x3 r =
+    {
+        *((float3*)&m->r0),
+        *((float3*)&m->r1),
+        *((float3*)&m->r2),
+    };
+    return r;
+}
 
 
 /*

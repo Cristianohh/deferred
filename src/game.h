@@ -18,6 +18,7 @@ struct Object {
     Transform   transform;
     MeshID      mesh;
     TextureID   texture;
+    TextureID   normal_texture;
 };
 
 class Game {

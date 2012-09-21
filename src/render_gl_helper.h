@@ -45,6 +45,7 @@ typedef struct {
     GLsizei index_count;
     GLenum  index_format;
     GLuint  texture;
+    GLuint  normal_texture;
 } Renderable;
 
 typedef struct {

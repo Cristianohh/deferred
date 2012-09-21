@@ -63,14 +63,17 @@ void Game::initialize(void) {
     o.transform.position.y = -50.0f;
     o.mesh = _render->create_mesh(4, kVtxPosNormTex, 6, sizeof(ground_indices[0]), ground_vertices, ground_indices);
     o.texture = _render->load_texture("assets/grass.dds");
+    o.normal_texture = _render->load_texture("assets/grass_nrm.png");
     _add_object(o);
 
 
-    TextureID textures[3] = {0};
-    //textures[0] = _render->load_texture("assets/metal.jpg");
-    textures[0] = _render->load_texture("assets/metal.dds");
-    textures[1] = _render->load_texture("assets/brick.dds");
-    textures[2] = _render->load_texture("assets/wood.dds");
+    TextureID textures[3][2] = {0};
+    textures[0][0] = _render->load_texture("assets/metal.dds");
+    textures[1][0] = _render->load_texture("assets/brick.dds");
+    textures[2][0] = _render->load_texture("assets/wood.dds");
+    textures[0][1] = _render->load_texture("assets/metal_nrm.png");
+    textures[1][1] = _render->load_texture("assets/brick_nrm.png");
+    textures[2][1] = _render->load_texture("assets/wood_nrm.png");
 
     for(int ii=0; ii<32;++ii) {
         o.transform = TransformZero();
@@ -88,7 +91,9 @@ void Game::initialize(void) {
                 o.mesh = _render->cube_mesh();
                 break;
         }
-        o.texture = textures[rand()%3];
+        int material = rand()%3;
+        o.texture = textures[material][0];
+        o.normal_texture = textures[material][1];
         _add_object(o);
     }
 
@@ -151,7 +156,7 @@ int Game::on_frame(void) {
 
     for(int ii=0;ii<_num_objects;++ii) {
         const Object& o = _objects[ii];
-        _render->draw_3d(o.mesh, o.texture, TransformGetMatrix(&o.transform));
+        _render->draw_3d(o.mesh, o.texture, o.normal_texture, TransformGetMatrix(&o.transform));
     }
     for(int ii=0;ii<MAX_LIGHTS;++ii) {
         _render->draw_light(_lights[ii], _colors[ii], _colors[ii].w);

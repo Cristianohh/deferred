@@ -17,6 +17,7 @@ layout(std140) uniform LightBuffer
 };
 
 uniform sampler2D kDiffuseTex;
+uniform sampler2D kNormalTex;
 
 uniform vec3 kCameraPosition;
 
@@ -24,12 +25,17 @@ in vec3 int_WorldPos;
 in vec3 int_Normal;
 in vec2 int_TexCoord;
 
+in vec3 int_NormalCam;
+in vec3 int_TangentCam;
+in vec3 int_BitangentCam;
+
 out vec4 out_Color;
 
 
 vec3 phong( vec3 light_dir, vec3 light_color,
             vec3 normal, vec3 albedo,
-            vec3 dir_to_cam, float spec_power, float spec_intensity)
+            vec3 dir_to_cam, float attenuation,
+            float spec_power, float spec_intensity)
 {
     float n_dot_l = clamp(dot(light_dir, normal), 0.0f, 1.0f);
     vec3 reflection = reflect(dir_to_cam, normal);
@@ -38,7 +44,7 @@ vec3 phong( vec3 light_dir, vec3 light_color,
     vec3 specular = vec3(min(1.0f, pow(r_dot_l, spec_power))) * light_color * spec_intensity;
     vec3 diffuse = albedo * light_color * n_dot_l;
 
-    return diffuse + specular;
+    return attenuation * (diffuse + specular);
 }
 
 void main()
@@ -50,11 +56,14 @@ void main()
     float spec_power = 128.0f;
     float spec_intensity = 0.8f;
 
+    mat3 TBN = transpose(mat3(int_TangentCam, int_BitangentCam, int_NormalCam));
+
     for(int ii=0;ii<kNumLights;++ii) {
         Light current_light = kLight[ii];
         vec3 light_color = current_light.color.xyz;
         vec3 light_dir = current_light.pos.xyz;
         float light_type = current_light.color.a;
+        float attenuation = 1.0f;
 
         // Dirctional lights and point lights are handled a little bit differently.
         // It might be more efficient to make two separate shaders rather than have
@@ -69,8 +78,7 @@ void main()
                 continue;
             }
             light_dir = normalize(light_dir);
-            float attenuation = 1 - pow( clamp(dist/size, 0.0f, 1.0f), 2);
-            light_color *= attenuation;
+            attenuation = 1 - pow( clamp(dist/size, 0.0f, 1.0f), 2);
         }
 
         //
@@ -78,7 +86,7 @@ void main()
         //
         vec3 color = phong(light_dir, light_color,
                            normal, albedo,
-                           dir_to_cam,
+                           dir_to_cam, attenuation,
                            spec_power, spec_intensity);
 
         // Only add ambient to directional lights
