@@ -8,7 +8,7 @@ struct Light
 
 layout(std140) uniform LightBuffer
 {
-    Light kLight[511];
+    Light kLight[127];
     int  kNumLights;
     int  _padding[3];
 };

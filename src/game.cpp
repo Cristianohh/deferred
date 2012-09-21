@@ -158,8 +158,9 @@ int Game::on_frame(void) {
     _render->render();
 
     // End of frame stuff
-    if(++_frame_count % 16 == 0)
-        debug_output("%.1f FPS\n", get_fps(&_fps));
+    if(++_frame_count % 2 == 0) {
+        debug_output("%.2fms (%.0f FPS)\n", get_frametime(&_fps), get_fps(&_fps));
+    }
     return 0;
 }
 void Game::_control_camera()

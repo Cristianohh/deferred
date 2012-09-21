@@ -16,11 +16,19 @@ void update_fps(FPSCounter* fps, float delta_time) {
     int index = fps->frame++ % kFPSFrameCount;
     fps->times[index] = delta_time;
 }
-float get_fps(FPSCounter* fps) {
+float get_fps(const FPSCounter* fps) {
     int ii;
     float total = 0.0f;
     for(ii=0;ii<kFPSFrameCount;++ii) {
         total += fps->times[ii];
     }
     return kFPSFrameCount/total;
+}
+float get_frametime(const FPSCounter* fps) {
+    int ii;
+    float total = 0.0f;
+    for(ii=0;ii<kFPSFrameCount;++ii) {
+        total += fps->times[ii];
+    }
+    return total/kFPSFrameCount * 1000.0f;
 }

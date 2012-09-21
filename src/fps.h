@@ -23,7 +23,8 @@ typedef struct {
 } FPSCounter;
 
 void update_fps(FPSCounter* fps, float delta_time);
-float get_fps(FPSCounter* fps);
+float get_fps(const FPSCounter* fps);
+float get_frametime(const FPSCounter* fps);
 
 #ifdef __cplusplus
 } // extern "C" {
