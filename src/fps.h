@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-enum { kFPSFrameCount = 31 };
+enum { kFPSFrameCount = 127 };
 
 typedef struct {
     float times[kFPSFrameCount];

@@ -224,8 +224,6 @@ GLuint  _depth_buffer;
 GLuint  _gbuffer[3];
 GLuint  _gbuffer_tex[3];
 
-GLuint  _normal_map;
-
 };
 
 #endif /* include guard */
