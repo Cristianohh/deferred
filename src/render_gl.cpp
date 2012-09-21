@@ -298,10 +298,21 @@ MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
                    uint32_t index_count, size_t index_size,
                    const void* vertices, const void* indices) {
     MeshID id = _num_meshes++;
-    _meshes[id] = _create_mesh(vertex_count, kVertexSizes[vertex_type],
-                              index_count, index_size,
-                              vertices, indices,
-                              kVertexDescriptions[vertex_type]);
+
+    if(vertex_type == kVtxPosNormTex) {
+        VtxPosNormTanBitanTex* new_vertices = _calculate_tangets((VtxPosNormTex*)vertices, vertex_count, indices, index_size, index_count);
+        vertex_type = kVtxPosNormTanBitanTex;
+        _meshes[id] = _create_mesh(vertex_count, kVertexSizes[vertex_type],
+                                   index_count, index_size,
+                                   new_vertices, indices,
+                                   kVertexDescriptions[vertex_type]);
+        delete [] new_vertices;
+    } else {
+        _meshes[id] = _create_mesh(vertex_count, kVertexSizes[vertex_type],
+                                   index_count, index_size,
+                                   vertices, indices,
+                                   kVertexDescriptions[vertex_type]);
+    }
     return id;
 }
 

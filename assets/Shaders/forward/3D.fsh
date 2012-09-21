@@ -11,7 +11,7 @@ struct Light
 
 layout(std140) uniform LightBuffer
 {
-    Light kLight[63];
+    Light kLight[127];
     int  kNumLights;
     int  _padding[3];
 };
@@ -67,7 +67,7 @@ void main()
         float light_type = current_light.color.a;
         float attenuation = 1.0f;
 
-        light_dir = TBN * -light_dir;
+        light_dir = TBN * light_dir;
 
         // Dirctional lights and point lights are handled a little bit differently.
         // It might be more efficient to make two separate shaders rather than have
