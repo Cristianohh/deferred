@@ -23,6 +23,21 @@ in vec2 int_TexCoord;
 
 out vec4 out_Color;
 
+
+vec3 phong( vec3 light_dir, vec3 light_color,
+            vec3 normal, vec3 albedo,
+            vec3 dir_to_cam, float spec_power, float spec_intensity)
+{
+    float n_dot_l = clamp(dot(light_dir, normal), 0.0f, 1.0f);
+    vec3 reflection = reflect(dir_to_cam, normal);
+    float r_dot_l = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
+    
+    vec3 specular = vec3(min(1.0f, pow(r_dot_l, spec_power))) * light_color * spec_intensity;
+    vec3 diffuse = albedo * light_color * n_dot_l;
+
+    return diffuse + specular;
+}
+
 void main()
 {
     vec4 albedo = texture(kDiffuseTex, int_TexCoord);
