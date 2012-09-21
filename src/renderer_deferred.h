@@ -163,8 +163,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glUniform3fv(_light_cam_pos_uniform, 1, (float*)&view.r3);
         for(int ii=0;ii<num_lights;++ii) {
             Light light = lights[ii];
-            if(light.color.w == kDirectionalLight) {
-            
+            if(light.color.w == kDirectionalLight) {            
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&float4x4identity);
                 glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&float4x4identity);
                 glUniform4fv(_light_light_uniform, 2, (float*)&light);
