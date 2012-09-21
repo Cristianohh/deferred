@@ -191,6 +191,11 @@ void Game::_control_camera()
         _camera.position = float3add(&_camera.position, &right);
     if(app_is_key_down(KEY_A))
         _camera.position = float3subtract(&_camera.position, &right);
+    
+    if(app_is_key_down(KEY_E))
+        _camera.position = float3add(&_camera.position, &up);
+    if(app_is_key_down(KEY_Q))
+        _camera.position = float3subtract(&_camera.position, &up);
 }
 void Game::_add_object(const Object& o) {
     _objects[_num_objects++] = o;
