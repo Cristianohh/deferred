@@ -15,18 +15,26 @@
 
 #define MAX_LIGHTS 127
 
+struct VtxPosNormTanBitanTex {
+    float3  pos;
+    float3  norm;
+    float3  tan;
+    float3  bitan;
+    float2  tex;
+};
 struct VtxPosNormTex {
-    float3    pos;
-    float3    norm;
-    float2    tex;
+    float3  pos;
+    float3  norm;
+    float2  tex;
 };
 struct VtxPosTex {
-    float3    pos;
-    float2    tex;
+    float3  pos;
+    float2  tex;
 };
 enum VertexType {
     kVtxPosNormTex,
     kVtxPosTex,
+    kVtxPosNormTanBitanTex,
 
     kNUM_VERTEX_TYPES
 };

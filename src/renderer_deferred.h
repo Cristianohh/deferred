@@ -21,8 +21,8 @@ void init(void) {
     glGenTextures(3, _gbuffer_tex);
 
     { // Deferred Geometry
-        GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred.vsh");
-        GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred.fsh");
+        GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred/geometry.vsh");
+        GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred/geometry.fsh");
         _geom_program = _create_program(vs, fs);
         glDeleteShader(vs);
         glDeleteShader(fs);
@@ -32,8 +32,8 @@ void init(void) {
         _geom_diffuse_uniform = glGetUniformLocation(_geom_program, "kDiffuseTex");
     }    
     { // Deferred lighting
-        GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred_light.vsh");
-        GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred_light.fsh");
+        GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred/light.vsh");
+        GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/deferred/light.fsh");
         _light_program = _create_program(vs, fs);
         glDeleteShader(vs);
         glDeleteShader(fs);
@@ -223,6 +223,8 @@ GLuint  _depth_buffer;
 
 GLuint  _gbuffer[3];
 GLuint  _gbuffer_tex[3];
+
+GLuint  _normal_map;
 
 };
 

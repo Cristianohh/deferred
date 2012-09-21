@@ -15,8 +15,8 @@ class RendererForward : public Renderer {
 public:
 
 void init(void) {
-    GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/3D.vsh");
-    GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/3D.fsh");
+    GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/forward/3D.vsh");
+    GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/forward/3D.fsh");
     _program = _create_program(vs, fs);
     glDeleteShader(vs);
     glDeleteShader(fs);

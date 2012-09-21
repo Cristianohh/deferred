@@ -62,6 +62,15 @@ struct float4x4
 };
 
 /*
+ * float2 functions
+ */
+static float2 float2subtract(const float2* a, const float2* b)
+{
+    float2 r = { a->x - b->x, a->y - b->y  };
+    return r;
+}
+
+/*
  * float3 functions
  */
 static const float3 float3zero = { 0,0,0 };

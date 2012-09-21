@@ -84,14 +84,28 @@ static const VertexDescription kVertexDescriptions[kNUM_VERTEX_TYPES][8] =
     { // kVtxPosNormTex
         { 0, 3 },
         { 1, 3 },
-        { 2, 2 },
+        { 4, 2 },
         { 0, 0 },
     },
     { // kVtxPosTex
         { 0, 3 },
         { 1, 2 },
         { 0, 0 },
-    }
+    },
+    { // kVtxPosNormTanBitanTex
+        { 0, 3 },
+        { 1, 3 },
+        { 2, 3 },
+        { 3, 3 },
+        { 4, 2 },
+        { 0, 0 },
+    },
+};
+static const size_t kVertexSizes[kNUM_VERTEX_TYPES] =
+{
+    sizeof(VtxPosNormTex),
+    sizeof(VtxPosTex),
+    sizeof(VtxPosNormTanBitanTex)
 };
 
 }
@@ -272,7 +286,7 @@ MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
                    uint32_t index_count, size_t index_size,
                    const void* vertices, const void* indices) {
     MeshID id = _num_meshes++;
-    _meshes[id] = _create_mesh(vertex_count, (vertex_type == kVtxPosNormTex) ? sizeof(VtxPosNormTex) : sizeof(VtxPosTex),
+    _meshes[id] = _create_mesh(vertex_count, kVertexSizes[vertex_type],
                               index_count, index_size,
                               vertices, indices,
                               kVertexDescriptions[vertex_type]);
@@ -381,10 +395,64 @@ MeshID load_mesh(const char* filename) {
     fread( pData + (nVertexStride * nVertexCount), nIndexSize, nIndexCount, pFile );
     fclose( pFile );
 
-    MeshID mesh = create_mesh(nVertexCount, kVtxPosNormTex, nIndexCount, nIndexSize, pData, pData + (nVertexStride * nVertexCount));
+    void* indices = pData + (nVertexStride * nVertexCount);
+
+    VtxPosNormTanBitanTex* new_vertices = _calculate_tangets((VtxPosNormTex*)pData, nVertexCount, indices, (size_t)nIndexSize, nIndexCount);
+
+    MeshID mesh = create_mesh(nVertexCount, kVtxPosNormTanBitanTex, nIndexCount, nIndexSize, new_vertices, indices);
     delete [] pData;
+    delete [] new_vertices;
 
     return mesh;
+}
+VtxPosNormTanBitanTex* _calculate_tangets(const VtxPosNormTex* vertices, int num_vertices, const void* indices, size_t index_size, int num_indices) {
+    VtxPosNormTanBitanTex* new_vertices = new VtxPosNormTanBitanTex[num_vertices];
+    for(int ii=0;ii<num_vertices;++ii) {
+        new_vertices[ii].pos = vertices[ii].pos;
+        new_vertices[ii].norm = vertices[ii].norm;
+        new_vertices[ii].tex = vertices[ii].tex;
+    }
+    for(int ii=0;ii<num_indices;ii+=3) {
+        uint32_t i0,i1,i2;
+        if(index_size == 2) {
+            i0 = ((uint16_t*)indices)[ii+0];
+            i1 = ((uint16_t*)indices)[ii+1];
+            i2 = ((uint16_t*)indices)[ii+2];
+        } else {
+            i0 = ((uint32_t*)indices)[ii+0];
+            i1 = ((uint32_t*)indices)[ii+1];
+            i2 = ((uint32_t*)indices)[ii+2];
+        }
+
+        VtxPosNormTanBitanTex& v0 = new_vertices[i0];
+        VtxPosNormTanBitanTex& v1 = new_vertices[i1];
+        VtxPosNormTanBitanTex& v2 = new_vertices[i2];
+
+        float3 delta_pos1 = float3subtract(&v1.pos, &v0.pos);
+        float3 delta_pos2 = float3subtract(&v2.pos, &v0.pos);
+        float2 delta_uv1 = float2subtract(&v1.tex, &v0.tex);
+        float2 delta_uv2 = float2subtract(&v2.tex, &v0.tex);
+        
+        float r = 1.0f / (delta_uv1.x * delta_uv2.y - delta_uv1.y * delta_uv2.x);
+        float3 a = float3multiplyScalar(&delta_pos1, delta_uv2.y);
+        float3 b = float3multiplyScalar(&delta_pos2, delta_uv1.y);
+        float3 tangent = float3subtract(&a,&b);
+        tangent = float3multiplyScalar(&tangent, r);
+        
+        a = float3multiplyScalar(&delta_pos2, delta_uv1.x);
+        b = float3multiplyScalar(&delta_pos1, delta_uv2.x);
+        float3 bitangent = float3subtract(&a,&b);
+        bitangent = float3multiplyScalar(&bitangent, r);
+
+        v0.bitan = bitangent;
+        v1.bitan = bitangent;
+        v2.bitan = bitangent;
+        
+        v0.tan = tangent;
+        v1.tan = tangent;
+        v2.tan = tangent;
+    }
+    return new_vertices;
 }
 private:
 void _clear(void) {
