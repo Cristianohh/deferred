@@ -14,20 +14,19 @@ out vec3 int_WorldPos;
 out vec3 int_Normal;
 out vec2 int_TexCoord;
 
-out vec3 int_NormalCam;
-out vec3 int_TangentCam;
-out vec3 int_BitangentCam;
+out vec3 int_NormalWS;
+out vec3 int_TangentWS;
 
 void main()
 {
+    mat3 world3 = mat3(kWorld);
     vec4 world_pos = kWorld * in_Position;
     gl_Position = kViewProj * world_pos;
 
     int_WorldPos = vec3(world_pos);
-    int_Normal = mat3(kWorld) * in_Normal;
+    int_Normal = world3 * in_Normal;
     int_TexCoord = in_TexCoord;
 
-    int_NormalCam       = kWorldView * normalize(in_Normal);
-    int_TangentCam      = kWorldView * normalize(in_Tangent);
-    int_BitangentCam    = kWorldView * normalize(in_BiTangent);
+    int_NormalWS    = world3 * in_Normal;
+    int_TangentWS   = world3 * in_Tangent;
 }

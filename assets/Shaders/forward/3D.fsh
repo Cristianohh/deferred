@@ -25,9 +25,8 @@ in vec3 int_WorldPos;
 in vec3 int_Normal;
 in vec2 int_TexCoord;
 
-in vec3 int_NormalCam;
-in vec3 int_TangentCam;
-in vec3 int_BitangentCam;
+in vec3 int_NormalWS;
+in vec3 int_TangentWS;
 
 out vec4 out_Color;
 
@@ -56,9 +55,12 @@ void main()
     float spec_power = 128.0f;
     float spec_intensity = 0.8f;
 
-    mat3 TBN = transpose(mat3(int_TangentCam, int_BitangentCam, int_NormalCam));
+    vec3 N = normalize(int_NormalWS);
+    vec3 T = normalize(int_TangentWS - dot(int_TangentWS, N)*N);
+    vec3 B = cross(N,T);
 
-    dir_to_cam = TBN * dir_to_cam;
+    mat3 TBN = mat3(T, B, N);
+    normal = normalize(TBN*normal);
 
     for(int ii=0;ii<kNumLights;++ii) {
         Light current_light = kLight[ii];
@@ -66,8 +68,6 @@ void main()
         vec3 light_dir = current_light.pos.xyz;
         float light_type = current_light.color.a;
         float attenuation = 1.0f;
-
-        light_dir = TBN * light_dir;
 
         // Dirctional lights and point lights are handled a little bit differently.
         // It might be more efficient to make two separate shaders rather than have
