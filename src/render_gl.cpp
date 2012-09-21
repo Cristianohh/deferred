@@ -334,6 +334,17 @@ void draw_light(const float4& light, const float4& color, LightType type) {
 TextureID load_texture(const char* filename) {
     int width, height, components;
     GLenum format;
+    { // Check to see if this is a DXT texture
+        FILE* file = fopen(filename, "rb");
+        assert(file);
+        char filecode[4];
+        fread(filecode, 1, 4, file);
+        if(strncmp(filecode, "DDS", 4) == 0) {
+            fclose(file);
+            return _load_dxt_texture(filename);
+        }
+        fclose(file);
+    }
     void* tex_data = stbi_load(filename, &width, &height, &components, 0);
 
     GLuint texture;
@@ -370,6 +381,24 @@ TextureID load_texture(const char* filename) {
     CheckGLError();
 
     stbi_image_free(tex_data);
+
+    _textures[_num_textures] = texture;
+    return _num_textures++;
+}
+TextureID _load_dxt_texture(const char* filename) {
+    FILE* file = fopen(filename, "rb");
+    assert(file);
+    char filecode[4];
+    fread(filecode, 1, 4, file);
+    if(strncmp(filecode, "DDS", 4) != 0) {
+        fclose(file);
+        return -1;
+    }
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+
+    fclose(file);
 
     _textures[_num_textures] = texture;
     return _num_textures++;
