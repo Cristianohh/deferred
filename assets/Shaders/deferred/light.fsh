@@ -52,7 +52,7 @@ void main()
     
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos.xyz);
     vec3 light_color = kLight[1].xyz;
-    vec3 light_dir = kLight[0].xyz;
+    vec3 light_dir;
     float light_type = kLight[1].a;
     float attenuation = 1.0f;
 
@@ -60,7 +60,7 @@ void main()
     // It might be more efficient to make two separate shaders rather than have
     // the different cases.
     if(light_type == kDirectionalLight) {
-        light_dir = normalize(light_dir);
+        light_dir = normalize(-kLight[0].xyz);
     } else if(light_type == kPointLight) {
         light_dir = kLight[0].xyz - world_pos.xyz;
         float dist = length(light_dir);

@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <vector>
 #include "assert.h"
 #include "stb_image.h"
 #include "application.h"
@@ -488,11 +489,17 @@ MeshID load_mesh(const char* filename) {
     uint32_t nIndexCount;
     char* pData;
 
+    const char* ext = (filename + strlen(filename))-3;
+    if(strncmp(ext, "obj", 4) == 0) {
+        return _load_obj(filename);
+    }
+
     FILE* pFile = fopen( filename, "rb" );
     fread( &nVertexStride, sizeof( nVertexStride ), 1, pFile );
     fread( &nVertexCount, sizeof( nVertexCount ), 1, pFile );
     fread( &nIndexSize, sizeof( nIndexSize ), 1, pFile );
-    nIndexSize = (nIndexSize == 32 ) ? 4 : 2;
+    if(nIndexSize > 8) // Convert from bits to bytes
+        nIndexSize /= 8;
     fread( &nIndexCount, sizeof( nIndexCount ), 1, pFile );
 
     pData   = new char[ (nVertexStride * nVertexCount) + (nIndexCount * nIndexSize) ];
@@ -508,6 +515,91 @@ MeshID load_mesh(const char* filename) {
     MeshID mesh = create_mesh(nVertexCount, kVtxPosNormTanBitanTex, nIndexCount, nIndexSize, new_vertices, indices);
     delete [] pData;
     delete [] new_vertices;
+
+    return mesh;
+}
+struct int3 {
+    int p;
+    int t;
+    int n;
+};
+MeshID _load_obj(const char* filename) {
+    
+    std::vector<float3> positions;
+    std::vector<float3> normals;
+    std::vector<float2> texcoords;
+
+    std::vector<int3>   indicies;
+    
+    FILE* file = fopen(filename, "rt");
+    while(1) {
+        char line_header[128];
+        int res = fscanf(file, "%s", line_header);
+        if(res == EOF)
+            break;
+
+        if(strcmp(line_header, "v") == 0) {
+            float3 v;
+            fscanf(file, "%f %f %f\n", &v.x, &v.y, &v.z);
+            positions.push_back(v);
+        } else if(strcmp(line_header, "vt") == 0) {
+            float2 t;
+            fscanf(file, "%f %f\n", &t.x, &t.y);
+            texcoords.push_back(t);
+        } else if(strcmp(line_header, "vn") == 0) {
+            float3 n;
+            fscanf(file, "%f %f %f\n", &n.x, &n.y, &n.z);
+            normals.push_back(n);
+        } else if(strcmp(line_header, "f") == 0) {
+            int3 triangle[4];
+            int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",
+                                        &triangle[0].p, &triangle[0].t,&triangle[0].n,
+                                        &triangle[1].p, &triangle[1].t,&triangle[1].n,
+                                        &triangle[2].p, &triangle[2].t,&triangle[2].n,
+                                        &triangle[3].p, &triangle[3].t,&triangle[3].n);
+            if(matches != 9 && matches != 12) {
+                debug_output("Can't load this OBJ\n");
+                return -1;
+            }
+            indicies.push_back(triangle[0]);
+            indicies.push_back(triangle[1]);
+            indicies.push_back(triangle[2]);
+            if(matches == 12) {
+                indicies.push_back(triangle[0]);
+                indicies.push_back(triangle[2]); 
+                indicies.push_back(triangle[3]);
+            }
+        } else {
+            // A comment?
+            char buffer[1024];
+            fgets(buffer, sizeof(buffer), file);
+        }
+    }
+    fclose(file);
+
+    VtxPosNormTex* vertices = new VtxPosNormTex[indicies.size()];
+    for(int ii=0; ii<(int)indicies.size(); ++ii) {
+        int pos_index = indicies[ii].p-1;
+        int tex_index = indicies[ii].t-1;
+        int norm_index = indicies[ii].n-1;
+        VtxPosNormTex& vertex = vertices[ii];
+        vertex.pos = positions[pos_index];
+        vertex.tex = texcoords[tex_index];
+        vertex.norm = normals[norm_index];
+    }
+    uint32_t* i = new uint32_t[indicies.size()];
+    for(int ii=0;ii<(int)indicies.size();++ii)
+        i[ii] = ii;
+
+    int vertex_count = (int)indicies.size();
+    int index_count = vertex_count;
+
+    VtxPosNormTanBitanTex* new_vertices = _calculate_tangets(vertices, vertex_count, i, sizeof(uint32_t), index_count);
+
+    MeshID mesh = create_mesh(vertex_count, kVtxPosNormTanBitanTex, index_count, sizeof(uint32_t), new_vertices, i);
+    delete [] new_vertices;
+    delete [] vertices;
+    delete [] i;
 
     return mesh;
 }

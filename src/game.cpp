@@ -29,10 +29,14 @@ Game::Game()
 {
     _fps.frame = 0;
     _camera = TransformZero();
+//    _camera.position.z = -60.0f;
+//    _camera.position.y = 15.0f;
+//    float3 axis = {1.0f, 0.0f, 0.0f};
+//    _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
     _camera.position.z = -60.0f;
-    _camera.position.y = 15.0f;
+    _camera.position.y = 0.5f;
     float3 axis = {1.0f, 0.0f, 0.0f};
-    _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
+    _camera.orientation = quaternionFromAxisAngle(&axis, 0.0f);
 }
 void Game::initialize(void) {
     timer_init(&_timer);
@@ -97,9 +101,16 @@ void Game::initialize(void) {
         _add_object(o);
     }
 
+    o.transform = TransformZero();
+    o.transform.scale = 0.01f;
+    o.mesh = _render->load_mesh("assets/house_obj.obj");
+    o.texture = _render->load_texture("assets/house_diffuse.tga");
+    o.normal_texture = _render->load_texture("assets/house_normal.tga");;
+    _add_object(o);
+
     // Add a "sun"
-    _lights[0].x = 0.0f;
-    _lights[0].y = 1.0f;
+    _lights[0].x = 0.1f;
+    _lights[0].y = -1.0f;
     _lights[0].z = 0.0f;
     _lights[0].w = 8.0f;
     _colors[0].x = 0.9f;

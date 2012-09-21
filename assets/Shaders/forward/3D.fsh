@@ -11,7 +11,7 @@ struct Light
 
 layout(std140) uniform LightBuffer
 {
-    Light kLight[127];
+    Light kLight[511];
     int  kNumLights;
     int  _padding[3];
 };
@@ -48,8 +48,9 @@ vec3 phong( vec3 light_dir, vec3 light_color,
 
 void main()
 {
-    vec3 albedo = texture(kDiffuseTex, int_TexCoord).rgb;
-    vec3 normal = normalize(texture(kNormalTex, int_TexCoord).rgb*2.0 - 1.0f);
+    vec2 flipped_tex = vec2(int_TexCoord.x, -int_TexCoord.y); // Flip the tex coords on the y
+    vec3 albedo = texture(kDiffuseTex, flipped_tex).rgb;
+    vec3 normal = normalize(texture(kNormalTex, flipped_tex).rgb*2.0 - 1.0f);
     vec3 world_pos = int_WorldPos;
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos);
     float spec_power = 128.0f;
@@ -65,7 +66,7 @@ void main()
     for(int ii=0;ii<kNumLights;++ii) {
         Light current_light = kLight[ii];
         vec3 light_color = current_light.color.xyz;
-        vec3 light_dir = current_light.pos.xyz;
+        vec3 light_dir;
         float light_type = current_light.color.a;
         float attenuation = 1.0f;
 
@@ -73,7 +74,7 @@ void main()
         // It might be more efficient to make two separate shaders rather than have
         // the different cases.
         if(light_type == kDirectionalLight) {
-            light_dir = normalize(light_dir);
+            light_dir = normalize(-current_light.pos.xyz);
         } else if(light_type == kPointLight) {
             light_dir = current_light.pos.xyz - world_pos.xyz;
             float dist = length(light_dir);

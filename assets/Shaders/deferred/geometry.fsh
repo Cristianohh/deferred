@@ -15,10 +15,11 @@ out vec4 GBuffer[3];
 
 void main()
 {
+    vec2 flipped_tex = vec2(int_TexCoord.x, -int_TexCoord.y); // Flip the tex coords on the y
     float spec_intensity = 0.8f;
     float spec_power = 128.0f;
 
-    vec3 norm = normalize(texture(kNormalTex, int_TexCoord).rgb*2.0 - 1.0f);
+    vec3 norm = normalize(texture(kNormalTex, flipped_tex).rgb*2.0 - 1.0f);
 
     vec3 N = normalize(int_NormalWS);
     vec3 T = normalize(int_TangentWS - dot(int_TangentWS, N)*N);
@@ -27,7 +28,7 @@ void main()
     mat3 TBN = mat3(T, B, N);
     norm = normalize(TBN*norm);
 
-    GBuffer[0] = vec4(texture(kDiffuseTex, int_TexCoord).rgb, spec_intensity);
+    GBuffer[0] = vec4(texture(kDiffuseTex, flipped_tex).rgb, spec_intensity);
     norm += 1.0f;
     norm *= 0.5f;
     GBuffer[1] = vec4(norm, spec_power);

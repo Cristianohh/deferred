@@ -157,7 +157,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
-        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
         
         float4x4 inv_viewproj = float4x4inverse(&view_proj);
         glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
@@ -195,9 +195,9 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             }
         }
 
+        glDepthMask(GL_TRUE);
         glActiveTexture(GL_TEXTURE0);
         glDisable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
