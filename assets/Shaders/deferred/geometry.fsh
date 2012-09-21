@@ -8,7 +8,6 @@ in vec3 int_Normal;
 in vec2 int_TexCoord;
 in vec2 int_Depth;
 
-in vec3 int_NormalWS;
 in vec3 int_TangentWS;
 
 out vec4 GBuffer[3];
@@ -21,7 +20,7 @@ void main()
 
     vec3 norm = normalize(texture(kNormalTex, flipped_tex).rgb*2.0 - 1.0f);
 
-    vec3 N = normalize(int_NormalWS);
+    vec3 N = normalize(int_Normal);
     vec3 T = normalize(int_TangentWS - dot(int_TangentWS, N)*N);
     vec3 B = cross(N,T);
 

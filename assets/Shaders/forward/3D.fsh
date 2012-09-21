@@ -24,8 +24,6 @@ uniform vec3 kCameraPosition;
 in vec3 int_WorldPos;
 in vec3 int_Normal;
 in vec2 int_TexCoord;
-
-in vec3 int_NormalWS;
 in vec3 int_TangentWS;
 
 out vec4 out_Color;
@@ -56,7 +54,7 @@ void main()
     float spec_power = 128.0f;
     float spec_intensity = 0.8f;
 
-    vec3 N = normalize(int_NormalWS);
+    vec3 N = normalize(int_Normal);
     vec3 T = normalize(int_TangentWS - dot(int_TangentWS, N)*N);
     vec3 B = cross(N,T);
 

@@ -27,8 +27,7 @@ void init(void) {
         glDeleteShader(vs);
         glDeleteShader(fs);
         _geom_world_uniform = glGetUniformLocation(_geom_program, "kWorld");
-        _geom_proj_uniform = glGetUniformLocation(_geom_program, "kProj");
-        _geom_view_uniform = glGetUniformLocation(_geom_program, "kView");
+        _geom_viewproj_uniform = glGetUniformLocation(_geom_program, "kViewProj");
         _geom_diffuse_uniform = glGetUniformLocation(_geom_program, "kDiffuseTex");
         _geom_normal_uniform = glGetUniformLocation(_geom_program, "kNormalTex");
     }    
@@ -122,8 +121,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
 
         glUseProgram(_geom_program);
 
-        glUniformMatrix4fv(_geom_proj_uniform, 1, GL_FALSE, (float*)&proj);
-        glUniformMatrix4fv(_geom_view_uniform, 1, GL_FALSE, (float*)&inv_view);
+        glUniformMatrix4fv(_geom_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
         for(int ii=0;ii<num_renderables;++ii) {
             const Renderable& r = renderables[ii];
             glUniformMatrix4fv(_geom_world_uniform, 1, GL_FALSE, (float*)&r.transform);
@@ -213,8 +211,7 @@ Mesh    _fullscreen_mesh;
 
 GLuint  _geom_program;
 GLuint  _geom_world_uniform;
-GLuint  _geom_view_uniform;
-GLuint  _geom_proj_uniform;
+GLuint  _geom_viewproj_uniform;
 GLuint  _geom_diffuse_uniform;
 GLuint  _geom_normal_uniform;
 
