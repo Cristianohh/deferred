@@ -30,6 +30,7 @@ void init(void) {
         _geom_proj_uniform = glGetUniformLocation(_geom_program, "kProj");
         _geom_view_uniform = glGetUniformLocation(_geom_program, "kView");
         _geom_diffuse_uniform = glGetUniformLocation(_geom_program, "kDiffuseTex");
+        _geom_normal_uniform = glGetUniformLocation(_geom_program, "kNormalTex");
     }    
     { // Deferred lighting
         GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred/light.vsh");
@@ -126,12 +127,18 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         for(int ii=0;ii<num_renderables;++ii) {
             const Renderable& r = renderables[ii];
             glUniformMatrix4fv(_geom_world_uniform, 1, GL_FALSE, (float*)&r.transform);
+            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, r.texture);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, r.normal_texture);
+            glUniform1i(_geom_diffuse_uniform, 0);
+            glUniform1i(_geom_normal_uniform, 1);
             glBindVertexArray(r.vao);
             _validate_program(_geom_program);
             glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
         }
 
+        glActiveTexture(GL_TEXTURE0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -209,6 +216,7 @@ GLuint  _geom_world_uniform;
 GLuint  _geom_view_uniform;
 GLuint  _geom_proj_uniform;
 GLuint  _geom_diffuse_uniform;
+GLuint  _geom_normal_uniform;
 
 GLuint  _light_program;
 GLuint  _light_world_uniform;

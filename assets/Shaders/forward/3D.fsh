@@ -11,7 +11,7 @@ struct Light
 
 layout(std140) uniform LightBuffer
 {
-    Light kLight[127];
+    Light kLight[63];
     int  kNumLights;
     int  _padding[3];
 };
@@ -50,7 +50,7 @@ vec3 phong( vec3 light_dir, vec3 light_color,
 void main()
 {
     vec3 albedo = texture(kDiffuseTex, int_TexCoord).rgb;
-    vec3 normal = normalize(int_Normal);
+    vec3 normal = normalize(texture(kNormalTex, int_TexCoord).rgb*2.0 - 1.0f);
     vec3 world_pos = int_WorldPos;
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos);
     float spec_power = 128.0f;
@@ -58,12 +58,16 @@ void main()
 
     mat3 TBN = transpose(mat3(int_TangentCam, int_BitangentCam, int_NormalCam));
 
+    dir_to_cam = TBN * dir_to_cam;
+
     for(int ii=0;ii<kNumLights;++ii) {
         Light current_light = kLight[ii];
         vec3 light_color = current_light.color.xyz;
         vec3 light_dir = current_light.pos.xyz;
         float light_type = current_light.color.a;
         float attenuation = 1.0f;
+
+        light_dir = TBN * -light_dir;
 
         // Dirctional lights and point lights are handled a little bit differently.
         // It might be more efficient to make two separate shaders rather than have

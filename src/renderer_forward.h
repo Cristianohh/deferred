@@ -69,10 +69,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
     }
     
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

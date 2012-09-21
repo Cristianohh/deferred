@@ -15,6 +15,10 @@ out vec3 int_Normal;
 out vec2 int_TexCoord;
 out vec2 int_Depth;
 
+out vec3 int_NormalCam;
+out vec3 int_TangentCam;
+out vec3 int_BitangentCam;
+
 void main()
 {
     vec4 world_pos = kWorld * in_Position;
@@ -27,4 +31,10 @@ void main()
     
 	int_Depth.x = gl_Position.z;
 	int_Depth.y = gl_Position.w;
+
+    mat3 kWorldView = mat3(kView)*mat3(kWorld);
+    
+    int_NormalCam       = kWorldView * normalize(in_Normal);
+    int_TangentCam      = kWorldView * normalize(in_Tangent);
+    int_BitangentCam    = kWorldView * normalize(in_BiTangent);
 }

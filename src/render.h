@@ -13,7 +13,7 @@
 #include <stddef.h>
 #include "vec_math.h"
 
-#define MAX_LIGHTS 127
+#define MAX_LIGHTS 63
 
 struct VtxPosNormTanBitanTex {
     float3  pos;
