@@ -196,6 +196,28 @@ void Game::_control_camera()
         _camera.position = float3add(&_camera.position, &up);
     if(app_is_key_down(KEY_Q))
         _camera.position = float3subtract(&_camera.position, &up);
+
+    if(app_is_key_down(KEY_UP)) {
+        float3 xaxis = {1.0f, 0.0f, 0.0f};
+        quaternion q = quaternionFromAxisAngle(&xaxis, -_delta_time);
+        _camera.orientation = quaternionMultiply(&q, &_camera.orientation);
+    }
+    if(app_is_key_down(KEY_DOWN)) {
+        float3 xaxis = {1.0f, 0.0f, 0.0f};
+        quaternion q = quaternionFromAxisAngle(&xaxis, _delta_time);
+        _camera.orientation = quaternionMultiply(&q, &_camera.orientation);
+    }
+    
+    if(app_is_key_down(KEY_RIGHT)) {
+        float3 yaxis = {0.0f, 1.0f, 0.0f};
+        quaternion q = quaternionFromAxisAngle(&yaxis, _delta_time);
+        _camera.orientation = quaternionMultiply(&_camera.orientation, &q);
+    }
+    if(app_is_key_down(KEY_LEFT)) {
+        float3 yaxis = {0.0f, 1.0f, 0.0f};
+        quaternion q = quaternionFromAxisAngle(&yaxis, -_delta_time);
+        _camera.orientation = quaternionMultiply(&_camera.orientation, &q);
+    }
 }
 void Game::_add_object(const Object& o) {
     _objects[_num_objects++] = o;
