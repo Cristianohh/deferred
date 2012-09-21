@@ -1,9 +1,12 @@
 #version 330
 
+#define kDirectionalLight 0.0f
+#define kPointLight 1.0f
+
 struct Light 
 {
-        vec4 pos;
-        vec4 color;
+    vec4 pos;
+    vec4 color;
 };
 
 layout(std140) uniform LightBuffer
@@ -40,38 +43,49 @@ vec3 phong( vec3 light_dir, vec3 light_color,
 
 void main()
 {
-    vec4 albedo = texture(kDiffuseTex, int_TexCoord);
+    vec3 albedo = texture(kDiffuseTex, int_TexCoord).rgb;
     vec3 normal = normalize(int_Normal);
-    vec3 dir_to_cam = normalize(kCameraPosition - int_WorldPos);
+    vec3 world_pos = int_WorldPos;
+    vec3 dir_to_cam = normalize(kCameraPosition - world_pos);
+    float spec_power = 128.0f;
+    float spec_intensity = 0.8f;
 
-    out_Color = albedo * 0.1f;
     for(int ii=0;ii<kNumLights;++ii) {
-        if(kLight[ii].color.a == 0.0f) {
-            vec3 light_dir = kLight[ii].pos.xyz;
-            
-            light_dir = normalize(light_dir);
-            float n_l = dot(light_dir, normal);
+        Light current_light = kLight[ii];
+        vec3 light_color = current_light.color.xyz;
+        vec3 light_dir = current_light.pos.xyz;
+        float light_type = current_light.color.a;
 
-            out_Color += albedo * kLight[ii].color * clamp(n_l, 0.0f, 1.0f);
-        } else if(kLight[ii].color.a == 1.0f) {
-            vec3 light_pos = kLight[ii].pos.xyz;
-            vec3 light_dir = light_pos - int_WorldPos;
+        // Dirctional lights and point lights are handled a little bit differently.
+        // It might be more efficient to make two separate shaders rather than have
+        // the different cases.
+        if(light_type == kDirectionalLight) {
+            light_dir = normalize(light_dir);
+        } else if(light_type == kPointLight) {
+            light_dir = current_light.pos.xyz - world_pos.xyz;
             float dist = length(light_dir);
-
-            if(dist > kLight[ii].pos.w) {
-                continue; // TODO: This causes rendering artifacts on Intel
+            float size = current_light.pos.w;
+            if(dist > size) {
+                continue;
             }
-            
             light_dir = normalize(light_dir);
-            float n_l = dot(light_dir, normal);
-            float attenuation = 1 - pow( clamp(dist/kLight[ii].pos.w, 0.0f, 1.0f), 2);
-
-            vec3 reflection = reflect(dir_to_cam, normal);
-            float rDotL     = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
-            vec3 spec       = vec3(min(1.0f, pow(rDotL, 128.0f)));
-            //vec3 spec       = vec3(0.0f);
-
-            out_Color += (albedo * kLight[ii].color * clamp(n_l, 0.0f, 1.0f) * attenuation)*0.9f + vec4(spec*kLight[ii].color.rgb,1.0f);
+            float attenuation = 1 - pow( clamp(dist/size, 0.0f, 1.0f), 2);
+            light_color *= attenuation;
         }
+
+        //
+        // Perform the actual shading
+        //
+        vec3 color = phong(light_dir, light_color,
+                           normal, albedo,
+                           dir_to_cam,
+                           spec_power, spec_intensity);
+
+        // Only add ambient to directional lights
+        // In the future, AO/GI/better lighting will handle the ambient
+        if(light_type == kDirectionalLight) {
+            color = color*0.9f + albedo*0.1f*light_color;
+        }
+        out_Color += vec4(color, 1.0f);
     }
 }
