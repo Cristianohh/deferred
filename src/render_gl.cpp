@@ -11,6 +11,10 @@
         #include <OpenGLES/ES2/gl.h>
     #elif TARGET_OS_MAC
         #include <OpenGL/gl3.h>
+        #define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
+        #define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
+        #define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
+        #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
     #endif
     // TODO: flushing the buffer requires Obj-C in OS X. This is a hack to
     // include an Obj-C function
@@ -24,6 +28,7 @@
 #endif
 
 #include <stddef.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include "assert.h"
 #include "stb_image.h"
@@ -46,6 +51,13 @@
     } while(__LINE__ == 0)
 
 #define ARRAYSIZE(a) (sizeof((a))/sizeof((a)[0]))
+
+#define MAKEFOURCC(ch0, ch1, ch2, ch3)                              \
+                ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |   \
+                ((uint32_t)(uint8_t)(ch2) << 16) | ((uint32_t)(uint8_t)(ch3) << 24 ))
+#define FOURCC_DXT1	MAKEFOURCC('D', 'X', 'T', '1')
+#define FOURCC_DXT3	MAKEFOURCC('D', 'X', 'T', '3')
+#define FOURCC_DXT5	MAKEFOURCC('D', 'X', 'T', '5')
 
 namespace {
 
@@ -257,7 +269,7 @@ void render(void) {
     } else {
         _render_fullscreen(_color_texture);
     }
-    
+
     _num_3d_render_commands = _num_2d_render_commands = 0;
     _num_renderables = 0;
     _light_buffer.num_lights = 0;
@@ -339,7 +351,7 @@ TextureID load_texture(const char* filename) {
         assert(file);
         char filecode[4];
         fread(filecode, 1, 4, file);
-        if(strncmp(filecode, "DDS", 4) == 0) {
+        if(strncmp(filecode, "DDS ", 4) == 0) {
             fclose(file);
             return _load_dxt_texture(filename);
         }
@@ -352,12 +364,12 @@ TextureID load_texture(const char* filename) {
     CheckGLError();
     glBindTexture(GL_TEXTURE_2D, texture);
     CheckGLError();
-    
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    
+
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     switch(components)
@@ -372,7 +384,7 @@ TextureID load_texture(const char* filename) {
         break;
     default: assert(0);
     }
-    
+
     glTexImage2D(GL_TEXTURE_2D, 0, components, width, height, 0, format, GL_UNSIGNED_BYTE, tex_data);
     CheckGLError();
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -390,15 +402,68 @@ TextureID _load_dxt_texture(const char* filename) {
     assert(file);
     char filecode[4];
     fread(filecode, 1, 4, file);
-    if(strncmp(filecode, "DDS", 4) != 0) {
+    if(strncmp(filecode, "DDS ", 4) != 0) {
         fclose(file);
+        return -1;
+    }
+
+    // Read the DXT header
+    uint8_t header[124] = {0};
+    fread(header, 124, 1, file);
+
+    uint32_t height         = *(uint32_t*)&(header[8 ]);
+    uint32_t width          = *(uint32_t*)&(header[12]);
+    uint32_t linearSize     = *(uint32_t*)&(header[16]);
+    uint32_t mipMapCount    = *(uint32_t*)&(header[24]);
+    uint32_t fourCC         = *(uint32_t*)&(header[80]);
+
+    uint8_t* buffer;
+    uint32_t bufsize;
+    /* how big is it going to be including all mipmaps? */
+    bufsize = mipMapCount > 1 ? linearSize * 2 : linearSize;
+    buffer = (uint8_t*)malloc(bufsize * sizeof(uint8_t));
+    fread(buffer, 1, bufsize, file);
+    /* close the file pointer */
+    fclose(file);
+
+    //uint32_t components  = (fourCC == FOURCC_DXT1) ? 3 : 4;
+    uint32_t format;
+    switch(fourCC)
+    {
+    case FOURCC_DXT1:
+        format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+        break;
+    case FOURCC_DXT3:
+        format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+        break;
+    case FOURCC_DXT5:
+        format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        break;
+    default:
+        free(buffer);
         return -1;
     }
 
     GLuint texture;
     glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
 
-    fclose(file);
+    uint32_t blockSize = (format == GL_COMPRESSED_RGBA_S3TC_DXT1_EXT) ? 8 : 16;
+    uint32_t offset = 0;
+ 
+    /* load the mipmaps */
+    for (uint32_t level = 0; level < mipMapCount && (width || height); ++level)
+    {
+        uint32_t size = ((width+3)/4)*((height+3)/4)*blockSize;
+        glCompressedTexImage2D(GL_TEXTURE_2D, level, format, width, height, 
+            0, size, buffer + offset);
+     
+        offset += size;
+        width  /= 2;
+        height /= 2;
+    }
+    free(buffer);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     _textures[_num_textures] = texture;
     return _num_textures++;
@@ -461,13 +526,13 @@ VtxPosNormTanBitanTex* _calculate_tangets(const VtxPosNormTex* vertices, int num
         float3 delta_pos2 = float3subtract(&v2.pos, &v0.pos);
         float2 delta_uv1 = float2subtract(&v1.tex, &v0.tex);
         float2 delta_uv2 = float2subtract(&v2.tex, &v0.tex);
-        
+
         float r = 1.0f / (delta_uv1.x * delta_uv2.y - delta_uv1.y * delta_uv2.x);
         float3 a = float3multiplyScalar(&delta_pos1, delta_uv2.y);
         float3 b = float3multiplyScalar(&delta_pos2, delta_uv1.y);
         float3 tangent = float3subtract(&a,&b);
         tangent = float3multiplyScalar(&tangent, r);
-        
+
         a = float3multiplyScalar(&delta_pos2, delta_uv1.x);
         b = float3multiplyScalar(&delta_pos1, delta_uv2.x);
         float3 bitangent = float3subtract(&a,&b);
@@ -476,7 +541,7 @@ VtxPosNormTanBitanTex* _calculate_tangets(const VtxPosNormTex* vertices, int num
         v0.bitan = bitangent;
         v1.bitan = bitangent;
         v2.bitan = bitangent;
-        
+
         v0.tan = tangent;
         v1.tan = tangent;
         v2.tan = tangent;
@@ -497,7 +562,7 @@ void _present(void) {
 #endif
 }
 void _load_shaders(void) {
-    
+
     GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/2D.vsh");
     GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/2D.fsh");
     _2d_program = _create_program(vs, fs);

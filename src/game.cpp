@@ -62,14 +62,15 @@ void Game::initialize(void) {
     o.transform.scale = 100.0f;
     o.transform.position.y = -50.0f;
     o.mesh = _render->create_mesh(4, kVtxPosNormTex, 6, sizeof(ground_indices[0]), ground_vertices, ground_indices);
-    o.texture = _render->load_texture("assets/grass.jpg");
+    o.texture = _render->load_texture("assets/grass.dds");
     _add_object(o);
 
 
     TextureID textures[3] = {0};
-    textures[0] = _render->load_texture("assets/metal.jpg");
-    textures[1] = _render->load_texture("assets/brick.jpg");
-    textures[2] = _render->load_texture("assets/wood.jpg");
+    //textures[0] = _render->load_texture("assets/metal.jpg");
+    textures[0] = _render->load_texture("assets/metal.dds");
+    textures[1] = _render->load_texture("assets/brick.dds");
+    textures[2] = _render->load_texture("assets/wood.dds");
 
     for(int ii=0; ii<32;++ii) {
         o.transform = TransformZero();
