@@ -12,7 +12,7 @@ out vec4 GBuffer[3];
 void main()
 {
     float spec_intensity = 0.8f;
-    float spec_power = 0.5f;
+    float spec_power = 128.0f;
 
     GBuffer[0] = vec4(texture(kDiffuseTex, int_TexCoord).rgb, spec_intensity);
     vec3 norm = normalize(int_Normal);

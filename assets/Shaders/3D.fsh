@@ -25,11 +25,11 @@ out vec4 out_Color;
 
 void main()
 {
-    out_Color = vec4(0.0f, 0.0f, 0.0f, 0.0f);
     vec4 albedo = texture(kDiffuseTex, int_TexCoord);
     vec3 normal = normalize(int_Normal);
     vec3 dir_to_cam = normalize(kCameraPosition - int_WorldPos);
-    
+
+    out_Color = albedo * 0.1f;
     for(int ii=0;ii<kNumLights;++ii) {
         if(kLight[ii].color.a == 0.0f) {
             vec3 light_dir = kLight[ii].pos.xyz;
@@ -53,10 +53,10 @@ void main()
 
             vec3 reflection = reflect(dir_to_cam, normal);
             float rDotL     = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
-            //vec3 spec       = vec3(min(1.0f, pow(rDotL, 128.0f)));
-            vec3 spec       = vec3(0.0f);
+            vec3 spec       = vec3(min(1.0f, pow(rDotL, 128.0f)));
+            //vec3 spec       = vec3(0.0f);
 
-            out_Color += albedo * kLight[ii].color * clamp(n_l, 0.0f, 1.0f) * attenuation + vec4(spec*kLight[ii].color.rgb,1.0f);
+            out_Color += (albedo * kLight[ii].color * clamp(n_l, 0.0f, 1.0f) * attenuation)*0.9f + vec4(spec*kLight[ii].color.rgb,1.0f);
         }
     }
 }
