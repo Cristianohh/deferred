@@ -266,12 +266,14 @@ const SystemEvent* app_pop_event(void) {
     }
     _mouse_buttons[MOUSE_LEFT] = 1;
     CGAssociateMouseAndMouseCursorPosition(false);
+    CGDisplayHideCursor(kCGDirectMainDisplay);
 }
 - (void)mouseUp:(NSEvent *)theEvent
 {
     _mouse_buttons[MOUSE_LEFT] = 0;
     (void)(sizeof(theEvent));
     CGAssociateMouseAndMouseCursorPosition(true);
+    CGDisplayShowCursor(kCGDirectMainDisplay);
 }
 - (void)mouseMoved:(NSEvent *)theEvent
 {
