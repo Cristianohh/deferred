@@ -32,7 +32,9 @@ extern void on_shutdown(void);
 
 typedef enum {
     kEventResize,
-    kEventKeyDown
+    kEventKeyDown,
+    kEventMouseMove,
+    kEventMouseDown
 } SystemEventType;
 
 typedef enum {
@@ -106,12 +108,21 @@ typedef enum {
     KEY_MAX_KEYS
 } Key;
 
+typedef enum {
+    MOUSE_LEFT,
+    MOUSE_RIGHT,
+    MOUSE_MIDDLE,
+
+    MOUSE_MAX_BUTTONS
+} MouseButton;
+
 typedef struct {
     SystemEventType type;
     union {
         struct {
-            int x;
-            int y;
+            float x; // For clicks, this is the position
+            float y; // For moves, this is the delta
+            MouseButton button;
         } mouse;
         struct {
             int width;
@@ -127,6 +138,7 @@ const SystemEvent* app_pop_event(void);
 void _app_push_event(SystemEvent event);
 
 int app_is_key_down(Key key);
+int app_is_mouse_button_down(MouseButton button);
 
 /*! @brief Gets the OS-specific window object
  *  @details This returns the NSWindow* in OS X and the HWND in Windows

@@ -158,6 +158,7 @@ static Key _convert_keycode(uint16_t key)
 }
 
 static char         _keys[KEY_MAX_KEYS] = {0};
+static char         _mouse_buttons[MOUSE_MAX_BUTTONS] = {0};
 static SystemEvent  _event_queue[1024];
 static uint         _write_pos = 0;
 static uint         _read_pos = 0;
@@ -167,6 +168,7 @@ void _app_push_event(SystemEvent event) {
     _write_pos++;
 }
 int app_is_key_down(Key key) { return _keys[key]; }
+int app_is_mouse_button_down(MouseButton button) { return _mouse_buttons[button]; }
 
 const SystemEvent* app_pop_event(void) {
     if(_read_pos == _write_pos)
@@ -250,6 +252,54 @@ const SystemEvent* app_pop_event(void) {
     else
         _keys[KEY_ALT] = 0;
 }
+- (void)mouseDown:(NSEvent *)theEvent
+{
+    if(_mouse_buttons[MOUSE_LEFT] == 0) {
+        CGPoint pt = [theEvent locationInWindow];
+        SystemEvent event;
+        pt = [[self contentView] convertPointToBacking:pt];
+        event.type = kEventMouseDown;
+        event.data.mouse.x = (float)pt.x;
+        event.data.mouse.y = (float)pt.y;
+        event.data.mouse.button = MOUSE_LEFT;
+        _app_push_event(event);
+    }
+    _mouse_buttons[MOUSE_LEFT] = 1;
+}
+- (void)mouseUp:(NSEvent *)theEvent
+{
+    _mouse_buttons[MOUSE_LEFT] = 0;
+    (void)(sizeof(theEvent));
+}
+- (void)mouseMoved:(NSEvent *)theEvent
+{
+    SystemEvent event;
+    event.type = kEventMouseMove;
+    event.data.mouse.x = (float)[theEvent deltaX];
+    event.data.mouse.y = (float)[theEvent deltaY];
+    _app_push_event(event);    
+}
+- (void)mouseDragged:(NSEvent *)theEvent { [self mouseMoved:theEvent]; }
+- (void)rightMouseDown:(NSEvent *)theEvent
+{
+    if(_mouse_buttons[MOUSE_RIGHT] == 0) {
+        CGPoint pt = [theEvent locationInWindow];
+        SystemEvent event;
+        pt = [[self contentView] convertPointToBacking:pt];
+        event.type = kEventMouseDown;
+        event.data.mouse.x = (float)pt.x;
+        event.data.mouse.y = (float)pt.y;
+        event.data.mouse.button = MOUSE_RIGHT;
+        _app_push_event(event);
+    }
+    _mouse_buttons[MOUSE_RIGHT] = 1;
+}
+- (void)rightMouseUp:(NSEvent *)theEvent
+{
+    _mouse_buttons[MOUSE_RIGHT] = 0;
+    (void)(sizeof(theEvent));
+}
+- (void)rightMouseDragged:(NSEvent *)theEvent { [self mouseMoved:theEvent]; }
 
 @end
 
@@ -273,6 +323,7 @@ const SystemEvent* app_pop_event(void) {
     
     [[self window] setContentView:[[OpenGLView alloc] init]];
     [[self window] setOpaque:YES];
+    [[self window] setAcceptsMouseMovedEvents:YES];
     [self setController:[[NSWindowController alloc] initWithWindow:[self window]]];
     [[self controller] showWindow:nil];
 

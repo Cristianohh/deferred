@@ -30,7 +30,7 @@ public:
     int on_frame(void);
     
 private:
-    void _control_camera(void);
+    void _control_camera(float mouse_x, float mouse_y);
     void _add_object(const Object& o);
 
 private:

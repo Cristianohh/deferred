@@ -134,34 +134,46 @@ void Game::shutdown(void) {
 }
 int Game::on_frame(void) {
     // Handle OS events
+    float delta_x = 0.0f;
+    float delta_y = 0.0f;
     const SystemEvent* event = app_pop_event();
     while (event) {
         switch(event->type) {
-        case kEventResize:
-            _render->resize(event->data.resize.width, event->data.resize.height);
-            printf("W: %d  H: %d\n", event->data.resize.width, event->data.resize.height);
-            break;
-        case kEventKeyDown:
-            if(event->data.key == KEY_ESCAPE)
-                return 1;
-            if(event->data.key == KEY_F1)
-                _render->toggle_debug_graphics();
-            if(event->data.key == KEY_F2)
-                _render->toggle_deferred();
-            break;
-        default:
-            break;
+            case kEventResize:
+                _render->resize(event->data.resize.width, event->data.resize.height);
+                printf("W: %d  H: %d\n", event->data.resize.width, event->data.resize.height);
+                break;
+            case kEventKeyDown:
+                if(event->data.key == KEY_ESCAPE)
+                    return 1;
+                if(event->data.key == KEY_F1)
+                    _render->toggle_debug_graphics();
+                if(event->data.key == KEY_F2)
+                    _render->toggle_deferred();
+                break;
+            case kEventMouseDown:
+                if(event->data.mouse.button == MOUSE_LEFT) {
+                    debug_output("Mouse: %f %f\n", event->data.mouse.x, event->data.mouse.y);
+                }
+                break;
+            case kEventMouseMove:
+                //debug_output("Mouse: %f %f\n", event->data.mouse.x, event->data.mouse.y);
+                delta_x += event->data.mouse.x;
+                delta_y += event->data.mouse.y;
+                break;
+            default:
+                break;
         }
         event = app_pop_event();
     }
-
+    
     // Beginning of frame stuff
     _delta_time = (float)timer_delta_time(&_timer);
     update_fps(&_fps, _delta_time);
 
 
     // Frame
-    _control_camera();
+    _control_camera(delta_x, delta_y);
     float4x4 view = TransformGetMatrix(&_camera);
     _render->set_3d_view_matrix(view);
 
@@ -175,12 +187,12 @@ int Game::on_frame(void) {
     _render->render();
 
     // End of frame stuff
-    if(++_frame_count % 16 == 0) {
+    if(++_frame_count % 256 == 0) {
         debug_output("%.2fms (%.0f FPS)\n", get_frametime(&_fps), get_fps(&_fps));
     }
     return 0;
 }
-void Game::_control_camera()
+void Game::_control_camera(float mouse_x, float mouse_y)
 {
     float camera_speed = 5.0f * _delta_time;
     if(app_is_key_down(KEY_SHIFT))
@@ -208,27 +220,28 @@ void Game::_control_camera()
     if(app_is_key_down(KEY_Q))
         _camera.position = float3subtract(&_camera.position, &up);
 
-    if(app_is_key_down(KEY_UP)) {
-        float3 xaxis = {1.0f, 0.0f, 0.0f};
-        quaternion q = quaternionFromAxisAngle(&xaxis, -_delta_time);
-        _camera.orientation = quaternionMultiply(&q, &_camera.orientation);
-    }
-    if(app_is_key_down(KEY_DOWN)) {
-        float3 xaxis = {1.0f, 0.0f, 0.0f};
-        quaternion q = quaternionFromAxisAngle(&xaxis, _delta_time);
-        _camera.orientation = quaternionMultiply(&q, &_camera.orientation);
-    }
+    if(app_is_key_down(KEY_UP))
+        mouse_y = -1.0f;
+    else if(app_is_key_down(KEY_DOWN))
+        mouse_y = 1.0f;
     
-    if(app_is_key_down(KEY_RIGHT)) {
-        float3 yaxis = {0.0f, 1.0f, 0.0f};
-        quaternion q = quaternionFromAxisAngle(&yaxis, _delta_time);
-        _camera.orientation = quaternionMultiply(&_camera.orientation, &q);
-    }
-    if(app_is_key_down(KEY_LEFT)) {
-        float3 yaxis = {0.0f, 1.0f, 0.0f};
-        quaternion q = quaternionFromAxisAngle(&yaxis, -_delta_time);
-        _camera.orientation = quaternionMultiply(&_camera.orientation, &q);
-    }
+    if(app_is_key_down(KEY_RIGHT))
+        mouse_x = 1.0f;
+    else if(app_is_key_down(KEY_LEFT))
+        mouse_x = -1.0f;
+
+    if(app_is_mouse_button_down(MOUSE_LEFT) == 0)
+        mouse_x = mouse_y = 0.0f;
+
+    // L/R Rotation
+    float3 yaxis = {0.0f, 1.0f, 0.0f};
+    quaternion q = quaternionFromAxisAngle(&yaxis, _delta_time*mouse_x);
+    _camera.orientation = quaternionMultiply(&_camera.orientation, &q);
+
+    // U/D rotation
+    float3 xaxis = {1.0f, 0.0f, 0.0f};
+    q = quaternionFromAxisAngle(&xaxis, _delta_time*mouse_y);
+    _camera.orientation = quaternionMultiply(&q, &_camera.orientation);
 }
 void Game::_add_object(const Object& o) {
     _objects[_num_objects++] = o;
