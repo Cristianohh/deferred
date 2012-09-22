@@ -131,7 +131,6 @@
 		273AB3E216026C5F007C7682 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				275A241A1605127C005FA2BC /* vec_math.h */,
 				27ADE8A016026E1E00D888DE /* application.c */,
 				27ADE8A116026E1E00D888DE /* application.h */,
 				27B5E1631602DFE900C0ECC0 /* fps.c */,
@@ -140,20 +139,21 @@
 				27DEFE01160408D7003C3972 /* game.h */,
 				2735A818160829B800B60C41 /* geometry.h */,
 				273AB3ED16026C5F007C7682 /* main.cpp */,
-				27CF508D1602805B009DBE5A /* render.h */,
 				27DEFE0416040903003C3972 /* render.cpp */,
+				27CF508D1602805B009DBE5A /* render.h */,
 				27CF508C1602805B009DBE5A /* render_gl.cpp */,
 				27CF508F16028273009DBE5A /* render_gl.m */,
+				275F567816082A0C00FB9F9E /* render_gl_helper.h */,
+				279EEED816083AEE00BC08EE /* renderer.h */,
+				275F567B16082B8300FB9F9E /* renderer_deferred.h */,
+				279EEEDA16083BE000BC08EE /* renderer_forward.h */,
 				278F9E081602862200F90E06 /* timer.c */,
 				278F9E091602862200F90E06 /* timer.h */,
 				27ADE8AC16027ACD00D888DE /* unit_test.cpp */,
 				27ADE8AD16027ACD00D888DE /* unit_test.h */,
+				275A241A1605127C005FA2BC /* vec_math.h */,
 				27ADE8AB16027ACD00D888DE /* tests */,
 				273AB3E316026C5F007C7682 /* macosx */,
-				275F567816082A0C00FB9F9E /* render_gl_helper.h */,
-				275F567B16082B8300FB9F9E /* renderer_deferred.h */,
-				279EEED816083AEE00BC08EE /* renderer.h */,
-				279EEEDA16083BE000BC08EE /* renderer_forward.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
