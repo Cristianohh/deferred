@@ -6,7 +6,7 @@
 uniform sampler2D GBuffer[3];
 
 uniform mat4 kInverseViewProj;
-uniform vec4 kLight[2];
+uniform vec4 kLight[3];
 
 uniform vec3 kCameraPosition;
 
@@ -51,18 +51,19 @@ void main()
     normal -= 1.0f;
     
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos.xyz);
-    vec3 light_color = kLight[1].xyz;
-    vec3 light_dir;
-    float light_type = kLight[1].a;
+    vec3 light_color = kLight[2].xyz;
+    vec3 light_dir = kLight[1].xyz;
+    vec3 light_pos = kLight[0].xyz;
+    float light_type = kLight[2].a;
     float attenuation = 1.0f;
 
     // Dirctional lights and point lights are handled a little bit differently.
     // It might be more efficient to make two separate shaders rather than have
     // the different cases.
     if(light_type == kDirectionalLight) {
-        light_dir = normalize(-kLight[0].xyz);
+        light_dir = normalize(-light_dir);
     } else if(light_type == kPointLight) {
-        light_dir = kLight[0].xyz - world_pos.xyz;
+        light_dir = light_pos - world_pos.xyz;
         float dist = length(light_dir);
         if(dist > kLight[0].w)
             discard;

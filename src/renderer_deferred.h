@@ -166,7 +166,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             if(light.color.w == kDirectionalLight) {            
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&float4x4identity);
                 glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&float4x4identity);
-                glUniform4fv(_light_light_uniform, 2, (float*)&light);
+                glUniform4fv(_light_light_uniform, 3, (float*)&light);
                 
                 glBindVertexArray(_fullscreen_mesh.vao);
                 _validate_program(_light_program);
@@ -184,7 +184,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
                     glCullFace(GL_FRONT);
                 }
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);
-                glUniform4fv(_light_light_uniform, 2, (float*)&light);
+                glUniform4fv(_light_light_uniform, 3, (float*)&light);
                 glBindVertexArray(_sphere_mesh.vao);
                 _validate_program(_light_program);
                 glDrawElements(GL_TRIANGLES, (GLsizei)_sphere_mesh.index_count, _sphere_mesh.index_format, NULL);

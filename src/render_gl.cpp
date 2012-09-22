@@ -354,7 +354,11 @@ void draw_2d(MeshID, TextureID, const float4x4&) {
 
 void draw_light(const float4& light, const float4& color, LightType type) {
     int index = _light_buffer.num_lights++;
-    _light_buffer.lights[index].pos = light;
+    if(type == kDirectionalLight) {
+        _light_buffer.lights[index].dir = light;
+    } else if(type == kPointLight) {
+        _light_buffer.lights[index].pos = light;
+    }
     _light_buffer.lights[index].color = color;
     _light_buffer.lights[index].color.w = type;
 }

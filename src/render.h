@@ -39,15 +39,16 @@ enum VertexType {
     kNUM_VERTEX_TYPES
 };
 struct Light {
-    float4  pos;
-    float4  color;
+    float4  pos;    // A: radius
+    float4  dir;    
+    float4  color;  // A: type
 };
 
 typedef int32_t MeshID;
 typedef int32_t TextureID;
 typedef float LightType;
-static const LightType  kDirectionalLight = 0.0f;
-static const LightType  kPointLight = 1.0f;
+static const LightType kDirectionalLight = 0.0f;
+static const LightType kPointLight = 1.0f;
 
 class Render {
 public:

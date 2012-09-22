@@ -6,6 +6,7 @@
 struct Light 
 {
     vec4 pos;
+    vec4 dir;
     vec4 color;
 };
 
@@ -72,7 +73,7 @@ void main()
         // It might be more efficient to make two separate shaders rather than have
         // the different cases.
         if(light_type == kDirectionalLight) {
-            light_dir = normalize(-current_light.pos.xyz);
+            light_dir = normalize(-current_light.dir.xyz);
         } else if(light_type == kPointLight) {
             light_dir = current_light.pos.xyz - world_pos.xyz;
             float dist = length(light_dir);
