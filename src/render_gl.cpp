@@ -51,7 +51,9 @@
         assert(_glError == GL_NO_ERROR);\
     } while(__LINE__ == 0)
 
+#ifndef ARRAYSIZE
 #define ARRAYSIZE(a) (sizeof((a))/sizeof((a)[0]))
+#endif
 
 #define MAKEFOURCC(ch0, ch1, ch2, ch3)                              \
                 ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |   \
@@ -279,7 +281,7 @@ void resize(int width, int height) {
     _width = width;
     _height = height;
     glViewport(0, 0, width, height);
-    _orthographic_projection = float4x4OrthographicOffCenterLH(0, width, height, 0, 0.0f, 1.0f);
+    _orthographic_projection = float4x4OrthographicOffCenterLH(0, (float)width, (float)height, 0, 0.0f, 1.0f);
     _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 1.0f, 10000.0f);
 
     // Resize render targets

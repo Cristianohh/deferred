@@ -8,6 +8,7 @@
     #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
+#include <windowsx.h>
 #include <Shellapi.h>
 #include "application.h"
 #include "unit_test.h"
@@ -18,23 +19,40 @@
 static const char _class_name[] = "deferred";
 
 /* Variables */
-static HWND _hwnd = NULL;
-static int  _fullscreen = 0;
+static uint32_t     _width = 0;
+static uint32_t     _height = 0;
+static int          _prev_mouse_x = -1;
+static int          _prev_mouse_y = -1;
+static HWND         _hwnd = NULL;
+static int          _fullscreen = 0;
 static char         _keys[KEY_MAX_KEYS] = {0};
+static char         _mouse_buttons[MOUSE_MAX_BUTTONS] = {0};
 static SystemEvent  _event_queue[1024];
 static uint32_t     _write_pos = 0;
 static uint32_t     _read_pos = 0;
+static HCURSOR      _cursor = NULL;
 
 void _app_push_event(SystemEvent event) {
     _event_queue[_write_pos%1024] = event;
     _write_pos++;
 }
 int app_is_key_down(Key key) { return _keys[key]; }
+int app_is_mouse_button_down(MouseButton button) { return _mouse_buttons[button]; }
 
 const SystemEvent* app_pop_event(void) {
     if(_read_pos == _write_pos)
         return NULL;
     return &_event_queue[(_read_pos++) % 1024];
+}
+void app_lock_and_hide_cursor(void) { 
+    RECT rect;
+    GetClientRect(_hwnd, &rect);
+    ClipCursor(&rect);
+    SetCursor(NULL);
+}
+void app_unlock_and_show_cursor(void) {
+    SetCursor(_cursor);
+    ClipCursor(NULL);
 }
 
 static Key convert_keycode(uint8_t key)
@@ -113,7 +131,7 @@ static void _create_application(HINSTANCE hInstance, const char* name)
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
     wcex.hIcon          = NULL;
-    wcex.hCursor        = (HCURSOR)LoadCursor(NULL, IDC_ARROW);
+    wcex.hCursor        = NULL;
     wcex.hbrBackground  = NULL;
     wcex.lpszMenuName   = NULL;
     wcex.lpszClassName  = name;
@@ -197,7 +215,8 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
 {
     Key key;
     switch(message) {
-    case WM_CREATE: 
+    case WM_CREATE:
+        _cursor = GetCursor();
         return 0;
     case WM_KEYDOWN:
     case WM_SYSKEYDOWN:
@@ -240,34 +259,91 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         {
             SystemEvent event;
             RECT rect;
-            int width;
-            int height;
             GetClientRect(_hwnd, &rect);
-            width = rect.right - rect.left;
-            height = rect.bottom - rect.top;
-            event.data.resize.width = width;
-            event.data.resize.height = height;
+            _width = rect.right - rect.left;
+            _height = rect.bottom - rect.top;
+            event.data.resize.width = _width;
+            event.data.resize.height = _height;
             event.type = kEventResize;
             _app_push_event(event);
-            return 0;
         }
         return 0;
-    case WM_EXITSIZEMOVE:
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
         {
             SystemEvent event;
-            RECT rect;
-            int width;
-            int height;
-            GetClientRect(_hwnd, &rect);
-            width = rect.right - rect.left;
-            height = rect.bottom - rect.top;
-            event.data.resize.width = width;
-            event.data.resize.height = height;
-            event.type = kEventResize;
-            _app_push_event(event);
-            return 0;
+            int x = GET_X_LPARAM(lParam);
+            int y = _height - GET_Y_LPARAM(lParam);
+            event.data.mouse.x = x;
+            event.data.mouse.y = y;
+            // L button
+            if(wParam & MK_LBUTTON) {
+                if(_mouse_buttons[MOUSE_LEFT] == 0) {
+                    event.type = kEventMouseDown;
+                    event.data.mouse.button = MOUSE_LEFT;
+                    _app_push_event(event);
+                }
+                _mouse_buttons[MOUSE_LEFT] = 1;
+            } else {
+                if(_mouse_buttons[MOUSE_LEFT] == 1) {
+                    event.type = kEventMouseUp;
+                    event.data.mouse.button = MOUSE_LEFT;
+                    _app_push_event(event);
+                }
+                _mouse_buttons[MOUSE_LEFT] = 0;
+            }
+            // R button
+            if(wParam & MK_RBUTTON) {
+                if(_mouse_buttons[MOUSE_RIGHT] == 0) {
+                    event.type = kEventMouseDown;
+                    event.data.mouse.button = MOUSE_RIGHT;
+                    _app_push_event(event);
+                }
+                _mouse_buttons[MOUSE_RIGHT] = 1;
+            } else {
+                if(_mouse_buttons[MOUSE_RIGHT] == 1) {
+                    event.type = kEventMouseUp;
+                    event.data.mouse.button = MOUSE_RIGHT;
+                    _app_push_event(event);
+                }
+                _mouse_buttons[MOUSE_RIGHT] = 0;
+            }
+            // M button
+            if(wParam & MK_MBUTTON) {
+                if(_mouse_buttons[MOUSE_MIDDLE] == 0) {
+                    event.type = kEventMouseDown;
+                    event.data.mouse.button = MOUSE_MIDDLE;
+                    _app_push_event(event);
+                }
+                _mouse_buttons[MOUSE_MIDDLE] = 1;
+            } else {
+                if(_mouse_buttons[MOUSE_MIDDLE] == 1) {
+                    event.type = kEventMouseUp;
+                    event.data.mouse.button = MOUSE_MIDDLE;
+                    _app_push_event(event);
+                }
+                _mouse_buttons[MOUSE_MIDDLE] = 0;
+            }
         }
-        break;
+        return 0;
+    case WM_MOUSEMOVE:
+        {
+            SystemEvent event;
+            int x = GET_X_LPARAM(lParam);
+            int y = _height - GET_Y_LPARAM(lParam);
+            event.data.mouse.x = x - _prev_mouse_x;
+            event.data.mouse.y = _prev_mouse_y - y;
+            event.type = kEventMouseMove;
+            _app_push_event(event);
+
+            _prev_mouse_x = x;
+            _prev_mouse_y = y;
+        }
+        return 0;
     }
     return DefWindowProc(hWnd, message, wParam, lParam);
 }

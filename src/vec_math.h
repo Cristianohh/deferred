@@ -3,6 +3,8 @@
 #define _vec_math_h__
 #include <math.h>
 
+#pragma warning(disable:4505) /* Unreferenced function */
+
 /*
  * Constants
  */

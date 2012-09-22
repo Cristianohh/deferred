@@ -129,6 +129,7 @@ void Game::initialize(void) {
     }
 }
 void Game::shutdown(void) {
+    app_unlock_and_show_cursor();
     _render->shutdown();
     Render::destroy(_render);
 }
@@ -154,6 +155,7 @@ int Game::on_frame(void) {
             case kEventMouseDown:
                 if(event->data.mouse.button == MOUSE_LEFT)
                     app_lock_and_hide_cursor();
+                debug_output("Mouse: %.0f %.0f\n", event->data.mouse.x, event->data.mouse.y);
                 break;
             case kEventMouseUp:
                 if(event->data.mouse.button == MOUSE_LEFT)
