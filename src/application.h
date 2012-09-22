@@ -34,7 +34,9 @@ typedef enum {
     kEventResize,
     kEventKeyDown,
     kEventMouseMove,
-    kEventMouseDown
+    kEventMouseDown,
+    kEventMouseUp
+
 } SystemEventType;
 
 typedef enum {
@@ -139,6 +141,9 @@ void _app_push_event(SystemEvent event);
 
 int app_is_key_down(Key key);
 int app_is_mouse_button_down(MouseButton button);
+
+void app_lock_and_hide_cursor(void);
+void app_unlock_and_show_cursor(void);
 
 /*! @brief Gets the OS-specific window object
  *  @details This returns the NSWindow* in OS X and the HWND in Windows

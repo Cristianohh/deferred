@@ -176,6 +176,15 @@ const SystemEvent* app_pop_event(void) {
     return &_event_queue[(_read_pos++) % 1024];
 }
 
+void app_lock_and_hide_cursor(void) {
+    CGAssociateMouseAndMouseCursorPosition(false);
+    CGDisplayHideCursor(kCGDirectMainDisplay);
+}
+void app_unlock_and_show_cursor(void) {
+    CGAssociateMouseAndMouseCursorPosition(true);
+    CGDisplayShowCursor(kCGDirectMainDisplay);
+}
+
 @interface OpenGLWindow : NSWindow
 @property BOOL fullscreen;
 @end
@@ -265,15 +274,18 @@ const SystemEvent* app_pop_event(void) {
         _app_push_event(event);
     }
     _mouse_buttons[MOUSE_LEFT] = 1;
-    CGAssociateMouseAndMouseCursorPosition(false);
-    CGDisplayHideCursor(kCGDirectMainDisplay);
 }
 - (void)mouseUp:(NSEvent *)theEvent
 {
+    CGPoint pt = [theEvent locationInWindow];
+    SystemEvent event;
+    pt = [[self contentView] convertPointToBacking:pt];
+    event.type = kEventMouseUp;
+    event.data.mouse.x = (float)pt.x;
+    event.data.mouse.y = (float)pt.y;
+    event.data.mouse.button = MOUSE_LEFT;
+    _app_push_event(event);
     _mouse_buttons[MOUSE_LEFT] = 0;
-    (void)(sizeof(theEvent));
-    CGAssociateMouseAndMouseCursorPosition(true);
-    CGDisplayShowCursor(kCGDirectMainDisplay);
 }
 - (void)mouseMoved:(NSEvent *)theEvent
 {
@@ -300,8 +312,16 @@ const SystemEvent* app_pop_event(void) {
 }
 - (void)rightMouseUp:(NSEvent *)theEvent
 {
+    CGPoint pt = [theEvent locationInWindow];
+    SystemEvent event;
+    pt = [[self contentView] convertPointToBacking:pt];
+    event.type = kEventMouseUp;
+    event.data.mouse.x = (float)pt.x;
+    event.data.mouse.y = (float)pt.y;
+    event.data.mouse.button = MOUSE_RIGHT;
+    _app_push_event(event);
+
     _mouse_buttons[MOUSE_RIGHT] = 0;
-    (void)(sizeof(theEvent));
 }
 - (void)rightMouseDragged:(NSEvent *)theEvent { [self mouseMoved:theEvent]; }
 

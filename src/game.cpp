@@ -152,12 +152,14 @@ int Game::on_frame(void) {
                     _render->toggle_deferred();
                 break;
             case kEventMouseDown:
-                if(event->data.mouse.button == MOUSE_LEFT) {
-                    debug_output("Mouse: %f %f\n", event->data.mouse.x, event->data.mouse.y);
-                }
+                if(event->data.mouse.button == MOUSE_LEFT)
+                    app_lock_and_hide_cursor();
+                break;
+            case kEventMouseUp:
+                if(event->data.mouse.button == MOUSE_LEFT)
+                    app_unlock_and_show_cursor();
                 break;
             case kEventMouseMove:
-                //debug_output("Mouse: %f %f\n", event->data.mouse.x, event->data.mouse.y);
                 delta_x += event->data.mouse.x;
                 delta_y += event->data.mouse.y;
                 break;
