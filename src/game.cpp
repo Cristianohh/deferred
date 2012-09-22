@@ -29,14 +29,10 @@ Game::Game()
 {
     _fps.frame = 0;
     _camera = TransformZero();
-//    _camera.position.z = -60.0f;
-//    _camera.position.y = 15.0f;
-//    float3 axis = {1.0f, 0.0f, 0.0f};
-//    _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
     _camera.position.z = -60.0f;
-    _camera.position.y = 0.5f;
+    _camera.position.y = 15.0f;
     float3 axis = {1.0f, 0.0f, 0.0f};
-    _camera.orientation = quaternionFromAxisAngle(&axis, 0.0f);
+    _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
 }
 void Game::initialize(void) {
     timer_init(&_timer);
@@ -191,7 +187,7 @@ int Game::on_frame(void) {
     _render->render();
 
     // End of frame stuff
-    if(++_frame_count % 256 == 0) {
+    if(++_frame_count % 16 == 0) {
         debug_output("%.2fms (%.0f FPS)\n", get_frametime(&_fps), get_fps(&_fps));
     }
     return 0;
