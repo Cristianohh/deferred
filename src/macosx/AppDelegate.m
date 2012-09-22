@@ -265,11 +265,13 @@ const SystemEvent* app_pop_event(void) {
         _app_push_event(event);
     }
     _mouse_buttons[MOUSE_LEFT] = 1;
+    CGAssociateMouseAndMouseCursorPosition(false);
 }
 - (void)mouseUp:(NSEvent *)theEvent
 {
     _mouse_buttons[MOUSE_LEFT] = 0;
     (void)(sizeof(theEvent));
+    CGAssociateMouseAndMouseCursorPosition(true);
 }
 - (void)mouseMoved:(NSEvent *)theEvent
 {
@@ -326,7 +328,7 @@ const SystemEvent* app_pop_event(void) {
     [[self window] setAcceptsMouseMovedEvents:YES];
     [self setController:[[NSWindowController alloc] initWithWindow:[self window]]];
     [[self controller] showWindow:nil];
-
+    
     /*chdir([[bundle resourcePath] UTF8String]); */ /* Set cwd to Content/Resources */
     chdir([[[bundle bundlePath] stringByDeletingLastPathComponent] UTF8String]);
     {   /* Get argc/argv */
