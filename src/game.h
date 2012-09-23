@@ -17,8 +17,7 @@ class Render;
 struct Object {
     Transform   transform;
     MeshID      mesh;
-    TextureID   texture;
-    TextureID   normal_texture;
+    Material    material;
 };
 
 class Game {

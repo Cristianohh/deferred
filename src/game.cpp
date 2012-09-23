@@ -43,6 +43,45 @@ void Game::initialize(void) {
     //srand((uint32_t)_timer.start_time);
     srand(42);
 
+    // Create some materials
+    Material grass_material =
+    {
+        _render->load_texture("assets/grass.dds"),
+        _render->load_texture("assets/grass_nrm.png"),
+        -1,
+        {0.0f, 0.0f, 0.0f},
+        0.0f,
+        0.0f
+    };
+
+    Material materials[3] =
+    {
+        {
+            _render->load_texture("assets/metal.dds"),
+            _render->load_texture("assets/metal_nrm.png"),
+            _render->load_texture("assets/metal.dds"),
+            {0.0f, 0.0f, 0.0f},
+            200.0f,
+            0.8f
+        },
+        {
+            _render->load_texture("assets/brick.dds"),
+            _render->load_texture("assets/brick_nrm.png"),
+            -1,
+            {1.0f, 1.0f, 1.0f},
+            4.0f,
+            0.1f
+        },
+        {
+            _render->load_texture("assets/wood.dds"),
+            _render->load_texture("assets/wood_nrm.png"),
+            -1,
+            {1.0f, 1.0f, 1.0f},
+            8.0f,
+            0.3f
+        }
+    };
+
     Object o;
     // Ground
     const VtxPosNormTex ground_vertices[] =
@@ -62,18 +101,9 @@ void Game::initialize(void) {
     o.transform.scale = 100.0f;
     o.transform.position.y = -50.0f;
     o.mesh = _render->create_mesh(4, kVtxPosNormTex, 6, sizeof(ground_indices[0]), ground_vertices, ground_indices);
-    o.texture = _render->load_texture("assets/grass.dds");
-    o.normal_texture = _render->load_texture("assets/grass_nrm.png");
+    o.material = grass_material;
     _add_object(o);
 
-
-    TextureID textures[3][2] = {0};
-    textures[0][0] = _render->load_texture("assets/metal.dds");
-    textures[1][0] = _render->load_texture("assets/brick.dds");
-    textures[2][0] = _render->load_texture("assets/wood.dds");
-    textures[0][1] = _render->load_texture("assets/default_norm.png");
-    textures[1][1] = _render->load_texture("assets/brick_nrm.png");
-    textures[2][1] = _render->load_texture("assets/wood_nrm.png");
 
     for(int ii=0; ii<32;++ii) {
         o.transform = TransformZero();
@@ -92,16 +122,23 @@ void Game::initialize(void) {
                 break;
         }
         int material = rand()%3;
-        o.texture = textures[material][0];
-        o.normal_texture = textures[material][1];
+        o.material = materials[material];
         _add_object(o);
     }
 
+    Material house_material =
+    {
+        _render->load_texture("assets/house_diffuse.tga"),
+        _render->load_texture("assets/house_normal.tga"),
+        _render->load_texture("assets/house_spec.tga"),
+        {0.0f, 0.0f, 0.0f},
+        1.5f,
+        0.06f
+    };
     o.transform = TransformZero();
     o.transform.scale = 0.01f;
     o.mesh = _render->load_mesh("assets/house_obj.obj");
-    o.texture = _render->load_texture("assets/house_diffuse.tga");
-    o.normal_texture = _render->load_texture("assets/house_normal.tga");;
+    o.material = house_material;
     _add_object(o);
 
     // Add a "sun"
@@ -184,7 +221,7 @@ int Game::on_frame(void) {
 
     for(int ii=0;ii<_num_objects;++ii) {
         const Object& o = _objects[ii];
-        _render->draw_3d(o.mesh, o.texture, o.normal_texture, TransformGetMatrix(&o.transform));
+        _render->draw_3d(o.mesh, o.material.albedo_tex, o.material.normal_tex, TransformGetMatrix(&o.transform));
     }
     for(int ii=0;ii<MAX_LIGHTS;++ii) {
         _render->draw_light(_lights[ii]);

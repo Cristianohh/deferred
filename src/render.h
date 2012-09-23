@@ -59,7 +59,9 @@ struct Material {
     TextureID   albedo_tex;
     TextureID   normal_tex;
     TextureID   specular_tex;
-    
+    float3      specular_color;
+    float       specular_power;
+    float       specular_coefficient;
 };
 
 
