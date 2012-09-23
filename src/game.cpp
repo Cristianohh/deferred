@@ -48,7 +48,7 @@ void Game::initialize(void) {
     {
         _render->load_texture("assets/grass.dds"),
         _render->load_texture("assets/grass_nrm.png"),
-        -1,
+        0,
         {0.0f, 0.0f, 0.0f},
         0.0f,
         0.0f
@@ -67,7 +67,7 @@ void Game::initialize(void) {
         {
             _render->load_texture("assets/brick.dds"),
             _render->load_texture("assets/brick_nrm.png"),
-            -1,
+            0,
             {1.0f, 1.0f, 1.0f},
             4.0f,
             0.1f
@@ -75,7 +75,7 @@ void Game::initialize(void) {
         {
             _render->load_texture("assets/wood.dds"),
             _render->load_texture("assets/wood_nrm.png"),
-            -1,
+            0,
             {1.0f, 1.0f, 1.0f},
             8.0f,
             0.3f

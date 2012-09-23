@@ -27,6 +27,10 @@ void init(void) {
     _camera_position_uniform = glGetUniformLocation(_program, "kCameraPosition");
     _normal_uniform = glGetUniformLocation(_program, "kNormalTex");
     _light_buffer_uniform = glGetUniformBlockIndex(_program, "LightBuffer");
+    _specular_uniform = glGetUniformLocation(_program, "kSpecularTex");
+    _specular_color_uniform = glGetUniformLocation(_program, "kSpecularColor");
+    _specular_coefficient_uniform = glGetUniformLocation(_program, "kSpecularCoefficient");
+    _specular_exponent_uniform = glGetUniformLocation(_program, "kSpecularExponent");
 
     _light_buffer_buffer = _create_buffer(GL_UNIFORM_BUFFER, sizeof(LightBuffer), &_light_buffer);
 }
@@ -57,10 +61,20 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glUniformMatrix4fv(_world_uniform, 1, GL_FALSE, (float*)&r.transform);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, r.material->albedo_tex);
+        glUniform1i(_albedo_uniform, 0);
+        
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, r.material->normal_tex);
-        glUniform1i(_albedo_uniform, 0);
         glUniform1i(_normal_uniform, 1);
+        
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, r.material->specular_tex);
+        glUniform1i(_specular_uniform, 2);
+
+        glUniform3fv(_specular_color_uniform, 1, (float*)&r.material->specular_color);
+        glUniform1f(_specular_coefficient_uniform, r.material->specular_coefficient);
+        glUniform1f(_specular_exponent_uniform, r.material->specular_power);
+
         glBindVertexArray(r.vao);
         _validate_program(_program);
         glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
@@ -78,6 +92,10 @@ GLuint  _world_uniform;
 GLuint  _camera_position_uniform;
 GLuint  _albedo_uniform;
 GLuint  _normal_uniform;
+GLuint  _specular_uniform;
+GLuint  _specular_coefficient_uniform;
+GLuint  _specular_exponent_uniform;
+GLuint  _specular_color_uniform;
 
 GLuint  _light_buffer_uniform;
 GLuint  _light_buffer_buffer;

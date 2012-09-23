@@ -24,6 +24,11 @@ layout(std140) uniform LightBuffer
 
 uniform sampler2D kAlbedoTex;
 uniform sampler2D kNormalTex;
+uniform sampler2D kSpecularTex;
+
+uniform vec3  kSpecularColor;
+uniform float kSpecularCoefficient;
+uniform float kSpecularExponent;
 
 uniform vec3 kCameraPosition;
 
@@ -38,13 +43,13 @@ out vec4 out_Color;
 vec3 phong( vec3 light_dir, vec3 light_color,
             vec3 normal, vec3 albedo,
             vec3 dir_to_cam, float attenuation,
-            float spec_power, float spec_intensity)
+            vec3 spec_color, float spec_power, float spec_coefficient)
 {
     float n_dot_l = clamp(dot(light_dir, normal), 0.0f, 1.0f);
     vec3 reflection = reflect(dir_to_cam, normal);
     float r_dot_l = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
     
-    vec3 specular = vec3(min(1.0f, pow(r_dot_l, spec_power))) * light_color * spec_intensity;
+    vec3 specular = vec3(min(1.0f, pow(r_dot_l, spec_power))) * light_color * spec_color * spec_coefficient;
     vec3 diffuse = albedo * light_color * n_dot_l;
 
     return attenuation * (diffuse + specular);
@@ -55,10 +60,9 @@ void main()
     vec2 flipped_tex = vec2(int_TexCoord.x, -int_TexCoord.y); // Flip the tex coords on the y
     vec3 albedo = texture(kAlbedoTex, flipped_tex).rgb;
     vec3 normal = normalize(texture(kNormalTex, flipped_tex).rgb*2.0 - 1.0f);
+    vec3 specular = texture(kSpecularTex, flipped_tex).rgb + kSpecularColor;
     vec3 world_pos = int_WorldPos;
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos);
-    float spec_power = 128.0f;
-    float spec_intensity = 0.8f;
 
     vec3 N = normalize(int_Normal);
     vec3 T = normalize(int_TangentWS - dot(int_TangentWS, N)*N);
@@ -104,7 +108,7 @@ void main()
         vec3 color = phong(light_dir, light_color,
                            normal, albedo,
                            dir_to_cam, attenuation,
-                           spec_power, spec_intensity);
+                           specular, kSpecularExponent, kSpecularCoefficient);
 
         // Only add ambient to directional lights
         // In the future, AO/GI/better lighting will handle the ambient

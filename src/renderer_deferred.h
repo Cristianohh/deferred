@@ -35,6 +35,10 @@ void init(void) {
         _geom_viewproj_uniform = glGetUniformLocation(_geom_program, "kViewProj");
         _geom_albedo_uniform = glGetUniformLocation(_geom_program, "kAlbedoTex");
         _geom_normal_uniform = glGetUniformLocation(_geom_program, "kNormalTex");
+        _geom_specular_uniform = glGetUniformLocation(_geom_program, "kSpecularTex");
+        _geom_specular_color_uniform = glGetUniformLocation(_geom_program, "kSpecularColor");
+        _geom_specular_coefficient_uniform = glGetUniformLocation(_geom_program, "kSpecularCoefficient");
+        _geom_specular_exponent_uniform = glGetUniformLocation(_geom_program, "kSpecularExponent");
     }    
     { // Deferred lighting
         GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred/light.vsh");
@@ -142,12 +146,23 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         for(int ii=0;ii<num_renderables;++ii) {
             const Renderable& r = renderables[ii];
             glUniformMatrix4fv(_geom_world_uniform, 1, GL_FALSE, (float*)&r.transform);
+            
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, r.material->albedo_tex);
+            glUniform1i(_geom_albedo_uniform, 0);
+            
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, r.material->normal_tex);
-            glUniform1i(_geom_albedo_uniform, 0);
             glUniform1i(_geom_normal_uniform, 1);
+            
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, r.material->specular_tex);
+            glUniform1i(_geom_specular_uniform, 2);
+
+            glUniform3fv(_geom_specular_color_uniform, 1, (float*)&r.material->specular_color);
+            glUniform1f(_geom_specular_coefficient_uniform, r.material->specular_coefficient);
+            glUniform1f(_geom_specular_exponent_uniform, r.material->specular_power);
+            
             glBindVertexArray(r.vao);
             _validate_program(_geom_program);
             glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
@@ -230,6 +245,10 @@ GLuint  _geom_world_uniform;
 GLuint  _geom_viewproj_uniform;
 GLuint  _geom_albedo_uniform;
 GLuint  _geom_normal_uniform;
+GLuint  _geom_specular_uniform;
+GLuint  _geom_specular_coefficient_uniform;
+GLuint  _geom_specular_exponent_uniform;
+GLuint  _geom_specular_color_uniform;
 
 GLuint  _light_program;
 GLuint  _light_world_uniform;

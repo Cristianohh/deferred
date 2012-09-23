@@ -2,6 +2,11 @@
 
 uniform sampler2D kAlbedoTex;
 uniform sampler2D kNormalTex;
+uniform sampler2D kSpecularTex;
+
+uniform vec3  kSpecularColor;
+uniform float kSpecularCoefficient;
+uniform float kSpecularExponent;
 
 in vec3 int_WorldPos;
 in vec3 int_Normal;
@@ -23,10 +28,7 @@ void main()
     vec2 flipped_tex = vec2(int_TexCoord.x, -int_TexCoord.y); // Flip the tex coords on the y
     vec3 norm = normalize(texture(kNormalTex, flipped_tex).rgb*2.0 - 1.0f);
     vec3 albedo = texture(kAlbedoTex, flipped_tex).rgb;
-    vec3 spec_color = vec3(1.0f);
-
-    float spec_coefficient = 0.8f;
-    float spec_exponent = 128.0f;
+    vec3 spec_color = texture(kSpecularTex, flipped_tex).rgb + kSpecularColor;
 
     vec3 N = normalize(int_Normal);
     vec3 T = normalize(int_TangentWS - dot(int_TangentWS, N)*N);
@@ -38,7 +40,7 @@ void main()
     GBuffer[0] = vec4(albedo, 1.0f);
     norm += 1.0f;
     norm *= 0.5f;
-    GBuffer[1] = vec4(norm, spec_coefficient);
-    GBuffer[2] = vec4(spec_color, spec_exponent*(1/256.0f));
+    GBuffer[1] = vec4(norm, kSpecularCoefficient);
+    GBuffer[2] = vec4(spec_color, kSpecularExponent*(1/256.0f));
     GBuffer[3] = vec4(int_Depth.x/int_Depth.y);
 }
