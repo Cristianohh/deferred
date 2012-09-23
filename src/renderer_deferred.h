@@ -174,13 +174,13 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
                 
                 glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
             } else if(light.color.w == kPointLight || light.color.w == kSpotLight) {
-                float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
+                float4x4 transform = float4x4Scale(light.size, light.size, light.size);
                 transform.r3.x = light.pos.x;
                 transform.r3.y = light.pos.y;
                 transform.r3.z = light.pos.z;
 
                 float3 v = float3subtract((float3*)&transform.r3, (float3*)&light.pos);
-                if(float3lengthSq(&v) < light.pos.w*light.pos.w) {
+                if(float3lengthSq(&v) < light.size*light.size) {
                     glCullFace(GL_FRONT);
                 }
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);

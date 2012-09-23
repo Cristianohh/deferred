@@ -39,7 +39,8 @@ enum VertexType {
     kNUM_VERTEX_TYPES
 };
 struct Light {
-    float4  pos;    // A: radius
+    float3  pos;
+    float   size;
     float4  dir;
     float4  color;  // A: type
     float4  spot;   // R: outer cos cutoff, B: inner cos cutoff

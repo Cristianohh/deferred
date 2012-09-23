@@ -5,7 +5,8 @@
 
 struct Light 
 {
-    vec4 pos;
+    vec3 pos;
+    float size;
     vec4 dir;
     vec4 color;
     vec4 spot;
@@ -78,7 +79,7 @@ void main()
         } else if(light_type == kPointLight) {
             light_dir = current_light.pos.xyz - world_pos.xyz;
             float dist = length(light_dir);
-            float size = current_light.pos.w;
+            float size = current_light.size;
             if(dist > size) {
                 continue;
             }

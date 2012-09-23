@@ -108,11 +108,10 @@ void Game::initialize(void) {
     _lights[0].pos.x = 0.1f;
     _lights[0].pos.y = -1.0f;
     _lights[0].pos.z = 0.0f;
-    _lights[0].pos.w = 8.0f;
+    _lights[0].size = 8.0f;
     _lights[0].dir.x = 0.1f;
     _lights[0].dir.y = -1.0f;
     _lights[0].dir.z = 0.0f;
-    _lights[0].dir.w = 8.0f;
     _lights[0].color.x = 0.9f;
     _lights[0].color.y = 0.9f;
     _lights[0].color.z = 0.9f;
@@ -121,7 +120,7 @@ void Game::initialize(void) {
         _lights[ii].pos.x = _rand_float(-50.0f, 50.0f);
         _lights[ii].pos.y = _rand_float(1.0f, 4.0f);
         _lights[ii].pos.z = _rand_float(-50.0f, 50.0f);
-        _lights[ii].pos.w = 3.0f;
+        _lights[ii].size = 3.0f;
         _lights[ii].color.x = _rand_float(0.0f, 1.0f);
         _lights[ii].color.y = _rand_float(0.0f, 1.0f);
         _lights[ii].color.z = _rand_float(0.0f, 1.0f);
