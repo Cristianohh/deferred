@@ -102,20 +102,22 @@ void Game::initialize(void) {
     o.mesh = _render->load_mesh("assets/house_obj.obj");
     o.texture = _render->load_texture("assets/house_diffuse.tga");
     o.normal_texture = _render->load_texture("assets/house_normal.tga");;
-    _add_object(o);
+    //_add_object(o);
 
     // Add a "sun"
-    _lights[0].pos.x = 0.1f;
-    _lights[0].pos.y = -1.0f;
-    _lights[0].pos.z = 0.0f;
-    _lights[0].size = 8.0f;
+    _lights[0].pos.x = 0.0f;
+    _lights[0].pos.y = 10.0f;
+    _lights[0].pos.z = -60.0f;
+    _lights[0].size = 250.0f;
     _lights[0].dir.x = 0.1f;
-    _lights[0].dir.y = -1.0f;
-    _lights[0].dir.z = 0.0f;
-    _lights[0].color.x = 0.9f;
-    _lights[0].color.y = 0.9f;
-    _lights[0].color.z = 0.9f;
-    _lights[0].type = kDirectionalLight;
+    _lights[0].dir.y = -0.1f;
+    _lights[0].dir.z = 1.0f;
+    _lights[0].color.x = 1.0f;
+    _lights[0].color.y = 1.0f;
+    _lights[0].color.z = 1.0f;
+    _lights[0].inner_cos = cosf(DegToRad(60.0f/2));
+    _lights[0].outer_cos = cosf(DegToRad(70.0f/2));
+    _lights[0].type = kSpotLight;
     for(int ii=1;ii<MAX_LIGHTS;++ii) {
         _lights[ii].pos.x = _rand_float(-50.0f, 50.0f);
         _lights[ii].pos.y = _rand_float(1.0f, 4.0f);
@@ -184,7 +186,7 @@ int Game::on_frame(void) {
         const Object& o = _objects[ii];
         _render->draw_3d(o.mesh, o.texture, o.normal_texture, TransformGetMatrix(&o.transform));
     }
-    for(int ii=0;ii<MAX_LIGHTS;++ii) {
+    for(int ii=0;ii<1;++ii) {
         _render->draw_light(_lights[ii]);
     }
     _render->render();

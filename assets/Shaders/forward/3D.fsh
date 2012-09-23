@@ -2,6 +2,7 @@
 
 #define kDirectionalLight 0.0f
 #define kPointLight 1.0f
+#define kSpotLight 2.0f
 
 struct Light 
 {
@@ -78,7 +79,7 @@ void main()
         // the different cases.
         if(light_type == kDirectionalLight) {
             light_dir = normalize(-current_light.dir.xyz);
-        } else if(light_type == kPointLight) {
+        } else {
             light_dir = current_light.pos.xyz - world_pos.xyz;
             float dist = length(light_dir);
             float size = current_light.size;
@@ -87,6 +88,14 @@ void main()
             }
             light_dir = normalize(light_dir);
             attenuation = 1 - pow( clamp(dist/size, 0.0f, 1.0f), 2);
+            if(light_type == kSpotLight) {
+                vec3 V = normalize(world_pos.xyz - current_light.pos.xyz);
+                float inner_cos = current_light.inner_cos;
+                float outer_cos = current_light.outer_cos;
+                float cos_dir = dot(V, normalize(current_light.dir));
+                float spot_effect = smoothstep(outer_cos, inner_cos, cos_dir);
+                attenuation *= spot_effect;
+            }
         }
 
         //
