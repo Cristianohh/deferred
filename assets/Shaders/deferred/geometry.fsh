@@ -1,6 +1,6 @@
 #version 330
 
-uniform sampler2D kDiffuseTex;
+uniform sampler2D kAlbedoTex;
 uniform sampler2D kNormalTex;
 
 in vec3 int_WorldPos;
@@ -22,7 +22,7 @@ void main()
 {
     vec2 flipped_tex = vec2(int_TexCoord.x, -int_TexCoord.y); // Flip the tex coords on the y
     vec3 norm = normalize(texture(kNormalTex, flipped_tex).rgb*2.0 - 1.0f);
-    vec3 albedo = texture(kDiffuseTex, flipped_tex).rgb;
+    vec3 albedo = texture(kAlbedoTex, flipped_tex).rgb;
     vec3 spec_color = vec3(1.0f);
 
     float spec_coefficient = 0.8f;

@@ -33,7 +33,7 @@ void init(void) {
         glDeleteShader(fs);
         _geom_world_uniform = glGetUniformLocation(_geom_program, "kWorld");
         _geom_viewproj_uniform = glGetUniformLocation(_geom_program, "kViewProj");
-        _geom_diffuse_uniform = glGetUniformLocation(_geom_program, "kDiffuseTex");
+        _geom_albedo_uniform = glGetUniformLocation(_geom_program, "kAlbedoTex");
         _geom_normal_uniform = glGetUniformLocation(_geom_program, "kNormalTex");
     }    
     { // Deferred lighting
@@ -146,7 +146,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             glBindTexture(GL_TEXTURE_2D, r.texture);
             glActiveTexture(GL_TEXTURE1);
             glBindTexture(GL_TEXTURE_2D, r.normal_texture);
-            glUniform1i(_geom_diffuse_uniform, 0);
+            glUniform1i(_geom_albedo_uniform, 0);
             glUniform1i(_geom_normal_uniform, 1);
             glBindVertexArray(r.vao);
             _validate_program(_geom_program);
@@ -228,7 +228,7 @@ Mesh    _fullscreen_mesh;
 GLuint  _geom_program;
 GLuint  _geom_world_uniform;
 GLuint  _geom_viewproj_uniform;
-GLuint  _geom_diffuse_uniform;
+GLuint  _geom_albedo_uniform;
 GLuint  _geom_normal_uniform;
 
 GLuint  _light_program;

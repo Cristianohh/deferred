@@ -22,7 +22,7 @@ layout(std140) uniform LightBuffer
     int  _padding[3];
 };
 
-uniform sampler2D kDiffuseTex;
+uniform sampler2D kAlbedoTex;
 uniform sampler2D kNormalTex;
 
 uniform vec3 kCameraPosition;
@@ -53,7 +53,7 @@ vec3 phong( vec3 light_dir, vec3 light_color,
 void main()
 {
     vec2 flipped_tex = vec2(int_TexCoord.x, -int_TexCoord.y); // Flip the tex coords on the y
-    vec3 albedo = texture(kDiffuseTex, flipped_tex).rgb;
+    vec3 albedo = texture(kAlbedoTex, flipped_tex).rgb;
     vec3 normal = normalize(texture(kNormalTex, flipped_tex).rgb*2.0 - 1.0f);
     vec3 world_pos = int_WorldPos;
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos);

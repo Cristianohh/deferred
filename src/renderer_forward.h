@@ -23,7 +23,7 @@ void init(void) {
     
     _world_uniform = glGetUniformLocation(_program, "kWorld");
     _viewproj_uniform = glGetUniformLocation(_program, "kViewProj");
-    _diffuse_uniform = glGetUniformLocation(_program, "kDiffuseTex");
+    _albedo_uniform = glGetUniformLocation(_program, "kAlbedoTex");
     _camera_position_uniform = glGetUniformLocation(_program, "kCameraPosition");
     _normal_uniform = glGetUniformLocation(_program, "kNormalTex");
     _light_buffer_uniform = glGetUniformBlockIndex(_program, "LightBuffer");
@@ -59,7 +59,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glBindTexture(GL_TEXTURE_2D, r.texture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, r.normal_texture);
-        glUniform1i(_diffuse_uniform, 0);
+        glUniform1i(_albedo_uniform, 0);
         glUniform1i(_normal_uniform, 1);
         glBindVertexArray(r.vao);
         _validate_program(_program);
@@ -75,8 +75,8 @@ private:
 GLuint  _program;
 GLuint  _viewproj_uniform;
 GLuint  _world_uniform;
-GLuint  _diffuse_uniform;
 GLuint  _camera_position_uniform;
+GLuint  _albedo_uniform;
 GLuint  _normal_uniform;
 
 GLuint  _light_buffer_uniform;
