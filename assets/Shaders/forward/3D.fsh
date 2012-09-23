@@ -5,11 +5,13 @@
 
 struct Light 
 {
-    vec3 pos;
-    float size;
-    vec4 dir;
-    vec4 color;
-    vec4 spot;
+    vec3    pos;
+    float   size;
+    vec3    dir;
+    float   type;
+    vec3    color;
+    float   inner_cos;
+    float   outer_cos;
 };
 
 layout(std140) uniform LightBuffer
@@ -68,7 +70,7 @@ void main()
         Light current_light = kLight[ii];
         vec3 light_color = current_light.color.xyz;
         vec3 light_dir;
-        float light_type = current_light.color.a;
+        float light_type = current_light.type;
         float attenuation = 1.0f;
 
         // Dirctional lights and point lights are handled a little bit differently.

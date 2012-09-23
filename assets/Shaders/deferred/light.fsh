@@ -4,6 +4,18 @@
 #define kPointLight 1.0f
 #define kSpotLight 2.0f
 
+
+struct Light 
+{
+    vec3    pos;
+    float   size;
+    vec3    dir;
+    float   type;
+    vec3    color;
+    float   inner_cos;
+    float   outer_cos;
+};
+
 uniform sampler2D GBuffer[3];
 
 uniform mat4 kInverseViewProj;
@@ -32,6 +44,10 @@ vec3 phong( vec3 light_dir, vec3 light_color,
 
 void main()
 {
+    Light light = Light(kLight[0].xyz, kLight[0].w,
+                        kLight[1].xyz, kLight[1].w,
+                        kLight[2].xyz, kLight[2].w,
+                        kLight[3].x);
     // Calculate screen space UVs
     vec2 screen_pos = int_Pos.xy/int_Pos.w;
     vec2 uv =  screen_pos*0.5+0.5;
@@ -52,10 +68,10 @@ void main()
     normal -= 1.0f;
     
     vec3 dir_to_cam = normalize(kCameraPosition - world_pos.xyz);
-    vec3 light_color = kLight[2].xyz;
-    vec3 light_dir = kLight[1].xyz;
-    vec3 light_pos = kLight[0].xyz;
-    float light_type = kLight[2].a;
+    vec3 light_color = light.color.xyz;
+    vec3 light_dir = light.dir.xyz;
+    vec3 light_pos = light.pos;
+    float light_type = light.type;
     float attenuation = 1.0f;
 
     // Dirctional lights and point lights are handled a little bit differently.
@@ -66,10 +82,10 @@ void main()
     } else if(light_type == kPointLight) {
         light_dir = light_pos - world_pos.xyz;
         float dist = length(light_dir);
-        if(dist > kLight[0].w)
+        if(dist > light.size)
             discard;
         light_dir = normalize(light_dir);
-        attenuation = 1 - pow( clamp(dist/kLight[0].w, 0.0f, 1.0f), 2);
+        attenuation = 1 - pow( clamp(dist/light.size, 0.0f, 1.0f), 2);
     } else if(light_type == kSpotLight) {
     }
 

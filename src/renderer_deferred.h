@@ -163,7 +163,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glUniform3fv(_light_cam_pos_uniform, 1, (float*)&view.r3);
         for(int ii=0;ii<num_lights;++ii) {
             Light light = lights[ii];
-            if(light.color.w == kDirectionalLight) {            
+            if(light.type == kDirectionalLight) {            
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&float4x4identity);
                 glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&float4x4identity);
                 glUniform4fv(_light_light_uniform, 4, (float*)&light);
@@ -173,7 +173,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
                 glDrawElements(GL_TRIANGLES, (GLsizei)_fullscreen_mesh.index_count, _fullscreen_mesh.index_format, NULL);
                 
                 glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
-            } else if(light.color.w == kPointLight || light.color.w == kSpotLight) {
+            } else if(light.type == kPointLight || light.type == kSpotLight) {
                 float4x4 transform = float4x4Scale(light.size, light.size, light.size);
                 transform.r3.x = light.pos.x;
                 transform.r3.y = light.pos.y;

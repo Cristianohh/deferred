@@ -41,9 +41,12 @@ enum VertexType {
 struct Light {
     float3  pos;
     float   size;
-    float4  dir;
-    float4  color;  // A: type
-    float4  spot;   // R: outer cos cutoff, B: inner cos cutoff
+    float3  dir;
+    float   type;
+    float3  color;  // A: type
+    float   inner_cos;
+    float   outer_cos;
+    float3  _padding;
 };
 
 typedef int32_t MeshID;

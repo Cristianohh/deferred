@@ -115,7 +115,7 @@ void Game::initialize(void) {
     _lights[0].color.x = 0.9f;
     _lights[0].color.y = 0.9f;
     _lights[0].color.z = 0.9f;
-    _lights[0].color.w = kDirectionalLight;
+    _lights[0].type = kDirectionalLight;
     for(int ii=1;ii<MAX_LIGHTS;++ii) {
         _lights[ii].pos.x = _rand_float(-50.0f, 50.0f);
         _lights[ii].pos.y = _rand_float(1.0f, 4.0f);
@@ -124,7 +124,7 @@ void Game::initialize(void) {
         _lights[ii].color.x = _rand_float(0.0f, 1.0f);
         _lights[ii].color.y = _rand_float(0.0f, 1.0f);
         _lights[ii].color.z = _rand_float(0.0f, 1.0f);
-        _lights[ii].color.w = kPointLight;
+        _lights[ii].type = kPointLight;
     }
 }
 void Game::shutdown(void) {
