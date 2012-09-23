@@ -29,17 +29,23 @@ out vec4 out_Color;
 vec3 phong( vec3 light_dir, vec3 light_color,
             vec3 normal, vec3 albedo,
             vec3 dir_to_cam, float attenuation,
-            float spec_power, float spec_intensity)
+            vec3 spec_color, float spec_power, float spec_coefficient)
 {
     float n_dot_l = clamp(dot(light_dir, normal), 0.0f, 1.0f);
     vec3 reflection = reflect(dir_to_cam, normal);
     float r_dot_l = clamp(dot(reflection, -light_dir), 0.0f, 1.0f);
     
-    vec3 specular = vec3(min(1.0f, pow(r_dot_l, spec_power))) * light_color * spec_intensity;
+    vec3 specular = vec3(min(1.0f, pow(r_dot_l, spec_power))) * light_color * spec_color * spec_coefficient;
     vec3 diffuse = albedo * light_color * n_dot_l;
 
     return attenuation * (diffuse + specular);
 }
+
+// GBuffer format
+//  [0] RGB: Albedo    
+//  [1] RGB: WS Normal  A: Spec coefficient
+//  [2] RGB: Spec Color A: Spec exponent
+//  [3] R: Depth
 
 void main()
 {
@@ -53,9 +59,10 @@ void main()
 
     // Read from textures
     vec3 albedo = texture(GBuffer[0], uv).rgb;
-    float spec_intensity = texture(GBuffer[0], uv).a;
     vec3 normal = texture(GBuffer[1], uv).rgb;
-    float spec_power = texture(GBuffer[1], uv).a;
+    float spec_coefficient = texture(GBuffer[1], uv).a;
+    vec3 spec_color = texture(GBuffer[2], uv).rgb;
+    float spec_power = texture(GBuffer[2], uv).a * 256.0f;
     float depth = texture(GBuffer[3], uv).r;
 
     // Calculate the world position from the depth
@@ -101,7 +108,7 @@ void main()
     vec3 color = phong(light_dir, light_color,
                        normal, albedo,
                        dir_to_cam, attenuation,
-                       spec_power, spec_intensity);
+                       spec_color, spec_power, spec_coefficient);
 
     // Only add ambient to directional lights
     // In the future, AO/GI/better lighting will handle the ambient

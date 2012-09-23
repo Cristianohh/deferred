@@ -10,6 +10,12 @@
 #include "render_gl_helper.h"
 #include "renderer.h"
 
+// GBuffer format
+//  [0] RGB: Albedo    
+//  [1] RGB: WS Normal  A: Spec coefficient
+//  [2] RGB: Spec Color A: Spec exponent
+//  [3] R: Depth
+
 class RendererDeferred : public Renderer {
 public:
 
@@ -17,7 +23,6 @@ void init(void) {
     glGenFramebuffers(1, &_frame_buffer);
     glGenRenderbuffers(1, &_depth_buffer);
     glGenRenderbuffers(ARRAYSIZE(_gbuffer), _gbuffer);
-
     glGenTextures(ARRAYSIZE(_gbuffer_tex), _gbuffer_tex);
 
     { // Deferred Geometry
