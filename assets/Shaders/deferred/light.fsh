@@ -2,11 +2,12 @@
 
 #define kDirectionalLight 0.0f
 #define kPointLight 1.0f
+#define kSpotLight 2.0f
 
 uniform sampler2D GBuffer[3];
 
 uniform mat4 kInverseViewProj;
-uniform vec4 kLight[3];
+uniform vec4 kLight[4];
 
 uniform vec3 kCameraPosition;
 
@@ -69,6 +70,7 @@ void main()
             discard;
         light_dir = normalize(light_dir);
         attenuation = 1 - pow( clamp(dist/kLight[0].w, 0.0f, 1.0f), 2);
+    } else if(light_type == kSpotLight) {
     }
 
     //

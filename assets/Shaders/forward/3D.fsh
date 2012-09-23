@@ -8,6 +8,7 @@ struct Light
     vec4 pos;
     vec4 dir;
     vec4 color;
+    vec4 spot;
 };
 
 layout(std140) uniform LightBuffer

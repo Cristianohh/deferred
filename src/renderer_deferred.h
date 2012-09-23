@@ -166,14 +166,14 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             if(light.color.w == kDirectionalLight) {            
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&float4x4identity);
                 glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&float4x4identity);
-                glUniform4fv(_light_light_uniform, 3, (float*)&light);
+                glUniform4fv(_light_light_uniform, 4, (float*)&light);
                 
                 glBindVertexArray(_fullscreen_mesh.vao);
                 _validate_program(_light_program);
                 glDrawElements(GL_TRIANGLES, (GLsizei)_fullscreen_mesh.index_count, _fullscreen_mesh.index_format, NULL);
                 
                 glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
-            } else if(light.color.w == kPointLight) {
+            } else if(light.color.w == kPointLight || light.color.w == kSpotLight) {
                 float4x4 transform = float4x4Scale(light.pos.w, light.pos.w, light.pos.w);
                 transform.r3.x = light.pos.x;
                 transform.r3.y = light.pos.y;
@@ -184,7 +184,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
                     glCullFace(GL_FRONT);
                 }
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);
-                glUniform4fv(_light_light_uniform, 3, (float*)&light);
+                glUniform4fv(_light_light_uniform, 4, (float*)&light);
                 glBindVertexArray(_sphere_mesh.vao);
                 _validate_program(_light_program);
                 glDrawElements(GL_TRIANGLES, (GLsizei)_sphere_mesh.index_count, _sphere_mesh.index_format, NULL);

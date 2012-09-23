@@ -40,8 +40,9 @@ enum VertexType {
 };
 struct Light {
     float4  pos;    // A: radius
-    float4  dir;    
+    float4  dir;
     float4  color;  // A: type
+    float4  spot;   // R: outer cos cutoff, B: inner cos cutoff
 };
 
 typedef int32_t MeshID;
@@ -49,6 +50,7 @@ typedef int32_t TextureID;
 typedef float LightType;
 static const LightType kDirectionalLight = 0.0f;
 static const LightType kPointLight = 1.0f;
+static const LightType kSpotLight = 2.0f;
 
 class Render {
 public:
@@ -76,7 +78,7 @@ public:
     virtual void set_2d_view_matrix(const float4x4& view) = 0;
     virtual void draw_3d(MeshID mesh, TextureID texture, TextureID normal_texture, const float4x4& transform) = 0;
     virtual void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) = 0;
-    virtual void draw_light(const float4& light, const float4& color, LightType type) = 0;
+    virtual void draw_light(const Light& light) = 0;
 
     virtual void toggle_debug_graphics(void) = 0;
     virtual void toggle_deferred(void) = 0;

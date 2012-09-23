@@ -44,8 +44,7 @@ private:
 
     Object      _objects[1024];
     int         _num_objects;
-    float4      _lights[MAX_LIGHTS];
-    float4      _colors[MAX_LIGHTS];
+    Light       _lights[MAX_LIGHTS];
 };
 
 #endif /* include guard */

@@ -105,23 +105,27 @@ void Game::initialize(void) {
     _add_object(o);
 
     // Add a "sun"
-    _lights[0].x = 0.1f;
-    _lights[0].y = -1.0f;
-    _lights[0].z = 0.0f;
-    _lights[0].w = 8.0f;
-    _colors[0].x = 0.9f;
-    _colors[0].y = 0.9f;
-    _colors[0].z = 0.9f;
-    _colors[0].w = kDirectionalLight;
+    _lights[0].pos.x = 0.1f;
+    _lights[0].pos.y = -1.0f;
+    _lights[0].pos.z = 0.0f;
+    _lights[0].pos.w = 8.0f;
+    _lights[0].dir.x = 0.1f;
+    _lights[0].dir.y = -1.0f;
+    _lights[0].dir.z = 0.0f;
+    _lights[0].dir.w = 8.0f;
+    _lights[0].color.x = 0.9f;
+    _lights[0].color.y = 0.9f;
+    _lights[0].color.z = 0.9f;
+    _lights[0].color.w = kDirectionalLight;
     for(int ii=1;ii<MAX_LIGHTS;++ii) {
-        _lights[ii].x = _rand_float(-50.0f, 50.0f);
-        _lights[ii].y = _rand_float(1.0f, 4.0f);
-        _lights[ii].z = _rand_float(-50.0f, 50.0f);
-        _lights[ii].w = 3.0f;
-        _colors[ii].x = _rand_float(0.0f, 1.0f);
-        _colors[ii].y = _rand_float(0.0f, 1.0f);
-        _colors[ii].z = _rand_float(0.0f, 1.0f);
-        _colors[ii].w = kPointLight;
+        _lights[ii].pos.x = _rand_float(-50.0f, 50.0f);
+        _lights[ii].pos.y = _rand_float(1.0f, 4.0f);
+        _lights[ii].pos.z = _rand_float(-50.0f, 50.0f);
+        _lights[ii].pos.w = 3.0f;
+        _lights[ii].color.x = _rand_float(0.0f, 1.0f);
+        _lights[ii].color.y = _rand_float(0.0f, 1.0f);
+        _lights[ii].color.z = _rand_float(0.0f, 1.0f);
+        _lights[ii].color.w = kPointLight;
     }
 }
 void Game::shutdown(void) {
@@ -166,7 +170,7 @@ int Game::on_frame(void) {
         }
         event = app_pop_event();
     }
-    
+
     // Beginning of frame stuff
     _delta_time = (float)timer_delta_time(&_timer);
     update_fps(&_fps, _delta_time);
@@ -182,7 +186,7 @@ int Game::on_frame(void) {
         _render->draw_3d(o.mesh, o.texture, o.normal_texture, TransformGetMatrix(&o.transform));
     }
     for(int ii=0;ii<MAX_LIGHTS;++ii) {
-        _render->draw_light(_lights[ii], _colors[ii], _colors[ii].w);
+        _render->draw_light(_lights[ii]);
     }
     _render->render();
 
@@ -214,7 +218,7 @@ void Game::_control_camera(float mouse_x, float mouse_y)
         _camera.position = float3add(&_camera.position, &right);
     if(app_is_key_down(KEY_A))
         _camera.position = float3subtract(&_camera.position, &right);
-    
+
     if(app_is_key_down(KEY_E))
         _camera.position = float3add(&_camera.position, &up);
     if(app_is_key_down(KEY_Q))
@@ -224,7 +228,7 @@ void Game::_control_camera(float mouse_x, float mouse_y)
         mouse_y = -1.0f;
     else if(app_is_key_down(KEY_DOWN))
         mouse_y = 1.0f;
-    
+
     if(app_is_key_down(KEY_RIGHT))
         mouse_x = 1.0f;
     else if(app_is_key_down(KEY_LEFT))
