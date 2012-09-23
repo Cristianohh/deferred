@@ -15,7 +15,7 @@ struct Light
     float   outer_cos;
 };
 
-uniform sampler2D GBuffer[3];
+uniform sampler2D GBuffer[4];
 
 uniform mat4 kInverseViewProj;
 uniform vec4 kLight[4];
@@ -56,7 +56,7 @@ void main()
     float spec_intensity = texture(GBuffer[0], uv).a;
     vec3 normal = texture(GBuffer[1], uv).rgb;
     float spec_power = texture(GBuffer[1], uv).a;
-    float depth = texture(GBuffer[2], uv).r;
+    float depth = texture(GBuffer[3], uv).r;
 
     // Calculate the world position from the depth
     vec4 world_pos = vec4(screen_pos.xy, depth, 1.0f);

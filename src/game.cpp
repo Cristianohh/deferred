@@ -186,7 +186,7 @@ int Game::on_frame(void) {
         const Object& o = _objects[ii];
         _render->draw_3d(o.mesh, o.texture, o.normal_texture, TransformGetMatrix(&o.transform));
     }
-    for(int ii=0;ii<1;++ii) {
+    for(int ii=0;ii<MAX_LIGHTS;++ii) {
         _render->draw_light(_lights[ii]);
     }
     _render->render();

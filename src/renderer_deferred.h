@@ -16,9 +16,9 @@ public:
 void init(void) {
     glGenFramebuffers(1, &_frame_buffer);
     glGenRenderbuffers(1, &_depth_buffer);
-    glGenRenderbuffers(3, _gbuffer);
+    glGenRenderbuffers(ARRAYSIZE(_gbuffer), _gbuffer);
 
-    glGenTextures(3, _gbuffer_tex);
+    glGenTextures(ARRAYSIZE(_gbuffer_tex), _gbuffer_tex);
 
     { // Deferred Geometry
         GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/deferred/geometry.vsh");
@@ -49,8 +49,8 @@ void shutdown(void) {
     glDeleteProgram(_geom_program);
     glDeleteProgram(_light_program);
     
-    glDeleteRenderbuffers(3, _gbuffer);
-    glDeleteTextures(3, _gbuffer_tex);
+    glDeleteRenderbuffers(ARRAYSIZE(_gbuffer), _gbuffer);
+    glDeleteTextures(ARRAYSIZE(_gbuffer_tex), _gbuffer_tex);
 
     glDeleteRenderbuffers(1, &_depth_buffer);
     glDeleteFramebuffers(1, &_frame_buffer);
@@ -75,8 +75,13 @@ void resize(int width, int height) {
     CheckGLError();
     
     glBindRenderbuffer(GL_RENDERBUFFER, _gbuffer[2]);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, width, height);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_RENDERBUFFER, _gbuffer[2]);
+    CheckGLError();
+    
+    glBindRenderbuffer(GL_RENDERBUFFER, _gbuffer[3]);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32F, width, height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_RENDERBUFFER, _gbuffer[3]);
     CheckGLError();
 
     glBindTexture(GL_TEXTURE_2D, _gbuffer_tex[0]);
@@ -94,10 +99,17 @@ void resize(int width, int height) {
     CheckGLError();
     
     glBindTexture(GL_TEXTURE_2D, _gbuffer_tex[2]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _gbuffer_tex[2], 0);
+    CheckGLError();
+    
+    glBindTexture(GL_TEXTURE_2D, _gbuffer_tex[3]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, _gbuffer_tex[3], 0);
     CheckGLError();
 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
@@ -116,8 +128,8 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
-        GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-        glDrawBuffers(3, buffers);
+        GLenum buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
+        glDrawBuffers(4, buffers);
 
         glUseProgram(_geom_program);
 
@@ -146,12 +158,12 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glDrawBuffers(1, buffers);
         
         glUseProgram(_light_program);
-        for(int ii=0;ii<3;++ii) {
+        for(int ii=0;ii<(int)ARRAYSIZE(_gbuffer_tex);++ii) {
             glActiveTexture(GL_TEXTURE0+ii);
             glBindTexture(GL_TEXTURE_2D, _gbuffer_tex[ii]);
         }
-        int i[] = {0,1,2};
-        glUniform1iv(_light_gbuffer_uniform, 3, i);
+        int i[] = {0,1,2,3};
+        glUniform1iv(_light_gbuffer_uniform, ARRAYSIZE(i), i);
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE);
@@ -225,8 +237,8 @@ GLuint  _light_cam_pos_uniform;
 GLuint  _frame_buffer;
 GLuint  _depth_buffer;
 
-GLuint  _gbuffer[3];
-GLuint  _gbuffer_tex[3];
+GLuint  _gbuffer[4];
+GLuint  _gbuffer_tex[4];
 
 };
 

@@ -21,6 +21,10 @@ extern "C" { // Use C linkage
     } while(__LINE__ == 0)
 
 
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(a) (sizeof((a))/sizeof((a)[0]))
+#endif
+
 typedef struct {
     GLuint      vao;
     GLuint      vertex_buffer;

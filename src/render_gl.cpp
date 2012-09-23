@@ -51,10 +51,6 @@
         assert(_glError == GL_NO_ERROR);\
     } while(__LINE__ == 0)
 
-#ifndef ARRAYSIZE
-#define ARRAYSIZE(a) (sizeof((a))/sizeof((a)[0]))
-#endif
-
 #define MAKEFOURCC(ch0, ch1, ch2, ch3)                              \
                 ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |   \
                 ((uint32_t)(uint8_t)(ch2) << 16) | ((uint32_t)(uint8_t)(ch3) << 24 ))
@@ -259,11 +255,13 @@ void render(void) {
         glBindVertexArray(mesh.vao);
         _validate_program(_2d_program);
         glUniformMatrix4fv(_2d_viewproj_uniform, 1, GL_FALSE, (float*)&float4x4identity);
-        for(int ii=0;ii<3;++ii) {
+        for(int ii=0;ii<4;++ii) {
             if(ii == 1)
                 translate.r3.y = 0.5f;
             if(ii == 2)
                 translate.r3.x = 0.5f;
+            if(ii == 3)
+                translate.r3.y = -0.5f;
             glBindTexture(GL_TEXTURE_2D, _deferred_renderer.gbuffer_tex(ii));
             glUniformMatrix4fv(_2d_world_uniform, 1, GL_FALSE, (float*)&translate);
             glDrawElements(GL_TRIANGLES, (GLsizei)mesh.index_count, mesh.index_format, NULL);

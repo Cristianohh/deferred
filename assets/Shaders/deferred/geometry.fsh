@@ -10,7 +10,7 @@ in vec2 int_Depth;
 
 in vec3 int_TangentWS;
 
-out vec4 GBuffer[3];
+out vec4 GBuffer[4];
 
 void main()
 {
@@ -31,5 +31,5 @@ void main()
     norm += 1.0f;
     norm *= 0.5f;
     GBuffer[1] = vec4(norm, spec_power);
-    GBuffer[2] = vec4(int_Depth.x/int_Depth.y);
+    GBuffer[3] = vec4(int_Depth.x/int_Depth.y);
 }
