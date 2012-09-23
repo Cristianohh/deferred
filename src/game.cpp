@@ -102,7 +102,7 @@ void Game::initialize(void) {
     o.mesh = _render->load_mesh("assets/house_obj.obj");
     o.texture = _render->load_texture("assets/house_diffuse.tga");
     o.normal_texture = _render->load_texture("assets/house_normal.tga");;
-    //_add_object(o);
+    _add_object(o);
 
     // Add a "sun"
     _lights[0].pos.x = 0.0f;
