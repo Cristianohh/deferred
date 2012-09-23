@@ -128,8 +128,6 @@ RenderGL()
     : _window(NULL)
     , _num_meshes(0)
     , _num_textures(0)
-    , _num_2d_render_commands(0)
-    , _num_3d_render_commands(0)
     , _3d_view(float4x4identity)
     , _2d_view(float4x4identity)
     , _width(128)
@@ -271,7 +269,6 @@ void render(void) {
         _render_fullscreen(_color_texture);
     }
 
-    _num_3d_render_commands = _num_2d_render_commands = 0;
     _num_renderables = 0;
     _light_buffer.num_lights = 0;
 }
@@ -335,11 +332,10 @@ void set_3d_view_matrix(const float4x4& view) {
 void set_2d_view_matrix(const float4x4& view) {
     _2d_view = view;
 }
-void draw_3d(MeshID mesh, TextureID texture, TextureID normal_texture, const float4x4& transform) {
+void draw_3d(MeshID mesh, const Material* material, const float4x4& transform) {
     const Mesh& m = _meshes[mesh];
     Renderable& r = _renderables[_num_renderables];
-    r.texture = _textures[texture];
-    r.normal_texture = _textures[normal_texture];
+    r.material = material;
     r.vao = m.vao;
     r.index_count = m.index_count;
     r.index_format = m.index_format;
@@ -406,7 +402,7 @@ TextureID load_texture(const char* filename) {
     stbi_image_free(tex_data);
 
     _textures[_num_textures] = texture;
-    return _num_textures++;
+    return texture;
 }
 TextureID _load_dxt_texture(const char* filename) {
     FILE* file = fopen(filename, "rb");
@@ -477,7 +473,7 @@ TextureID _load_dxt_texture(const char* filename) {
     glBindTexture(GL_TEXTURE_2D, 0);
 
     _textures[_num_textures] = texture;
-    return _num_textures++;
+    return texture;
 }
 
 MeshID load_mesh(const char* filename) {
@@ -746,11 +742,6 @@ float4x4    _perspective_projection;
 float4x4    _3d_view;
 float4x4    _orthographic_projection;
 float4x4    _2d_view;
-
-RenderCommand   _3d_render_commands[kMAX_RENDER_COMMANDS];
-int             _num_3d_render_commands;
-RenderCommand   _2d_render_commands[kMAX_RENDER_COMMANDS];
-int             _num_2d_render_commands;
 
 Renderable  _renderables[kMAX_RENDER_COMMANDS];
 int         _num_renderables;

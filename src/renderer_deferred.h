@@ -143,9 +143,9 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             const Renderable& r = renderables[ii];
             glUniformMatrix4fv(_geom_world_uniform, 1, GL_FALSE, (float*)&r.transform);
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, r.texture);
+            glBindTexture(GL_TEXTURE_2D, r.material->albedo_tex);
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, r.normal_texture);
+            glBindTexture(GL_TEXTURE_2D, r.material->normal_tex);
             glUniform1i(_geom_albedo_uniform, 0);
             glUniform1i(_geom_normal_uniform, 1);
             glBindVertexArray(r.vao);

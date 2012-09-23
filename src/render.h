@@ -89,7 +89,7 @@ public:
 
     virtual void set_3d_view_matrix(const float4x4& view) = 0;
     virtual void set_2d_view_matrix(const float4x4& view) = 0;
-    virtual void draw_3d(MeshID mesh, TextureID texture, TextureID normal_texture, const float4x4& transform) = 0;
+    virtual void draw_3d(MeshID mesh, const Material* material, const float4x4& transform) = 0;
     virtual void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) = 0;
     virtual void draw_light(const Light& light) = 0;
 

@@ -221,7 +221,7 @@ int Game::on_frame(void) {
 
     for(int ii=0;ii<_num_objects;++ii) {
         const Object& o = _objects[ii];
-        _render->draw_3d(o.mesh, o.material.albedo_tex, o.material.normal_tex, TransformGetMatrix(&o.transform));
+        _render->draw_3d(o.mesh, &o.material, TransformGetMatrix(&o.transform));
     }
     for(int ii=0;ii<MAX_LIGHTS;++ii) {
         _render->draw_light(_lights[ii]);

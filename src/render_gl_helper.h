@@ -38,18 +38,11 @@ typedef struct {
 } VertexDescription;
 
 typedef struct {
-    float4x4    transform;
-    MeshID      mesh;
-    TextureID   texture;
-} RenderCommand;
-
-typedef struct {
-    float4x4    transform;
-    GLuint  vao;
-    GLsizei index_count;
-    GLenum  index_format;
-    GLuint  texture;
-    GLuint  normal_texture;
+    float4x4        transform;
+    GLuint          vao;
+    GLsizei         index_count;
+    GLenum          index_format;
+    const Material* material;
 } Renderable;
 
 typedef struct {
