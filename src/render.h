@@ -48,13 +48,20 @@ struct Light {
     float   outer_cos;
     float3  _padding;
 };
-
 typedef int32_t MeshID;
 typedef int32_t TextureID;
 typedef float LightType;
 static const LightType kDirectionalLight = 0.0f;
 static const LightType kPointLight = 1.0f;
 static const LightType kSpotLight = 2.0f;
+
+struct Material {
+    TextureID   albedo_tex;
+    TextureID   normal_tex;
+    TextureID   specular_tex;
+    
+};
+
 
 class Render {
 public:

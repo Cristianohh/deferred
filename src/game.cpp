@@ -71,7 +71,7 @@ void Game::initialize(void) {
     textures[0][0] = _render->load_texture("assets/metal.dds");
     textures[1][0] = _render->load_texture("assets/brick.dds");
     textures[2][0] = _render->load_texture("assets/wood.dds");
-    textures[0][1] = _render->load_texture("assets/metal_nrm.png");
+    textures[0][1] = _render->load_texture("assets/default_norm.png");
     textures[1][1] = _render->load_texture("assets/brick_nrm.png");
     textures[2][1] = _render->load_texture("assets/wood_nrm.png");
 
