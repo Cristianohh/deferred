@@ -147,14 +147,14 @@ void Game::initialize(void) {
     _lights[0].pos.z = -60.0f;
     _lights[0].size = 250.0f;
     _lights[0].dir.x = 0.1f;
-    _lights[0].dir.y = -0.1f;
-    _lights[0].dir.z = 1.0f;
+    _lights[0].dir.y = -0.8f;
+    _lights[0].dir.z = 0.5f;
     _lights[0].color.x = 1.0f;
     _lights[0].color.y = 1.0f;
     _lights[0].color.z = 1.0f;
     _lights[0].inner_cos = cosf(DegToRad(60.0f/2));
     _lights[0].outer_cos = cosf(DegToRad(70.0f/2));
-    _lights[0].type = kSpotLight;
+    _lights[0].type = kDirectionalLight;
     for(int ii=1;ii<MAX_LIGHTS;++ii) {
         _lights[ii].pos.x = _rand_float(-50.0f, 50.0f);
         _lights[ii].pos.y = _rand_float(1.0f, 4.0f);
