@@ -75,8 +75,7 @@ void init(void) {
         _shadow_program = _create_program(vs, fs);
         glDeleteShader(vs);
         glDeleteShader(fs);
-        _shadow_viewproj_uniform = glGetUniformLocation(_shadow_program, "kViewProj");
-        _shadow_world_uniform = glGetUniformLocation(_shadow_program, "kWorld");
+        _shadow_wvp_uniform = glGetUniformLocation(_shadow_program, "kWorldViewProj");
     }
 }
 void shutdown(void) {
@@ -225,11 +224,10 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         float4x4 shadow_vp = float4x4multiply(&shadow_view, &shadow_proj);
 
         glUseProgram(_shadow_program);
-        glUniformMatrix4fv(_shadow_viewproj_uniform, 1, GL_FALSE, (float*)&shadow_vp);
         for(int ii=0;ii<num_renderables;++ii) {
             const Renderable& r = renderables[ii];
-            //float4x4 wvp = float4x4multiply((float*)&r.tr, (float*)&shadow_vp);
-            glUniformMatrix4fv(_shadow_world_uniform, 1, GL_FALSE, (float*)&r.transform);
+            float4x4 wvp = float4x4multiply(&r.transform, &shadow_vp);
+            glUniformMatrix4fv(_shadow_wvp_uniform, 1, GL_FALSE, (float*)&wvp);
 
             glBindVertexArray(r.vao);
             _validate_program(_shadow_program);
@@ -344,8 +342,7 @@ GLuint  _gbuffer_tex[4];
 GLuint  _shadow_fb;
 GLuint  _shadow_depth;
 GLuint  _shadow_program;
-GLuint  _shadow_viewproj_uniform;
-GLuint  _shadow_world_uniform;
+GLuint  _shadow_wvp_uniform;
 
 };
 
