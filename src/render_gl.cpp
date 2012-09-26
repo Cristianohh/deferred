@@ -524,6 +524,8 @@ MeshID _load_obj(const char* filename) {
     std::vector<float2> texcoords;
 
     std::vector<int3>   indicies;
+
+    int textured = 0;
     
     FILE* file = fopen(filename, "rt");
     while(1) {
@@ -536,24 +538,49 @@ MeshID _load_obj(const char* filename) {
             float3 v;
             fscanf(file, "%f %f %f\n", &v.x, &v.y, &v.z);
             positions.push_back(v);
+            textured = 0;
         } else if(strcmp(line_header, "vt") == 0) {
             float2 t;
             fscanf(file, "%f %f\n", &t.x, &t.y);
             texcoords.push_back(t);
+            textured = 1;
         } else if(strcmp(line_header, "vn") == 0) {
             float3 n;
             fscanf(file, "%f %f %f\n", &n.x, &n.y, &n.z);
             normals.push_back(n);
         } else if(strcmp(line_header, "f") == 0) {
             int3 triangle[4];
-            int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",
-                                        &triangle[0].p, &triangle[0].t,&triangle[0].n,
-                                        &triangle[1].p, &triangle[1].t,&triangle[1].n,
-                                        &triangle[2].p, &triangle[2].t,&triangle[2].n,
-                                        &triangle[3].p, &triangle[3].t,&triangle[3].n);
-            if(matches != 9 && matches != 12) {
-                debug_output("Can't load this OBJ\n");
-                return -1;
+            int matches;
+            if(textured) {
+                matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d\n",
+                                 &triangle[0].p, &triangle[0].t, &triangle[0].n,
+                                 &triangle[1].p, &triangle[1].t, &triangle[1].n,
+                                 &triangle[2].p, &triangle[2].t, &triangle[2].n,
+                                 &triangle[3].p, &triangle[3].t, &triangle[3].n);
+                if(matches != 9 && matches != 12) {
+                    debug_output("Can't load this OBJ\n");
+                    fclose(file);
+                    return -1;
+                }
+            } else {
+                matches = fscanf(file, "%d//%d %d//%d %d//%d %d//%d\n",
+                                 &triangle[0].p, &triangle[0].n,
+                                 &triangle[1].p, &triangle[1].n,
+                                 &triangle[2].p, &triangle[2].n,
+                                 &triangle[3].p, &triangle[3].n);
+                if(matches != 6 && matches != 8) {
+                    debug_output("Can't load this OBJ\n");
+                    fclose(file);
+                    return -1;
+                }
+                triangle[0].t = 1;
+                triangle[1].t = 1;
+                triangle[2].t = 1;
+                matches = 9;
+                if(matches == 8) {
+                    triangle[3].t = 1;
+                    matches = 12;
+                }
             }
             indicies.push_back(triangle[0]);
             indicies.push_back(triangle[1]);
