@@ -137,6 +137,8 @@ void Game::initialize(void) {
     };
     o.transform = TransformZero();
     o.transform.scale = 0.015f;
+    float3 yaxis = {0,1,0};
+    o.transform.orientation = quaternionFromAxisAngle(&yaxis, DegToRad(-135.0f));
     o.mesh = _render->load_mesh("assets/house_obj.obj");
     o.material = house_material;
     _add_object(o);
