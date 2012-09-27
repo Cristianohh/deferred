@@ -44,7 +44,10 @@ private:
         ResourceUnloader*   unloader;
         void*               ud;
     }   _handlers[MAX_HANDLERS];
-    Resource    _resources[MAX_RESOURCES];
+    struct {
+        char        filename[256-sizeof(Resource)];
+        Resource    resource;
+    }   _resources[MAX_RESOURCES];
     int _free_resources[MAX_RESOURCES];
     int _free_resource_index;
     int _num_resources;

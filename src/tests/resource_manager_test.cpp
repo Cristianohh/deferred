@@ -7,6 +7,7 @@
 #include "unit_test.h"
 #include "resource_manager.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 namespace {
 
@@ -26,6 +27,8 @@ int _test_loader(const char*, void* data, Resource* resource) {
     resource->i = rand();
     int* i = (int*)data;
     (*i) += resource->i;
+
+    printf("LOADING");
 
     return 0;
 }

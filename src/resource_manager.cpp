@@ -6,6 +6,8 @@
 
 #include "resource_manager.h"
 #include <string.h>
+#include <stdio.h>
+#include "application.h"
 
 namespace {
 
@@ -43,7 +45,7 @@ void ResourceManager::add_handlers(const char* extension,
                                    void* user_data)
 {
     int index = _num_handlers++;
-    strlcat(_handlers[index].ext, extension, sizeof(_handlers[index].ext));
+    strncpy(_handlers[index].ext, extension, sizeof(_handlers[index].ext));
     _handlers[index].loader = loader;
     _handlers[index].unloader = unloader;
     _handlers[index].ud = user_data;
@@ -53,6 +55,33 @@ ResourceID ResourceManager::load(const char* filename) {
     char lower_filename[256];
     _to_lower(lower_filename, filename, sizeof(lower_filename));
 
-    _num_resources++;
+    const char* extension = filename+strlen(filename);
+    while(*extension != '.')
+        --extension;
+    ++extension;
+    printf("\n%s\n", extension);
+
+    int success = 0;
+    for(int ii=0;ii<_num_handlers;++ii) {
+    printf("\n%s\n", _handlers[ii].ext);
+        if(strcmp(extension, _handlers[ii].ext) == 0) {
+            MessageBoxResult result;
+            do {
+                success = _handlers[ii].loader(lower_filename, _handlers[ii].ud, &_resources[resource_index].resource);
+                if(success == 0)
+                    break;
+                char buffer[1024];
+                snprintf(buffer, sizeof(buffer), "Error loading file: %s\n", buffer);
+                result = message_box("File load error", buffer);
+            } while(result == kMBRetry);
+            break;
+        }
+    }
+    if(success == 0) {
+        strncpy(_resources[resource_index].filename, lower_filename, sizeof(lower_filename));
+        _num_resources++;
+    } else {
+        resource_index = kInvalidResource;
+    }
     return resource_index;
 }
