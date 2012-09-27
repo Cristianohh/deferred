@@ -16,7 +16,7 @@ struct Light
 };
 
 uniform sampler2D GBuffer[4];
-uniform sampler2D kShadowMap;
+uniform sampler2DShadow kShadowMap;
 
 uniform mat4 kShadowViewProj;
 
@@ -94,12 +94,10 @@ void main()
         float bias = 0.005f * tan(acos(n_dot_l));
         vec4 shadow_coord = kShadowViewProj * world_pos;
 
-        if( shadow_coord.x >= 0.0f && shadow_coord.x <= 1.0f &&
-           shadow_coord.y >= 0.0f && shadow_coord.y <= 1.0f ) {
-            float shadow = texture(kShadowMap, shadow_coord.xy).r;
-            if( shadow < shadow_coord.z-bias) {
-                attenuation = 0.1f;
-            }
+        if(shadow_coord.x >= 0.0f && shadow_coord.x <= 1.0f &&
+           shadow_coord.y >= 0.0f && shadow_coord.y <= 1.0f )
+        {
+            attenuation *= texture(kShadowMap, vec3(shadow_coord.xy, (shadow_coord.z-bias)/shadow_coord.w));
         }
     } else {
         light_dir = light_pos - world_pos.xyz;
@@ -132,7 +130,4 @@ void main()
         color = color*0.9f + albedo*0.1f*light_color;
     }
     out_Color = vec4(color, 1.0f);
-    //out_Color = vec4(shadow_coord.z);
-    //out_Color = vec4(shadow);
-    //out_Color = vec4(shadow_coord.xy, 0.0f, 1.0f);
 }

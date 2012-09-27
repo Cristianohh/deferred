@@ -16,6 +16,9 @@
 //  [2] RGB: Spec Color A: Spec exponent
 //  [3] R: Depth
 
+#define SHADOW_MAP_RES 2048
+#define GL_COMPARE_R_TO_TEXTURE     0x884E /* TODO: Why isn't this defined in OS X? */
+
 class RendererDeferred : public Renderer {
 public:
 
@@ -62,11 +65,13 @@ void init(void) {
 
         glGenTextures(1, &_shadow_depth);
         glBindTexture(GL_TEXTURE_2D, _shadow_depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, SHADOW_MAP_RES, SHADOW_MAP_RES, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _shadow_depth, 0);
 
         assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
@@ -205,10 +210,11 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
     { // Draw shadow map
         glBindFramebuffer(GL_FRAMEBUFFER, _shadow_fb);
         glDrawBuffer(GL_NONE);
-        glViewport(0, 0, 1024, 1024);
+        glViewport(0, 0, SHADOW_MAP_RES, SHADOW_MAP_RES);
+        glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-20.0f, 20.0f, 20.0f, -20.0f, -50.0f, 30.0f);
+        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-40.0f, 40.0f, 40.0f, -40.0f, -30.0f, 30.0f);
         float3 look = lights[0].dir;
         float3 up = {0,1,0};
         look = float3normalize(&look);
