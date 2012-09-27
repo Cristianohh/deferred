@@ -21,14 +21,19 @@ Render* Render::create() {
 void Render::destroy(Render* render) {
     delete render;
 }
-int Render::load_texture(const char* filename, void* ud, Resource* resource) {
+Resource Render::load_texture(const char* filename, void* ud) {
     Render* render = (Render*)ud;
-    *resource = render->_load_texture(filename);
-    if(resource->i == 0)
-        return 1;
-    return 0;
+    return render->_load_texture(filename);
 }
-void Render::unload_texture(Resource* resource, void* ud) {
+void Render::unload_texture(Resource resource, void* ud) {
     Render* render = (Render*)ud;
-    render->_unload_texture(*resource);
+    render->_unload_texture(resource);
+}
+Resource Render::load_mesh(const char* filename, void* ud) {
+    Render* render = (Render*)ud;
+    return render->_load_mesh(filename);
+}
+void Render::unload_mesh(Resource resource, void* ud) {
+    Render* render = (Render*)ud;
+    render->_unload_mesh(resource);
 }

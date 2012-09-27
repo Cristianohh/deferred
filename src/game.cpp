@@ -43,17 +43,19 @@ void Game::initialize(void) {
     //srand((uint32_t)_timer.start_time);
     srand(42);
 
+    // Texture loaders
     _resource_manager.add_handlers("jpg", Render::load_texture, Render::unload_texture, _render);
     _resource_manager.add_handlers("dds", Render::load_texture, Render::unload_texture, _render);
     _resource_manager.add_handlers("png", Render::load_texture, Render::unload_texture, _render);
     _resource_manager.add_handlers("tga", Render::load_texture, Render::unload_texture, _render);
 
+    // File loaders
+    _resource_manager.add_handlers("mesh", Render::load_mesh, Render::unload_mesh, _render);
+    _resource_manager.add_handlers("obj", Render::load_mesh, Render::unload_mesh, _render);
+
     // Create some materials
     Material grass_material =
     {
-        //_render->load_texture("assets/grass.dds"),
-        //_render->load_texture("assets/grass_nrm.png"),
-        //0,
         _resource_manager.get_resource("assets/grass.dds"),
         _resource_manager.get_resource("assets/grass_nrm.png"),
         {0},
@@ -147,7 +149,7 @@ void Game::initialize(void) {
     o.transform.scale = 0.015f;
     float3 yaxis = {0,1,0};
     o.transform.orientation = quaternionFromAxisAngle(&yaxis, DegToRad(-135.0f));
-    o.mesh = _render->load_mesh("assets/house_obj.obj");
+    o.mesh = _resource_manager.get_resource("assets/house_obj.obj");
     o.material = house_material;
     _add_object(o);
 

@@ -17,7 +17,7 @@ class Render;
 
 struct Object {
     Transform   transform;
-    MeshID      mesh;
+    Resource    mesh;
     Material    material;
 };
 

@@ -218,8 +218,8 @@ void initialize(void* window) {
 
     _forward_renderer.init();
     _deferred_renderer.init();
-    _deferred_renderer.set_sphere_mesh(_meshes[_sphere_mesh]);
-    _deferred_renderer.set_fullscreen_mesh(_meshes[_fullscreen_quad_mesh]);
+    _deferred_renderer.set_sphere_mesh(*((Mesh*)_sphere_mesh.ptr));
+    _deferred_renderer.set_fullscreen_mesh(*((Mesh*)_fullscreen_quad_mesh.ptr));
 }
 void shutdown(void) {
     _forward_renderer.shutdown();
@@ -248,7 +248,7 @@ void render(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     if(_deferred && _debug) {
         glDisable(GL_DEPTH_TEST);
-        const Mesh& mesh = _meshes[_fullscreen_quad_mesh];
+        const Mesh& mesh = *((Mesh*)_fullscreen_quad_mesh.ptr);
         float4x4 translate = float4x4Scale(0.5f, 0.5f, 0.5f);
         translate.r3.x = -0.5f;
         translate.r3.y = -0.5f;
@@ -288,38 +288,39 @@ void resize(int width, int height) {
     _deferred_renderer.resize(width, height);
 }
 void _render_fullscreen(GLuint texture) {
+    Mesh* mesh = (Mesh*)_fullscreen_quad_mesh.ptr;
     glUseProgram(_fullscreen_program);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glBindVertexArray(_meshes[_fullscreen_quad_mesh].vao);
+    glBindVertexArray(mesh->vao);
     _validate_program(_fullscreen_program);
-    glDrawElements(GL_TRIANGLES, (GLsizei)_meshes[_fullscreen_quad_mesh].index_count, _meshes[_fullscreen_quad_mesh].index_format, NULL);
+    glDrawElements(GL_TRIANGLES, (GLsizei)mesh->index_count, mesh->index_format, NULL);
 }
 
-MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
+Resource create_mesh(uint32_t vertex_count, VertexType vertex_type,
                    uint32_t index_count, size_t index_size,
                    const void* vertices, const void* indices) {
-    MeshID id = _num_meshes++;
-
+    Mesh* mesh = new Mesh;
     if(vertex_type == kVtxPosNormTex) {
         VtxPosNormTanBitanTex* new_vertices = _calculate_tangets((VtxPosNormTex*)vertices, vertex_count, indices, index_size, index_count);
         vertex_type = kVtxPosNormTanBitanTex;
-        _meshes[id] = _create_mesh(vertex_count, kVertexSizes[vertex_type],
-                                   index_count, index_size,
-                                   new_vertices, indices,
-                                   kVertexDescriptions[vertex_type]);
+        *mesh = _create_mesh(vertex_count, kVertexSizes[vertex_type],
+                             index_count, index_size,
+                             new_vertices, indices,
+                             kVertexDescriptions[vertex_type]);
         delete [] new_vertices;
     } else {
-        _meshes[id] = _create_mesh(vertex_count, kVertexSizes[vertex_type],
-                                   index_count, index_size,
-                                   vertices, indices,
-                                   kVertexDescriptions[vertex_type]);
+        *mesh = _create_mesh(vertex_count, kVertexSizes[vertex_type],
+                             index_count, index_size,
+                             vertices, indices,
+                             kVertexDescriptions[vertex_type]);
     }
-    return id;
+    Resource resource = {mesh};
+    return resource;
 }
 
-MeshID cube_mesh(void) { return _cube_mesh; }
-MeshID quad_mesh(void) { return _quad_mesh; }
-MeshID sphere_mesh(void) { return _sphere_mesh; }
+Resource cube_mesh(void) { return _cube_mesh; }
+Resource quad_mesh(void) { return _quad_mesh; }
+Resource sphere_mesh(void) { return _sphere_mesh; }
 void toggle_debug_graphics(void) { _debug = !_debug; }
 void toggle_deferred(void) {
     _deferred = !_deferred;
@@ -335,13 +336,13 @@ void set_3d_view_matrix(const float4x4& view) {
 void set_2d_view_matrix(const float4x4& view) {
     _2d_view = view;
 }
-void draw_3d(MeshID mesh, const Material* material, const float4x4& transform) {
-    const Mesh& m = _meshes[mesh];
+void draw_3d(Resource mesh, const Material* material, const float4x4& transform) {
+    const Mesh* m = (Mesh*)mesh.ptr;
     Renderable& r = _renderables[_num_renderables];
     r.material = material;
-    r.vao = m.vao;
-    r.index_count = m.index_count;
-    r.index_format = m.index_format;
+    r.vao = m->vao;
+    r.index_count = m->index_count;
+    r.index_format = m->index_format;
     r.transform = transform;
 
     _num_renderables++;
@@ -409,6 +410,13 @@ Resource _load_texture(const char* filename) {
 }
 void _unload_texture(Resource resource) {
     glDeleteTextures(1, (GLuint*)&resource.i);
+}
+void _unload_mesh(Resource resource) {
+    Mesh* mesh = (Mesh*)resource.ptr;
+    glDeleteBuffers(1, &mesh->index_buffer);
+    glDeleteBuffers(1, &mesh->vertex_buffer);
+    glDeleteVertexArrays(1, &mesh->vao);
+    delete mesh;
 }
 Resource _load_dxt_texture(const char* filename) {
     FILE* file = fopen(filename, "rb");
@@ -483,7 +491,7 @@ Resource _load_dxt_texture(const char* filename) {
     return resource;
 }
 
-MeshID load_mesh(const char* filename) {
+Resource _load_mesh(const char* filename) {
     uint32_t nVertexStride;
     uint32_t nVertexCount;
     uint32_t nIndexSize;
@@ -513,18 +521,18 @@ MeshID load_mesh(const char* filename) {
 
     VtxPosNormTanBitanTex* new_vertices = _calculate_tangets((VtxPosNormTex*)pData, nVertexCount, indices, (size_t)nIndexSize, nIndexCount);
 
-    MeshID mesh = create_mesh(nVertexCount, kVtxPosNormTanBitanTex, nIndexCount, nIndexSize, new_vertices, indices);
+    Resource resource = create_mesh(nVertexCount, kVtxPosNormTanBitanTex, nIndexCount, nIndexSize, new_vertices, indices);
     delete [] pData;
     delete [] new_vertices;
 
-    return mesh;
+    return resource;
 }
 struct int3 {
     int p;
     int t;
     int n;
 };
-MeshID _load_obj(const char* filename) {
+Resource _load_obj(const char* filename) {
     
     std::vector<float3> positions;
     std::vector<float3> normals;
@@ -570,7 +578,7 @@ MeshID _load_obj(const char* filename) {
                 if(matches != 9 && matches != 12) {
                     debug_output("Can't load this OBJ\n");
                     fclose(file);
-                    return -1;
+                    return kInvalidResource;
                 }
             } else {
                 matches = fscanf(file, "%d//%d %d//%d %d//%d %d//%d\n",
@@ -581,7 +589,7 @@ MeshID _load_obj(const char* filename) {
                 if(matches != 6 && matches != 8) {
                     debug_output("Can't load this OBJ\n");
                     fclose(file);
-                    return -1;
+                    return kInvalidResource;
                 }
                 triangle[0].t = 0;
                 triangle[1].t = 0;
@@ -640,12 +648,12 @@ MeshID _load_obj(const char* filename) {
 
     VtxPosNormTanBitanTex* new_vertices = _calculate_tangets(vertices, vertex_count, i, sizeof(uint32_t), index_count);
 
-    MeshID mesh = create_mesh(vertex_count, kVtxPosNormTanBitanTex, index_count, sizeof(uint32_t), new_vertices, i);
+    Resource resource = create_mesh(vertex_count, kVtxPosNormTanBitanTex, index_count, sizeof(uint32_t), new_vertices, i);
     delete [] new_vertices;
     delete [] vertices;
     delete [] i;
 
-    return mesh;
+    return resource;
 }
 VtxPosNormTanBitanTex* _calculate_tangets(const VtxPosNormTex* vertices, int num_vertices, const void* indices, size_t index_size, int num_indices) {
     VtxPosNormTanBitanTex* new_vertices = new VtxPosNormTanBitanTex[num_vertices];
@@ -733,7 +741,7 @@ void _create_base_meshes(void) {
     _fullscreen_quad_mesh = create_mesh(ARRAYSIZE(kFullscreenQuadVertices), kVtxPosTex,
                                         ARRAYSIZE(kQuadIndices), sizeof(kQuadIndices[0]),
                                         kFullscreenQuadVertices, kQuadIndices);
-    _sphere_mesh = load_mesh("assets/sphere.mesh");
+    _sphere_mesh = _load_mesh("assets/sphere.mesh");
 }
 void _resize_framebuffer(void) {
     glBindFramebuffer(GL_FRAMEBUFFER, _frame_buffer);
@@ -779,11 +787,11 @@ HDC     _dc;
 void*   _window;
 
 Mesh    _meshes[kMAX_MESHES];
-int     _num_meshes;
-MeshID  _cube_mesh;
-MeshID  _quad_mesh;
-MeshID  _sphere_mesh;
-MeshID  _fullscreen_quad_mesh;
+int         _num_meshes;
+Resource    _cube_mesh;
+Resource    _quad_mesh;
+Resource    _sphere_mesh;
+Resource     _fullscreen_quad_mesh;
 
 GLuint  _textures[kMAX_TEXTURES];
 int     _num_textures;

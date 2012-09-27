@@ -49,12 +49,9 @@ Resource ResourceManager::get_resource(const char* name) {
         return kInvalidResource;
 
     ResourceHandler handler = _handlers[extension];
-    Resource resource = { 0 };
-    int result = handler.loader(name, handler.ud, &resource);
-    if(result == 0)
+    Resource resource = handler.loader(name, handler.ud);
+    if(resource.i != kInvalidResource.i)
         _resources[lower_name] = resource;
-    else
-        resource = kInvalidResource;
 
     return resource;
 }

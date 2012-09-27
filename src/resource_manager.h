@@ -19,8 +19,8 @@ union Resource {
     intptr_t    i;
 };
 
-typedef int (ResourceLoader)(const char* filename, void* ud, Resource* resource);
-typedef void (ResourceUnloader)(Resource* resource, void* ud);
+typedef Resource (ResourceLoader)(const char* filename, void* ud);
+typedef void (ResourceUnloader)(Resource resource, void* ud);
 
 static const Resource kInvalidResource = { (void*)0xFFFFFFFFFFFFFFFF };
 

@@ -23,16 +23,16 @@ struct ResourceManagerFixture {
 
     ResourceManager manager;
 };
-int _test_loader(const char*, void* data, Resource* resource) {
-    resource->i = 98;
+Resource _test_loader(const char*, void* data) {
+    Resource resource = { (void*)98 };
     int* i = (int*)data;
-    (*i) += (int)resource->i;
+    (*i) += (int)resource.i;
 
-    return 0;
+    return resource;
 }
-void _test_unloader(Resource* resource, void* data) {
+void _test_unloader(Resource resource, void* data) {
     int* i = (int*)data;
-    (*i) -= (int)resource->i;
+    (*i) -= (int)resource.i;
 }
 TEST_FIXTURE(ResourceManagerFixture, SetLoader) {
     int test_int = 0;

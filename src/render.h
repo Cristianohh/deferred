@@ -80,20 +80,19 @@ public:
     virtual void render(void) = 0;
     virtual void resize(int width, int height) = 0;
 
-    virtual MeshID load_mesh(const char* filename) = 0;
-    virtual MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
-                               uint32_t index_count, size_t index_size,
-                               const void* vertices, const void* indices) = 0;
+    virtual Resource create_mesh(uint32_t vertex_count, VertexType vertex_type,
+                                 uint32_t index_count, size_t index_size,
+                                 const void* vertices, const void* indices) = 0;
 
     virtual void* window(void) = 0;
 
-    virtual MeshID cube_mesh(void) = 0;
-    virtual MeshID quad_mesh(void) = 0;
-    virtual MeshID sphere_mesh(void) = 0;
+    virtual Resource cube_mesh(void) = 0;
+    virtual Resource quad_mesh(void) = 0;
+    virtual Resource sphere_mesh(void) = 0;
 
     virtual void set_3d_view_matrix(const float4x4& view) = 0;
     virtual void set_2d_view_matrix(const float4x4& view) = 0;
-    virtual void draw_3d(MeshID mesh, const Material* material, const float4x4& transform) = 0;
+    virtual void draw_3d(Resource mesh, const Material* material, const float4x4& transform) = 0;
     virtual void draw_light(const Light& light) = 0;
 
     virtual void toggle_debug_graphics(void) = 0;
@@ -102,14 +101,20 @@ public:
     static Render* create(void);
     static void destroy(Render* render);
 
-    static int load_texture(const char* filename, void* ud, Resource* resource);
-    static void unload_texture(Resource* resource, void* ud);
+    static Resource load_texture(const char* filename, void* ud);
+    static void unload_texture(Resource resource, void* ud);
+    static Resource load_mesh(const char* mesh, void* ud);
+    static void unload_mesh(Resource resource, void* ud);
+
+    
+    virtual Resource _load_texture(const char* filename) = 0;
+    virtual void _unload_texture(Resource resource) = 0;
+    
+    virtual Resource _load_mesh(const char* filename) = 0;
+    virtual void _unload_mesh(Resource resource) = 0;
 
 private:
     static Render* _create_ogl(void);
-
-    virtual Resource _load_texture(const char* filename) = 0;
-    virtual void _unload_texture(Resource resource) = 0;
 
 };
 
