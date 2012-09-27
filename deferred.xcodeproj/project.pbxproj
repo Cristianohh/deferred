@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		2707F84416026C020014C2E1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2707F84316026C020014C2E1 /* Cocoa.framework */; };
 		273AB3F316026C5F007C7682 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 273AB3ED16026C5F007C7682 /* main.cpp */; };
+		273EE4BF161167AE00265F0D /* resource_manager_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 273EE4BD161167AE00265F0D /* resource_manager_test.cpp */; };
+		273EE4C51611682000265F0D /* resource_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 273EE4C31611682000265F0D /* resource_manager.cpp */; };
 		278F9E0A1602862200F90E06 /* timer.c in Sources */ = {isa = PBXBuildFile; fileRef = 278F9E081602862200F90E06 /* timer.c */; };
 		278F9E0D1602862700F90E06 /* timer_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 278F9E0C1602862700F90E06 /* timer_test.cpp */; };
 		27ADE89016026DCD00D888DE /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 27ADE88C16026DCD00D888DE /* AppDelegate.m */; };
@@ -39,6 +41,9 @@
 		2719DB8B160511F800485229 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
 		2735A818160829B800B60C41 /* geometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geometry.h; sourceTree = "<group>"; };
 		273AB3ED16026C5F007C7682 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		273EE4BD161167AE00265F0D /* resource_manager_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = resource_manager_test.cpp; sourceTree = "<group>"; };
+		273EE4C31611682000265F0D /* resource_manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = resource_manager.cpp; sourceTree = "<group>"; };
+		273EE4C41611682000265F0D /* resource_manager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource_manager.h; sourceTree = "<group>"; };
 		275A241A1605127C005FA2BC /* vec_math.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vec_math.h; sourceTree = "<group>"; };
 		275F567816082A0C00FB9F9E /* render_gl_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = render_gl_helper.h; sourceTree = "<group>"; };
 		275F567B16082B8300FB9F9E /* renderer_deferred.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = renderer_deferred.h; sourceTree = "<group>"; };
@@ -147,6 +152,8 @@
 				279EEED816083AEE00BC08EE /* renderer.h */,
 				275F567B16082B8300FB9F9E /* renderer_deferred.h */,
 				279EEEDA16083BE000BC08EE /* renderer_forward.h */,
+				273EE4C31611682000265F0D /* resource_manager.cpp */,
+				273EE4C41611682000265F0D /* resource_manager.h */,
 				278F9E081602862200F90E06 /* timer.c */,
 				278F9E091602862200F90E06 /* timer.h */,
 				27ADE8AC16027ACD00D888DE /* unit_test.cpp */,
@@ -189,6 +196,7 @@
 				278F9E0C1602862700F90E06 /* timer_test.cpp */,
 				27CF508716027C57009DBE5A /* unit_test_test.cpp */,
 				27ADE8AF16027B1E00D888DE /* application_test.cpp */,
+				273EE4BD161167AE00265F0D /* resource_manager_test.cpp */,
 			);
 			path = tests;
 			sourceTree = "<group>";
@@ -299,6 +307,8 @@
 				27DEFE02160408D7003C3972 /* game.cpp in Sources */,
 				27DEFE0516040903003C3972 /* render.cpp in Sources */,
 				27FA8ED31606AC8400B3B985 /* stb_image.c in Sources */,
+				273EE4BF161167AE00265F0D /* resource_manager_test.cpp in Sources */,
+				273EE4C51611682000265F0D /* resource_manager.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -16,6 +16,9 @@ struct Light
 };
 
 uniform sampler2D GBuffer[4];
+uniform sampler2DShadow kShadowMap;
+
+uniform mat4 kShadowViewProj;
 
 uniform mat4 kInverseViewProj;
 uniform vec4 kLight[4];
@@ -80,11 +83,22 @@ void main()
     float light_type = light.type;
     float attenuation = 1.0f;
 
+
     // Dirctional lights and point lights are handled a little bit differently.
     // It might be more efficient to make two separate shaders rather than have
     // the different cases.
     if(light_type == kDirectionalLight) {
         light_dir = normalize(-light_dir);
+
+        float n_dot_l = clamp(dot(normal, light_dir), 0.0f, 1.0f);
+        float bias = 0.005f * tan(acos(n_dot_l));
+        vec4 shadow_coord = kShadowViewProj * world_pos;
+
+        if(shadow_coord.x >= 0.0f && shadow_coord.x <= 1.0f &&
+           shadow_coord.y >= 0.0f && shadow_coord.y <= 1.0f )
+        {
+            attenuation *= texture(kShadowMap, vec3(shadow_coord.xy, (shadow_coord.z-bias)/shadow_coord.w));
+        }
     } else {
         light_dir = light_pos - world_pos.xyz;
         float dist = length(light_dir);
@@ -113,7 +127,7 @@ void main()
     // Only add ambient to directional lights
     // In the future, AO/GI/better lighting will handle the ambient
     if(light_type == kDirectionalLight) {
-        color = color*0.9f + albedo*0.1f*light_color;
+        color = color*0.7f + albedo*0.3f*light_color;
     }
     out_Color = vec4(color, 1.0f);
 }
