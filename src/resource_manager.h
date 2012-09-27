@@ -22,7 +22,7 @@ union Resource {
 typedef int (ResourceLoader)(const char* filename, void* ud, Resource* resource);
 typedef void (ResourceUnloader)(Resource* resource, void* ud);
 
-#define kInvalidResource 0xFFFFFFFFFFFFFFFF
+static const Resource kInvalidResource = { (void*)0xFFFFFFFFFFFFFFFF };
 
 class ResourceManager {
 public:
