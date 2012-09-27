@@ -11,6 +11,7 @@
 #include "vec_math.h"
 #include "fps.h"
 #include "render.h"
+#include "resource_manager.h"
 
 class Render;
 
@@ -44,6 +45,8 @@ private:
     Object      _objects[1024];
     int         _num_objects;
     Light       _lights[MAX_LIGHTS];
+
+    ResourceManager _resource_manager;
 };
 
 #endif /* include guard */

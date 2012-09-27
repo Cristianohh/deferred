@@ -60,15 +60,15 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         const Renderable& r = renderables[ii];
         glUniformMatrix4fv(_world_uniform, 1, GL_FALSE, (float*)&r.transform);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, r.material->albedo_tex);
+        glBindTexture(GL_TEXTURE_2D, (GLuint)r.material->albedo_tex.i);
         glUniform1i(_albedo_uniform, 0);
         
         glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, r.material->normal_tex);
+        glBindTexture(GL_TEXTURE_2D, (GLuint)r.material->normal_tex.i);
         glUniform1i(_normal_uniform, 1);
         
         glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, r.material->specular_tex);
+        glBindTexture(GL_TEXTURE_2D, (GLuint)r.material->specular_tex.i);
         glUniform1i(_specular_uniform, 2);
 
         glUniform3fv(_specular_color_uniform, 1, (float*)&r.material->specular_color);

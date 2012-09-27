@@ -61,9 +61,9 @@ static const LightType kPointLight = 1.0f;
 static const LightType kSpotLight = 2.0f;
 
 struct Material {
-    TextureID   albedo_tex;
-    TextureID   normal_tex;
-    TextureID   specular_tex;
+    Resource    albedo_tex;
+    Resource    normal_tex;
+    Resource    specular_tex;
     float3      specular_color;
     float       specular_power;
     float       specular_coefficient;
@@ -84,7 +84,6 @@ public:
     virtual MeshID create_mesh(uint32_t vertex_count, VertexType vertex_type,
                                uint32_t index_count, size_t index_size,
                                const void* vertices, const void* indices) = 0;
-    virtual TextureID load_texture(const char* filename) = 0;
 
     virtual void* window(void) = 0;
 
@@ -95,7 +94,6 @@ public:
     virtual void set_3d_view_matrix(const float4x4& view) = 0;
     virtual void set_2d_view_matrix(const float4x4& view) = 0;
     virtual void draw_3d(MeshID mesh, const Material* material, const float4x4& transform) = 0;
-    virtual void draw_2d(MeshID mesh, TextureID texture, const float4x4& transform) = 0;
     virtual void draw_light(const Light& light) = 0;
 
     virtual void toggle_debug_graphics(void) = 0;
@@ -103,8 +101,16 @@ public:
 
     static Render* create(void);
     static void destroy(Render* render);
+
+    static int load_texture(const char* filename, void* ud, Resource* resource);
+    static void unload_texture(Resource* resource, void* ud);
+
 private:
     static Render* _create_ogl(void);
+
+    virtual Resource _load_texture(const char* filename) = 0;
+    virtual void _unload_texture(Resource resource) = 0;
+
 };
 
 /* @} */

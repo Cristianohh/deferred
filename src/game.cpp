@@ -43,13 +43,20 @@ void Game::initialize(void) {
     //srand((uint32_t)_timer.start_time);
     srand(42);
 
+    _resource_manager.add_handlers("jpg", Render::load_texture, Render::unload_texture, _render);
+    _resource_manager.add_handlers("dds", Render::load_texture, Render::unload_texture, _render);
+    _resource_manager.add_handlers("png", Render::load_texture, Render::unload_texture, _render);
+    _resource_manager.add_handlers("tga", Render::load_texture, Render::unload_texture, _render);
+
     // Create some materials
     Material grass_material =
     {
-        _render->load_texture("assets/grass.dds"),
+        //_render->load_texture("assets/grass.dds"),
         //_render->load_texture("assets/grass_nrm.png"),
-        _render->load_texture("assets/default_norm.png"),
-        0,
+        //0,
+        _resource_manager.get_resource("assets/grass.dds"),
+        _resource_manager.get_resource("assets/grass_nrm.png"),
+        {0},
         {0.0f, 0.0f, 0.0f},
         0.0f,
         0.0f
@@ -58,24 +65,24 @@ void Game::initialize(void) {
     Material materials[3] =
     {
         {
-            _render->load_texture("assets/metal.dds"),
-            _render->load_texture("assets/metal_nrm.png"),
-            _render->load_texture("assets/metal.dds"),
+            _resource_manager.get_resource("assets/metal.dds"),
+            _resource_manager.get_resource("assets/metal_nrm.png"),
+            _resource_manager.get_resource("assets/metal.dds"),
             {0.0f, 0.0f, 0.0f},
             200.0f,
             0.8f
         },
         {
-            _render->load_texture("assets/brick.dds"),
-            _render->load_texture("assets/brick_nrm.png"),
+            _resource_manager.get_resource("assets/brick.dds"),
+            _resource_manager.get_resource("assets/brick_nrm.png"),
             0,
             {1.0f, 1.0f, 1.0f},
             4.0f,
             0.1f
         },
         {
-            _render->load_texture("assets/wood.dds"),
-            _render->load_texture("assets/wood_nrm.png"),
+            _resource_manager.get_resource("assets/wood.dds"),
+            _resource_manager.get_resource("assets/wood_nrm.png"),
             0,
             {1.0f, 1.0f, 1.0f},
             8.0f,
@@ -129,9 +136,9 @@ void Game::initialize(void) {
 
     Material house_material =
     {
-        _render->load_texture("assets/house_diffuse.tga"),
-        _render->load_texture("assets/house_normal.tga"),
-        _render->load_texture("assets/house_spec.tga"),
+        _resource_manager.get_resource("assets/house_diffuse.tga"),
+        _resource_manager.get_resource("assets/house_normal.tga"),
+        _resource_manager.get_resource("assets/house_spec.tga"),
         {0.0f, 0.0f, 0.0f},
         1.5f,
         0.06f

@@ -346,14 +346,11 @@ void draw_3d(MeshID mesh, const Material* material, const float4x4& transform) {
 
     _num_renderables++;
 }
-void draw_2d(MeshID, TextureID, const float4x4&) {
-}
-
 void draw_light(const Light& light) {
     int index = _light_buffer.num_lights++;
     _light_buffer.lights[index] = light;
 }
-TextureID load_texture(const char* filename) {
+Resource _load_texture(const char* filename) {
     int width, height, components;
     GLenum format = GL_RGB;
     { // Check to see if this is a DXT texture
@@ -406,17 +403,21 @@ TextureID load_texture(const char* filename) {
 
     stbi_image_free(tex_data);
 
-    _textures[_num_textures] = texture;
-    return texture;
+    Resource resource;
+    resource.i = texture;
+    return resource;
 }
-TextureID _load_dxt_texture(const char* filename) {
+void _unload_texture(Resource resource) {
+    glDeleteTextures(1, (GLuint*)&resource.i);
+}
+Resource _load_dxt_texture(const char* filename) {
     FILE* file = fopen(filename, "rb");
     assert(file);
     char filecode[4];
     fread(filecode, 1, 4, file);
     if(strncmp(filecode, "DDS ", 4) != 0) {
         fclose(file);
-        return -1;
+        return kInvalidResource;
     }
 
     // Read the DXT header
@@ -453,7 +454,7 @@ TextureID _load_dxt_texture(const char* filename) {
         break;
     default:
         free(buffer);
-        return -1;
+        return kInvalidResource;
     }
 
     GLuint texture;
@@ -476,9 +477,10 @@ TextureID _load_dxt_texture(const char* filename) {
     }
     free(buffer);
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    _textures[_num_textures] = texture;
-    return texture;
+    
+    Resource resource;
+    resource.i = texture;
+    return resource;
 }
 
 MeshID load_mesh(const char* filename) {

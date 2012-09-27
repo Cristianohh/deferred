@@ -183,15 +183,15 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             glUniformMatrix4fv(_geom_world_uniform, 1, GL_FALSE, (float*)&r.transform);
             
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, r.material->albedo_tex);
+            glBindTexture(GL_TEXTURE_2D, (GLuint)r.material->albedo_tex.i);
             glUniform1i(_geom_albedo_uniform, 0);
             
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, r.material->normal_tex);
+            glBindTexture(GL_TEXTURE_2D, (GLuint)r.material->normal_tex.i);
             glUniform1i(_geom_normal_uniform, 1);
             
             glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, r.material->specular_tex);
+            glBindTexture(GL_TEXTURE_2D, (GLuint)r.material->specular_tex.i);
             glUniform1i(_geom_specular_uniform, 2);
 
             glUniform3fv(_geom_specular_color_uniform, 1, (float*)&r.material->specular_color);
