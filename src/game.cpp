@@ -47,7 +47,8 @@ void Game::initialize(void) {
     Material grass_material =
     {
         _render->load_texture("assets/grass.dds"),
-        _render->load_texture("assets/grass_nrm.png"),
+        //_render->load_texture("assets/grass_nrm.png"),
+        _render->load_texture("assets/default_norm.png"),
         0,
         {0.0f, 0.0f, 0.0f},
         0.0f,
@@ -87,10 +88,10 @@ void Game::initialize(void) {
     const VtxPosNormTex ground_vertices[] =
     {
         /* Top */
-        { {-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 10.0f} },
-        { { 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {10.0f, 10.0f} },
-        { { 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {10.0f, 0.0f} },
-        { {-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f} },
+        { {-0.5f,  0.0f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 10.0f} },
+        { { 0.5f,  0.0f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {10.0f, 10.0f} },
+        { { 0.5f,  0.0f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {10.0f, 0.0f} },
+        { {-0.5f,  0.0f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f} },
     };
     const unsigned short ground_indices[] =
     {
@@ -99,8 +100,8 @@ void Game::initialize(void) {
     };
     o.transform = TransformZero();
     o.transform.scale = 100.0f;
-    o.transform.position.y = -50.0f;
-    o.mesh = _render->create_mesh(4, kVtxPosNormTex, 6, sizeof(ground_indices[0]), ground_vertices, ground_indices);
+    o.transform.position.y = 0.0f;
+    o.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
     o.material = grass_material;
     _add_object(o);
 

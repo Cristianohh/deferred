@@ -69,6 +69,12 @@
     <ClCompile Include="external\stb_image.c">
       <Filter>external</Filter>
     </ClCompile>
+    <ClCompile Include="src\resource_manager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tests\resource_manager_test.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application.h">
@@ -120,6 +126,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer_forward.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\resource_manager.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

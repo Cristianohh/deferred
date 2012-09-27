@@ -7,6 +7,7 @@
 #include "resource_manager.h"
 #include <string.h>
 #include <stdio.h>
+#include <algorithm>
 #include "application.h"
 
 namespace {

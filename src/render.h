@@ -16,6 +16,10 @@
 
 #define MAX_LIGHTS 511
 
+#ifndef ARRAYSIZE
+    #define ARRAYSIZE(a) (sizeof((a))/sizeof((a)[0]))
+#endif
+
 struct VtxPosNormTanBitanTex {
     float3  pos;
     float3  norm;

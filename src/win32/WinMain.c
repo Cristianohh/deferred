@@ -278,8 +278,8 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             SystemEvent event;
             int x = GET_X_LPARAM(lParam);
             int y = _height - GET_Y_LPARAM(lParam);
-            event.data.mouse.x = x;
-            event.data.mouse.y = y;
+            event.data.mouse.x = (float)x;
+            event.data.mouse.y = (float)y;
             // L button
             if(wParam & MK_LBUTTON) {
                 if(_mouse_buttons[MOUSE_LEFT] == 0) {
@@ -335,8 +335,8 @@ LRESULT CALLBACK _WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             SystemEvent event;
             int x = GET_X_LPARAM(lParam);
             int y = _height - GET_Y_LPARAM(lParam);
-            event.data.mouse.x = x - _prev_mouse_x;
-            event.data.mouse.y = _prev_mouse_y - y;
+            event.data.mouse.x = (float)(x - _prev_mouse_x);
+            event.data.mouse.y = (float)(_prev_mouse_y - y);
             event.type = kEventMouseMove;
             _app_push_event(event);
 

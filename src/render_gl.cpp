@@ -11,10 +11,11 @@
         #include <OpenGLES/ES2/gl.h>
     #elif TARGET_OS_MAC
         #include <OpenGL/gl3.h>
-        #define GL_COMPRESSED_RGB_S3TC_DXT1_EXT 0x83F0
+        #define GL_COMPRESSED_RGB_S3TC_DXT1_EXT  0x83F0
         #define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT 0x83F1
         #define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT 0x83F2
         #define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT 0x83F3
+        #define GL_COMPARE_R_TO_TEXTURE          0x884E /* TODO: Why isn't this defined in OS X? */
     #endif
     // TODO: flushing the buffer requires Obj-C in OS X. This is a hack to
     // include an Obj-C function
@@ -51,9 +52,11 @@
         assert(_glError == GL_NO_ERROR);\
     } while(__LINE__ == 0)
 
-#define MAKEFOURCC(ch0, ch1, ch2, ch3)                              \
-                ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |   \
-                ((uint32_t)(uint8_t)(ch2) << 16) | ((uint32_t)(uint8_t)(ch3) << 24 ))
+#ifndef MAKEFOURCC
+    #define MAKEFOURCC(ch0, ch1, ch2, ch3)                              \
+                    ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |   \
+                    ((uint32_t)(uint8_t)(ch2) << 16) | ((uint32_t)(uint8_t)(ch3) << 24 ))
+#endif
 #define FOURCC_DXT1	MAKEFOURCC('D', 'X', 'T', '1')
 #define FOURCC_DXT3	MAKEFOURCC('D', 'X', 'T', '3')
 #define FOURCC_DXT5	MAKEFOURCC('D', 'X', 'T', '5')
@@ -352,7 +355,7 @@ void draw_light(const Light& light) {
 }
 TextureID load_texture(const char* filename) {
     int width, height, components;
-    GLenum format;
+    GLenum format = GL_RGB;
     { // Check to see if this is a DXT texture
         FILE* file = fopen(filename, "rb");
         assert(file);
@@ -365,6 +368,7 @@ TextureID load_texture(const char* filename) {
         fclose(file);
     }
     void* tex_data = stbi_load(filename, &width, &height, &components, 0);
+    assert(tex_data);
 
     GLuint texture;
     glGenTextures(1, &texture);
@@ -389,7 +393,8 @@ TextureID load_texture(const char* filename) {
         format = GL_RGB;
         components = GL_RGB;
         break;
-    default: assert(0);
+    default: 
+        assert(0);
     }
 
     glTexImage2D(GL_TEXTURE_2D, 0, components, width, height, 0, format, GL_UNSIGNED_BYTE, tex_data);

@@ -17,7 +17,6 @@
 //  [3] R: Depth
 
 #define SHADOW_MAP_RES 2048
-#define GL_COMPARE_R_TO_TEXTURE     0x884E /* TODO: Why isn't this defined in OS X? */
 
 class RendererDeferred : public Renderer {
 public:
@@ -65,7 +64,7 @@ void init(void) {
 
         glGenTextures(1, &_shadow_depth);
         glBindTexture(GL_TEXTURE_2D, _shadow_depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, SHADOW_MAP_RES, SHADOW_MAP_RES, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, SHADOW_MAP_RES, SHADOW_MAP_RES, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -73,6 +72,7 @@ void init(void) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _shadow_depth, 0);
+        CheckGLError();
 
         assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -231,6 +231,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         shadow_view = float4x4inverse(&shadow_view);
         shadow_vp = float4x4multiply(&shadow_view, &shadow_proj);
 
+        //glCullFace(GL_FRONT); // TODO: Odd artifacts when switching culling the "right" way
         glUseProgram(_shadow_program);
         for(int ii=0;ii<num_renderables;++ii) {
             const Renderable& r = renderables[ii];
@@ -241,6 +242,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             _validate_program(_shadow_program);
             glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
         }
+        glCullFace(GL_BACK);
         
         glActiveTexture(GL_TEXTURE0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
