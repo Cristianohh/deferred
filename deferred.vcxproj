@@ -66,25 +66,38 @@
     <ClInclude Include="src\unit_test.h" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\brick.jpg" />
-    <Image Include="assets\grass.jpg" />
-    <Image Include="assets\metal.jpg" />
-    <Image Include="assets\texture.jpg" />
-    <Image Include="assets\wood.jpg" />
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="assets\house_diffuse.tga" />
+    <None Include="assets\house_normal.tga" />
+    <None Include="assets\house_obj.mtl" />
+    <None Include="assets\house_spec.tga" />
     <None Include="assets\Shaders\2D.fsh" />
     <None Include="assets\Shaders\2D.vsh" />
     <None Include="assets\Shaders\2D_fullscreen.vsh" />
-    <None Include="assets\Shaders\3D.fsh" />
-    <None Include="assets\Shaders\3D.vsh" />
     <None Include="assets\Shaders\debug.fsh" />
     <None Include="assets\Shaders\debug.vsh" />
-    <None Include="assets\Shaders\deferred.fsh" />
-    <None Include="assets\Shaders\deferred.vsh" />
-    <None Include="assets\Shaders\deferred_light.fsh" />
-    <None Include="assets\Shaders\deferred_light.vsh" />
+    <None Include="assets\Shaders\deferred\geometry.fsh" />
+    <None Include="assets\Shaders\deferred\geometry.vsh" />
+    <None Include="assets\Shaders\deferred\light.fsh" />
+    <None Include="assets\Shaders\deferred\light.vsh" />
+    <None Include="assets\Shaders\forward\3D.fsh" />
+    <None Include="assets\Shaders\forward\3D.vsh" />
     <None Include="assets\sphere.mesh" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\brick.dds" />
+    <Image Include="assets\brick.jpg" />
+    <Image Include="assets\brick_NRM.png" />
+    <Image Include="assets\brick_SPEC.png" />
+    <Image Include="assets\default_norm.png" />
+    <Image Include="assets\grass.dds" />
+    <Image Include="assets\grass.jpg" />
+    <Image Include="assets\grass_NRM.png" />
+    <Image Include="assets\metal.dds" />
+    <Image Include="assets\metal.jpg" />
+    <Image Include="assets\metal_NRM.png" />
+    <Image Include="assets\wood.dds" />
+    <Image Include="assets\wood.jpg" />
+    <Image Include="assets\wood_NRM.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and '$(VisualStudioVersion)' == ''">$(VCTargetsPath11)</VCTargetsPath>

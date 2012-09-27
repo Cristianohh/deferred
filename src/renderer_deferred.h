@@ -16,6 +16,9 @@
 //  [2] RGB: Spec Color A: Spec exponent
 //  [3] R: Depth
 
+#define SHADOW_MAP_RES 2048
+#define GL_COMPARE_R_TO_TEXTURE     0x884E /* TODO: Why isn't this defined in OS X? */
+
 class RendererDeferred : public Renderer {
 public:
 
@@ -52,6 +55,35 @@ void init(void) {
         _light_light_uniform = glGetUniformLocation(_light_program, "kLight");
         _light_inv_viewproj_uniform = glGetUniformLocation(_light_program, "kInverseViewProj");
         _light_cam_pos_uniform = glGetUniformLocation(_light_program, "kCameraPosition");
+
+        _light_shadow_map_uniform = glGetUniformLocation(_light_program, "kShadowMap");
+        _light_shadow_viewproj_uniform = glGetUniformLocation(_light_program, "kShadowViewProj");
+    }
+    { // Shadow maps
+        glGenFramebuffers(1, &_shadow_fb);
+        glBindFramebuffer(GL_FRAMEBUFFER, _shadow_fb);
+
+        glGenTextures(1, &_shadow_depth);
+        glBindTexture(GL_TEXTURE_2D, _shadow_depth);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, SHADOW_MAP_RES, SHADOW_MAP_RES, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _shadow_depth, 0);
+
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/shadow.vsh");
+        GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/shadow.fsh");
+        _shadow_program = _create_program(vs, fs);
+        glDeleteShader(vs);
+        glDeleteShader(fs);
+        _shadow_wvp_uniform = glGetUniformLocation(_shadow_program, "kWorldViewProj");
     }
 }
 void shutdown(void) {
@@ -126,6 +158,9 @@ void resize(int width, int height) {
         debug_output("FBO initialization failed\n");
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    _width = width;
+    _height = height;
 }
 void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             const Renderable* renderables, int num_renderables,
@@ -171,6 +206,46 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glActiveTexture(GL_TEXTURE0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+    float4x4 shadow_vp;
+    { // Draw shadow map
+        glBindFramebuffer(GL_FRAMEBUFFER, _shadow_fb);
+        glDrawBuffer(GL_NONE);
+        glViewport(0, 0, SHADOW_MAP_RES, SHADOW_MAP_RES);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-40.0f, 40.0f, 40.0f, -40.0f, -30.0f, 30.0f);
+        float3 look = lights[0].dir;
+        float3 up = {0,1,0};
+        look = float3normalize(&look);
+        float3 right = float3cross(&up, &look);
+        right = float3normalize(&right);
+        up = float3cross(&look, &right);
+        float4x4 shadow_view =
+        {
+            { right.x, right.y, right.z, 0.0f },
+            {    up.x,    up.y,    up.z, 0.0f },
+            {  look.x,  look.y,  look.z, 0.0f },
+            view.r3
+        };
+        shadow_view = float4x4inverse(&shadow_view);
+        shadow_vp = float4x4multiply(&shadow_view, &shadow_proj);
+
+        glUseProgram(_shadow_program);
+        for(int ii=0;ii<num_renderables;++ii) {
+            const Renderable& r = renderables[ii];
+            float4x4 wvp = float4x4multiply(&r.transform, &shadow_vp);
+            glUniformMatrix4fv(_shadow_wvp_uniform, 1, GL_FALSE, (float*)&wvp);
+
+            glBindVertexArray(r.vao);
+            _validate_program(_shadow_program);
+            glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
+        }
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, _width, _height);
+    }
 
     { // Render lights
         glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer);
@@ -193,6 +268,18 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
         glUniformMatrix4fv(_light_inv_viewproj_uniform, 1, GL_FALSE, (float*)&inv_viewproj);
         glUniform3fv(_light_cam_pos_uniform, 1, (float*)&view.r3);
+        float4x4 bias = {
+            0.5, 0.0, 0.0, 0.0,
+            0.0, 0.5, 0.0, 0.0,
+            0.0, 0.0, 0.5, 0.0,
+            0.5, 0.5, 0.5, 1.0
+        };
+        //float4x4 shadow_viewproj = float4x4multiply(&bias, &shadow_vp);
+        float4x4 shadow_viewproj = float4x4multiply(&shadow_vp, &bias);
+        glUniformMatrix4fv(_light_shadow_viewproj_uniform, 1, GL_FALSE, (float*)&shadow_viewproj);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, _shadow_depth);
+        glUniform1i(_light_shadow_map_uniform, 4);
         for(int ii=0;ii<num_lights;++ii) {
             Light light = lights[ii];
             if(light.type == kDirectionalLight) {            
@@ -233,12 +320,18 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
 void set_sphere_mesh(const Mesh& mesh) { _sphere_mesh = mesh; }
 void set_fullscreen_mesh(const Mesh& mesh) { _fullscreen_mesh = mesh; }
 
-GLuint gbuffer_tex(int index) { return _gbuffer_tex[index]; }
+GLuint gbuffer_tex(int index)
+{
+    return _gbuffer_tex[index];
+}
 
 private:
 
 Mesh    _sphere_mesh;
 Mesh    _fullscreen_mesh;
+
+int _width;
+int _height;
 
 GLuint  _geom_program;
 GLuint  _geom_world_uniform;
@@ -257,12 +350,19 @@ GLuint  _light_light_uniform;
 GLuint  _light_gbuffer_uniform;
 GLuint  _light_inv_viewproj_uniform;
 GLuint  _light_cam_pos_uniform;
+GLuint  _light_shadow_map_uniform;
+GLuint  _light_shadow_viewproj_uniform;
 
 GLuint  _frame_buffer;
 GLuint  _depth_buffer;
 
 GLuint  _gbuffer[4];
 GLuint  _gbuffer_tex[4];
+
+GLuint  _shadow_fb;
+GLuint  _shadow_depth;
+GLuint  _shadow_program;
+GLuint  _shadow_wvp_uniform;
 
 };
 
