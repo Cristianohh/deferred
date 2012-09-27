@@ -188,7 +188,10 @@ struct TestData {
     }
     float x;
     float z;
+
+    static float y;
 };
+float TestData::y = 0.0f;
 typedef SimpleComponent<TestData, kTestComponent> TestComponent;
 typedef SimpleSystem<TestData> TestSystem;
 
@@ -215,6 +218,30 @@ TEST_FIXTURE(WorldFixture, CustomType)
     CHECK_EQUAL_FLOAT(0.0f, world.entity(id2)->transform().position.y);
 }
 
+TEST_FIXTURE(WorldFixture, MultipleComponents)
+{
+    world.add_system(new TestSystem, kTestComponent);
+
+    EntityID id = world.create_entity();
+    world.entity(id)->add_component(NullComponent(3.0f)).add_component(TestComponent(5.0f));
+
+    world.update(0.5f);
+    CHECK_EQUAL_FLOAT(1.5f, world.entity(id)->transform().position.y);
+    CHECK_EQUAL_FLOAT(2.5f, world.entity(id)->transform().position.z);
+
+    world.entity(id)->deactivate_component(kTestComponent);    
+    world.update(0.5f);
+    CHECK_EQUAL_FLOAT(3.0f, world.entity(id)->transform().position.y);
+    CHECK_EQUAL_FLOAT(2.5f, world.entity(id)->transform().position.z);
+
+    
+    world.entity(id)->deactivate_component(kNullComponent);
+    world.entity(id)->activate_component(kTestComponent);
+    world.update(0.5f);
+    CHECK_EQUAL_FLOAT(3.0f, world.entity(id)->transform().position.y);
+    CHECK_EQUAL_FLOAT(5.0f, world.entity(id)->transform().position.z);
+}
+
 }
 
 void TestSystem::update(float elapsed_time) {
@@ -225,6 +252,7 @@ void TestSystem::update(float elapsed_time) {
         {
             e->_transform.position.x += elapsed_time*iter->second.second.x;
             e->_transform.position.z += elapsed_time*iter->second.second.z;
+            e->_transform.position.y += elapsed_time*iter->second.second.y;
         }
         ++iter;
     }
