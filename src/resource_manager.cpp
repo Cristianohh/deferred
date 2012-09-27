@@ -55,25 +55,23 @@ ResourceID ResourceManager::load(const char* filename) {
     char lower_filename[256];
     _to_lower(lower_filename, filename, sizeof(lower_filename));
 
+    // Get the extension
     const char* extension = filename+strlen(filename);
     while(*extension != '.')
         --extension;
     ++extension;
-    printf("\n%s\n", extension);
 
+    // Check to see if its already loaded
+    for(int ii=0;ii<_num_resources;++ii) {
+        if(strcmp(lower_filename, _resources[ii].filename) == 0)
+            return ii;
+    }
+
+    // Otherwise load it
     int success = 0;
     for(int ii=0;ii<_num_handlers;++ii) {
-    printf("\n%s\n", _handlers[ii].ext);
         if(strcmp(extension, _handlers[ii].ext) == 0) {
-            MessageBoxResult result;
-            do {
-                success = _handlers[ii].loader(lower_filename, _handlers[ii].ud, &_resources[resource_index].resource);
-                if(success == 0)
-                    break;
-                char buffer[1024];
-                snprintf(buffer, sizeof(buffer), "Error loading file: %s\n", buffer);
-                result = message_box("File load error", buffer);
-            } while(result == kMBRetry);
+            success = _handlers[ii].loader(lower_filename, _handlers[ii].ud, &_resources[resource_index].resource);
             break;
         }
     }
