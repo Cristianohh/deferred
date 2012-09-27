@@ -155,7 +155,7 @@ TEST_FIXTURE(WorldFixture, MultipleEntities)
     CHECK_EQUAL_FLOAT(3.0f, world.entity(id1)->transform().position.y);
     CHECK_EQUAL_FLOAT(2.5f, world.entity(id2)->transform().position.y);
 }
-IGNORE_TEST_FIXTURE(WorldFixture, EntityCommunication)
+TEST_FIXTURE(WorldFixture, EntityCommunication)
 {
     EntityID id1 = world.create_entity();
     EntityID id2 = world.create_entity();
@@ -173,34 +173,59 @@ IGNORE_TEST_FIXTURE(WorldFixture, EntityCommunication)
 struct TestData {
     TestData()
         : x(0)
-        , y(0)
+        , z(0)
     {
     }
-    TestData(float _x, float _y)
+    TestData(float f)
+        : x(f)
+        , z(f)
+    {
+    }
+    TestData(float _x, float _z)
         : x(_x)
-        , y(_y)
+        , z(_z)
     {
     }
     float x;
-    float y;
+    float z;
 };
-//typedef SimpleComponent<TestData, kTestComponent> TestComponent;
-//typedef SimpleSystem<TestData> TestSystem;
+typedef SimpleComponent<TestData, kTestComponent> TestComponent;
+typedef SimpleSystem<TestData> TestSystem;
 
-IGNORE_TEST_FIXTURE(WorldFixture, CustomType)
+
+TEST_FIXTURE(WorldFixture, CustomType)
 {
+    world.add_system(new TestSystem, kTestComponent);
+
     EntityID id1 = world.create_entity();
     EntityID id2 = world.create_entity();
     world.entity(id1)->add_component(NullComponent(3.0f));
-    world.entity(id2)->add_component(NullComponent(5.0f));
+    world.entity(id2)->add_component(TestComponent(3.0f));
 
     world.update(0.5f);
     CHECK_EQUAL_FLOAT(1.5f, world.entity(id1)->transform().position.y);
-    CHECK_EQUAL_FLOAT(2.5f, world.entity(id2)->transform().position.y);
-    world.entity(id2)->deactivate_component(kNullComponent);
+    CHECK_EQUAL_FLOAT(0.0f, world.entity(id2)->transform().position.y);
+
+    CHECK_EQUAL_FLOAT(0.0f, world.entity(id1)->transform().position.x);
+    CHECK_EQUAL_FLOAT(1.5f, world.entity(id2)->transform().position.x);
+    world.entity(id1)->deactivate_component(kNullComponent);
+
     world.update(0.5f);
-    CHECK_EQUAL_FLOAT(3.0f, world.entity(id1)->transform().position.y);
-    CHECK_EQUAL_FLOAT(2.5f, world.entity(id2)->transform().position.y);
+    CHECK_EQUAL_FLOAT(1.5f, world.entity(id1)->transform().position.y);
+    CHECK_EQUAL_FLOAT(0.0f, world.entity(id2)->transform().position.y);
 }
 
+}
+
+void TestSystem::update(float elapsed_time) {
+    std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.begin();
+    while(iter != _components.end()) {
+        Entity* e = iter->first;
+        if(iter->second.first == true)
+        {
+            e->_transform.position.x += elapsed_time*iter->second.second.x;
+            e->_transform.position.z += elapsed_time*iter->second.second.z;
+        }
+        ++iter;
+    }
 }

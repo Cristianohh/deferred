@@ -51,11 +51,19 @@ World::World()
     : _new_id(0)
 {
     _entities.reserve(1024*16);
-    _systems[kNullComponent] = new SimpleSystem<NullData>();
+    for(int ii=0;ii<kNUM_COMPONENTS;++ii) {
+        _systems[ii] = NULL;
+    }
+    add_system(new SimpleSystem<NullData>(), kNullComponent);
 }
 World::~World() {
-    for(int ii=0;ii<kNUM_COMPONENTS;++ii) 
-        delete _systems[ii];
+    for(int ii=0;ii<kNUM_COMPONENTS;++ii) {
+        if(_systems[ii])
+            delete _systems[ii];
+    }
+}
+void World::add_system(ComponentSystem* system, ComponentType type) {
+    _systems[type] = system;
 }
 int World::is_id_valid(EntityID id) const {
     IDWrapper wrapper(id);
@@ -70,7 +78,8 @@ int World::is_id_valid(EntityID id) const {
 }
 void World::update(float elapsed_time) {
     for(int ii=0;ii<kNUM_COMPONENTS;++ii) {
-        _systems[ii]->update(elapsed_time);
+        if(_systems[ii])
+            _systems[ii]->update(elapsed_time);
     }
 }
 ComponentSystem* World::_get_system(ComponentType type) {

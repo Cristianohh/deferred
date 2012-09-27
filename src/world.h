@@ -20,6 +20,7 @@ class Component;
 
 enum ComponentType {
    kNullComponent,
+   kTestComponent,
 
    kNUM_COMPONENTS
 };
@@ -137,6 +138,8 @@ class World {
 public:
     World();
     ~World();
+
+    void add_system(ComponentSystem* system, ComponentType type);
 
     EntityID create_entity(void);
     void destroy_entity(EntityID id);
