@@ -129,8 +129,6 @@ public:
 
 RenderGL()
     : _window(NULL)
-    , _num_meshes(0)
-    , _num_textures(0)
     , _3d_view(float4x4identity)
     , _2d_view(float4x4identity)
     , _width(128)
@@ -786,15 +784,10 @@ HDC     _dc;
 #endif
 void*   _window;
 
-Mesh    _meshes[kMAX_MESHES];
-int         _num_meshes;
 Resource    _cube_mesh;
 Resource    _quad_mesh;
 Resource    _sphere_mesh;
-Resource     _fullscreen_quad_mesh;
-
-GLuint  _textures[kMAX_TEXTURES];
-int     _num_textures;
+Resource    _fullscreen_quad_mesh;
 
 float4x4    _perspective_projection;
 float4x4    _3d_view;
