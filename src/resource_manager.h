@@ -2,6 +2,8 @@
  *  @author Kyle Weicht
  *  @date 9/24/12
  *  @copyright Copyright (c) 2012 Kyle Weicht. All rights reserved.
+ *  @todo Resource unloading
+ *        Retrying
  */
 
 #ifndef __resource_manager__
@@ -9,6 +11,8 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <map>
+#include <string>
 
 union Resource {
     void*       ptr;
@@ -17,41 +21,33 @@ union Resource {
 
 typedef int (ResourceLoader)(const char* filename, void* ud, Resource* resource);
 typedef void (ResourceUnloader)(Resource* resource, void* ud);
-typedef int ResourceID;
 
-enum {
-    kInvalidResource = -1
-};
+#define kInvalidResource 0xFFFFFFFFFFFFFFFF
 
 class ResourceManager {
 public:
     ResourceManager();
     ~ResourceManager();
 
-    int num_resources() const { return _num_resources; }
-    int num_handlers() const { return _num_handlers; }
+    int num_resources() const { return (int)_resources.size(); }
+    int num_handlers() const { return (int)_handlers.size(); }
     void add_handlers(const char* extension,
                       ResourceLoader* loader,
                       ResourceUnloader* unloader,
                       void* user_data);
-    ResourceID load(const char* filename);
+    Resource get_resource(const char* name);
+    void add_resource(Resource resource, const char* name);
 
 private:
-    enum { MAX_HANDLERS = 64, MAX_RESOURCES = 1024 };
-    struct {
-        char                ext[8];
+    struct ResourceHandler
+    {
         ResourceLoader*     loader;
         ResourceUnloader*   unloader;
         void*               ud;
-    }   _handlers[MAX_HANDLERS];
-    struct {
-        char        filename[256-sizeof(Resource)];
-        Resource    resource;
-    }   _resources[MAX_RESOURCES];
-    int _free_resources[MAX_RESOURCES];
-    int _free_resource_index;
-    int _num_resources;
-    int _num_handlers;
+    };
+    
+    std::map<std::string, ResourceHandler>  _handlers;
+    std::map<std::string, Resource>         _resources;
 };
 
 #endif /* Include guard */

@@ -45,24 +45,34 @@ TEST_FIXTURE(ResourceManagerFixture, SetLoader) {
 TEST_FIXTURE(ResourceManagerFixture, Load) {
     int test_int = 0;
     manager.add_handlers("test", _test_loader, _test_unloader, &test_int);
-    ResourceID id = manager.load("file.test");
-    CHECK_NOT_EQUAL(kInvalidResource, id);
+    Resource r = manager.get_resource("file.test");
+    CHECK_NOT_EQUAL(kInvalidResource, r.i);
     CHECK_EQUAL(1, manager.num_resources());
 }
 TEST_FIXTURE(ResourceManagerFixture, Reload) {
     int test_int = 0;
     manager.add_handlers("test", _test_loader, _test_unloader, &test_int);
-    ResourceID file_1_id = manager.load("file.test");
-    CHECK_NOT_EQUAL(kInvalidResource, file_1_id);
+    Resource r1 = manager.get_resource("file.test");
+    CHECK_NOT_EQUAL(kInvalidResource, r1.i);
     CHECK_EQUAL(1, manager.num_resources());
     
-    ResourceID file_2_id = manager.load("file2.test");
-    CHECK_NOT_EQUAL(kInvalidResource, file_2_id);
+    Resource r2 = manager.get_resource("file2.test");
+    CHECK_NOT_EQUAL(kInvalidResource, r2.i);
     CHECK_EQUAL(2, manager.num_resources());
     
-    ResourceID file_3_id = manager.load("file.test");
-    CHECK_EQUAL(file_1_id, file_3_id);
+    Resource r3 = manager.get_resource("file.test");
+    CHECK_EQUAL(r1.i, r3.i);
     CHECK_EQUAL(2, manager.num_resources());
+}
+IGNORE_TEST_FIXTURE(ResourceManagerFixture, AddManualResource) {
+    Resource resource;
+    resource.i = 42;
+    manager.add_resource(resource, "name");
+    CHECK_EQUAL(1, manager.num_resources());
+    
+    Resource r = manager.get_resource("name");
+    CHECK_EQUAL(resource.i, r.i);
+    CHECK_EQUAL(1, manager.num_resources());   
 }
 
 }

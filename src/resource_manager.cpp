@@ -29,12 +29,7 @@ void _to_lower(char* dest, const char* source, size_t size) {
 }
 
 ResourceManager::ResourceManager()
-    : _num_resources(0)
-    , _num_handlers(0)
-    , _free_resource_index(MAX_RESOURCES-1)
 {
-    for(int ii=0;ii<MAX_RESOURCES;++ii)
-        _free_resources[ii] = (MAX_RESOURCES-1)-ii;
 }
 ResourceManager::~ResourceManager() {
 }
@@ -44,42 +39,39 @@ void ResourceManager::add_handlers(const char* extension,
                                    ResourceUnloader* unloader,
                                    void* user_data)
 {
-    int index = _num_handlers++;
-    strncpy(_handlers[index].ext, extension, sizeof(_handlers[index].ext));
-    _handlers[index].loader = loader;
-    _handlers[index].unloader = unloader;
-    _handlers[index].ud = user_data;
+    ResourceHandler h = { loader, unloader, user_data };
+    char lower_extension[32];
+    _to_lower(lower_extension, extension, sizeof(lower_extension));
+    if(_handlers.find(lower_extension) != _handlers.end())
+        _handlers[lower_extension] = h;
 }
-ResourceID ResourceManager::load(const char* filename) {
-    int resource_index = _free_resources[_free_resource_index--];
-    char lower_filename[256];
-    _to_lower(lower_filename, filename, sizeof(lower_filename));
+Resource ResourceManager::get_resource(const char* name) {
+    char lower_name[256];
+    _to_lower(lower_name, name, sizeof(lower_name));
 
     // Get the extension
-    const char* extension = filename+strlen(filename);
+    const char* extension = lower_name+strlen(lower_name);
     while(*extension != '.')
         --extension;
     ++extension;
 
     // Check to see if its already loaded
-    for(int ii=0;ii<_num_resources;++ii) {
-        if(strcmp(lower_filename, _resources[ii].filename) == 0)
-            return ii;
-    }
+    if(_resources.find(lower_name) != _resources.end())
+        return _resources[lower_name];
 
-    // Otherwise load it
-    int success = 0;
-    for(int ii=0;ii<_num_handlers;++ii) {
-        if(strcmp(extension, _handlers[ii].ext) == 0) {
-            success = _handlers[ii].loader(lower_filename, _handlers[ii].ud, &_resources[resource_index].resource);
-            break;
-        }
-    }
-    if(success == 0) {
-        strncpy(_resources[resource_index].filename, lower_filename, sizeof(lower_filename));
-        _num_resources++;
-    } else {
-        resource_index = kInvalidResource;
-    }
-    return resource_index;
+    ResourceHandler handler = _handlers[extension];
+    Resource resource = {0};
+    int result = handler.loader(name, handler.ud, &resource);
+    if(result == 0)
+        _resources[lower_name] = resource;
+
+    return resource;
+}
+void ResourceManager::add_resource(Resource resource, const char* name) {
+    char lower_name[256];
+    _to_lower(lower_name, name, sizeof(lower_name));
+    
+    // Check to see if its already loaded
+    if(_resources.find(lower_name) == _resources.end())
+        _resources[lower_name] = resource;
 }

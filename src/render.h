@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "vec_math.h"
+#include "resource_manager.h"
 
 #define MAX_LIGHTS 511
 
