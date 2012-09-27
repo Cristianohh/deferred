@@ -526,6 +526,9 @@ MeshID _load_obj(const char* filename) {
     std::vector<int3>   indicies;
 
     int textured = 0;
+
+    float2 tex = {0.5f, 0.5f};
+    texcoords.push_back(tex);
     
     FILE* file = fopen(filename, "rt");
     while(1) {
@@ -573,12 +576,12 @@ MeshID _load_obj(const char* filename) {
                     fclose(file);
                     return -1;
                 }
-                triangle[0].t = 1;
-                triangle[1].t = 1;
-                triangle[2].t = 1;
+                triangle[0].t = 0;
+                triangle[1].t = 0;
+                triangle[2].t = 0;
                 matches = 9;
                 if(matches == 8) {
-                    triangle[3].t = 1;
+                    triangle[3].t = 0;
                     matches = 12;
                 }
             }
@@ -601,7 +604,7 @@ MeshID _load_obj(const char* filename) {
     VtxPosNormTex* vertices = new VtxPosNormTex[indicies.size()];
     for(int ii=0; ii<(int)indicies.size(); ++ii) {
         int pos_index = indicies[ii].p-1;
-        int tex_index = indicies[ii].t-1;
+        int tex_index = indicies[ii].t;
         int norm_index = indicies[ii].n-1;
         VtxPosNormTex& vertex = vertices[ii];
         vertex.pos = positions[pos_index];
@@ -614,6 +617,19 @@ MeshID _load_obj(const char* filename) {
 
     int vertex_count = (int)indicies.size();
     int index_count = vertex_count;
+    
+    //int vertex_size = sizeof(VtxPosNormTex);
+    //int index_size = sizeof(uint32_t);
+    //char new_filename[256];
+    //sprintf(new_filename, "%s.mesh", filename);
+    //file = fopen(new_filename, "wb");
+    //fwrite(&vertex_size, sizeof(int), 1, file);
+    //fwrite(&vertex_count, sizeof(int), 1, file);
+    //fwrite(&index_size, sizeof(int), 1, file);
+    //fwrite(&index_count, sizeof(int), 1, file);
+    //fwrite(vertices, vertex_size, vertex_count, file);
+    //fwrite(i, index_size, index_count, file);
+    //fclose(file);
 
     VtxPosNormTanBitanTex* new_vertices = _calculate_tangets(vertices, vertex_count, i, sizeof(uint32_t), index_count);
 
