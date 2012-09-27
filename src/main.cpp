@@ -9,6 +9,7 @@
 #include "unit_test.h"
 
 #include "game.h"
+#include "world.h"
 
 static Game _game;
 

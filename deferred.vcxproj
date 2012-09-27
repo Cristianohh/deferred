@@ -36,11 +36,19 @@
     <ClCompile Include="src\resource_manager.cpp" />
     <ClCompile Include="src\tests\application_test.cpp" />
     <ClCompile Include="src\tests\resource_manager_test.cpp" />
+    <ClCompile Include="src\tests\world_test.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
     <ClCompile Include="src\tests\timer_test.cpp" />
     <ClCompile Include="src\tests\unit_test_test.cpp" />
     <ClCompile Include="src\timer.c" />
     <ClCompile Include="src\unit_test.cpp" />
     <ClCompile Include="src\win32\WinMain.c" />
+    <ClCompile Include="src\world.cpp">
+      <SubType>
+      </SubType>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\GL\glcorearb.h" />
@@ -67,6 +75,10 @@
     <ClInclude Include="src\resource_manager.h" />
     <ClInclude Include="src\timer.h" />
     <ClInclude Include="src\unit_test.h" />
+    <ClInclude Include="src\world.h">
+      <SubType>
+      </SubType>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\house_diffuse.tga" />

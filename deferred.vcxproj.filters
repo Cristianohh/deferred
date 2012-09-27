@@ -75,6 +75,12 @@
     <ClCompile Include="src\tests\resource_manager_test.cpp">
       <Filter>src\tests</Filter>
     </ClCompile>
+    <ClCompile Include="src\tests\world_test.cpp">
+      <Filter>src\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\world.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application.h">
@@ -129,6 +135,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\resource_manager.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\world.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

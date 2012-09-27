@@ -11,7 +11,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <map>
+#include <hash_map>
 #include <string>
 
 union Resource {
@@ -46,8 +46,8 @@ private:
         void*               ud;
     };
     
-    std::map<std::string, ResourceHandler>  _handlers;
-    std::map<std::string, Resource>         _resources;
+    std::hash_map<std::string, ResourceHandler>  _handlers;
+    std::hash_map<std::string, Resource>         _resources;
 };
 
 #endif /* Include guard */

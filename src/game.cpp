@@ -10,6 +10,8 @@
 #include "render.h"
 #include "assert.h"
 #include "application.h"
+#include "world.h"
+#include "unit_test.h"
 
 /*
  * Internal
@@ -35,6 +37,19 @@ Game::Game()
     _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
 }
 void Game::initialize(void) {
+    {
+        World world;
+        EntityID id = world.create_entity();
+        Entity* e = world.get_entity(id);
+        e->add_component(NullComponent(3.0f));
+        CHECK_EQUAL_FLOAT(0.0f, e->transform().position.y);
+        world.update(0.5f);
+        CHECK_EQUAL_FLOAT(1.5f, e->transform().position.y);
+    }
+
+
+
+
     timer_init(&_timer);
     _frame_count = 0;
     _render = Render::create();
