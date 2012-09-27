@@ -19,6 +19,12 @@
     <Filter Include="assets\shaders">
       <UniqueIdentifier>{cb0f7aab-2c94-48dc-8858-85ff55a68d78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="assets\shaders\deferred">
+      <UniqueIdentifier>{6045f85d-1c08-4be1-877f-1ab691993662}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets\shaders\forward">
+      <UniqueIdentifier>{89210f14-3670-430c-8967-f3a429881f9f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\tests\timer_test.cpp">
@@ -118,36 +124,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="assets\brick.jpg">
-      <Filter>assets</Filter>
-    </Image>
-    <Image Include="assets\grass.jpg">
-      <Filter>assets</Filter>
-    </Image>
-    <Image Include="assets\metal.jpg">
-      <Filter>assets</Filter>
-    </Image>
-    <Image Include="assets\texture.jpg">
-      <Filter>assets</Filter>
-    </Image>
-    <Image Include="assets\wood.jpg">
-      <Filter>assets</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="assets\sphere.mesh">
-      <Filter>assets</Filter>
-    </None>
     <None Include="assets\Shaders\2D.fsh">
       <Filter>assets\shaders</Filter>
     </None>
     <None Include="assets\Shaders\2D.vsh">
       <Filter>assets\shaders</Filter>
     </None>
-    <None Include="assets\Shaders\3D.fsh">
-      <Filter>assets\shaders</Filter>
-    </None>
-    <None Include="assets\Shaders\3D.vsh">
+    <None Include="assets\Shaders\2D_fullscreen.vsh">
       <Filter>assets\shaders</Filter>
     </None>
     <None Include="assets\Shaders\debug.fsh">
@@ -156,20 +139,82 @@
     <None Include="assets\Shaders\debug.vsh">
       <Filter>assets\shaders</Filter>
     </None>
-    <None Include="assets\Shaders\deferred.fsh">
-      <Filter>assets\shaders</Filter>
+    <None Include="assets\Shaders\deferred\geometry.fsh">
+      <Filter>assets\shaders\deferred</Filter>
     </None>
-    <None Include="assets\Shaders\deferred.vsh">
-      <Filter>assets\shaders</Filter>
+    <None Include="assets\Shaders\deferred\geometry.vsh">
+      <Filter>assets\shaders\deferred</Filter>
     </None>
-    <None Include="assets\Shaders\deferred_light.fsh">
-      <Filter>assets\shaders</Filter>
+    <None Include="assets\Shaders\deferred\light.fsh">
+      <Filter>assets\shaders\deferred</Filter>
     </None>
-    <None Include="assets\Shaders\deferred_light.vsh">
-      <Filter>assets\shaders</Filter>
+    <None Include="assets\Shaders\deferred\light.vsh">
+      <Filter>assets\shaders\deferred</Filter>
     </None>
-    <None Include="assets\Shaders\2D_fullscreen.vsh">
-      <Filter>assets\shaders</Filter>
+    <None Include="assets\Shaders\forward\3D.fsh">
+      <Filter>assets\shaders\forward</Filter>
     </None>
+    <None Include="assets\Shaders\forward\3D.vsh">
+      <Filter>assets\shaders\forward</Filter>
+    </None>
+    <None Include="assets\house_diffuse.tga">
+      <Filter>assets</Filter>
+    </None>
+    <None Include="assets\house_normal.tga">
+      <Filter>assets</Filter>
+    </None>
+    <None Include="assets\house_obj.mtl">
+      <Filter>assets</Filter>
+    </None>
+    <None Include="assets\house_spec.tga">
+      <Filter>assets</Filter>
+    </None>
+    <None Include="assets\sphere.mesh">
+      <Filter>assets</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\brick.dds">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\brick.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\brick_NRM.png">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\brick_SPEC.png">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\default_norm.png">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\grass.dds">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\grass.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\grass_NRM.png">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\metal.dds">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\metal.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\metal_NRM.png">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\wood.dds">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\wood.jpg">
+      <Filter>assets</Filter>
+    </Image>
+    <Image Include="assets\wood_NRM.png">
+      <Filter>assets</Filter>
+    </Image>
   </ItemGroup>
 </Project>
