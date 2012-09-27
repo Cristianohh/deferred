@@ -208,8 +208,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glViewport(0, 0, 1024, 1024);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-20.0f, 20.0f, 20.0f, -20.0f, -30.0f, 30.0f);
-        //float3 look = float3multiplyScalar(&lights[0].dir, -1.0f);
+        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-20.0f, 20.0f, 20.0f, -20.0f, -50.0f, 30.0f);
         float3 look = lights[0].dir;
         float3 up = {0,1,0};
         look = float3normalize(&look);
@@ -317,8 +316,6 @@ void set_fullscreen_mesh(const Mesh& mesh) { _fullscreen_mesh = mesh; }
 
 GLuint gbuffer_tex(int index)
 {
-    if(index == 1)
-        return _shadow_depth;
     return _gbuffer_tex[index];
 }
 
