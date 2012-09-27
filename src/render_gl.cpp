@@ -21,6 +21,7 @@
     // include an Obj-C function
     extern "C" void _osx_flush_buffer(void* window);
 #elif defined(_WIN32)
+    #undef ARRAYSIZE
     #include <gl/glew.h>
     #include <gl/wglew.h>
     #include <gl/glcorearb.h>
