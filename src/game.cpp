@@ -146,9 +146,9 @@ void Game::initialize(void) {
     _lights[0].pos.y = 10.0f;
     _lights[0].pos.z = -60.0f;
     _lights[0].size = 250.0f;
-    _lights[0].dir.x = 0.1f;
+    _lights[0].dir.x = 0.5f;
     _lights[0].dir.y = -0.8f;
-    _lights[0].dir.z = 0.5f;
+    _lights[0].dir.z = 0.1f;
     _lights[0].color.x = 1.0f;
     _lights[0].color.y = 1.0f;
     _lights[0].color.z = 1.0f;
@@ -223,7 +223,7 @@ int Game::on_frame(void) {
         const Object& o = _objects[ii];
         _render->draw_3d(o.mesh, &o.material, TransformGetMatrix(&o.transform));
     }
-    for(int ii=0;ii<MAX_LIGHTS;++ii) {
+    for(int ii=0;ii<1;++ii) {
         _render->draw_light(_lights[ii]);
     }
     _render->render();

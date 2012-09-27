@@ -52,6 +52,9 @@ void init(void) {
         _light_light_uniform = glGetUniformLocation(_light_program, "kLight");
         _light_inv_viewproj_uniform = glGetUniformLocation(_light_program, "kInverseViewProj");
         _light_cam_pos_uniform = glGetUniformLocation(_light_program, "kCameraPosition");
+
+        _light_shadow_map_uniform = glGetUniformLocation(_light_program, "kShadowMap");
+        _light_shadow_viewproj_uniform = glGetUniformLocation(_light_program, "kShadowViewProj");
     }
     { // Shadow maps
         glGenFramebuffers(1, &_shadow_fb);
@@ -59,7 +62,7 @@ void init(void) {
 
         glGenTextures(1, &_shadow_depth);
         glBindTexture(GL_TEXTURE_2D, _shadow_depth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT16, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -198,14 +201,14 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glActiveTexture(GL_TEXTURE0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-
+    float4x4 shadow_vp;
     { // Draw shadow map
         glBindFramebuffer(GL_FRAMEBUFFER, _shadow_fb);
         glDrawBuffer(GL_NONE);
         glViewport(0, 0, 1024, 1024);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-50.0f, 50.0f, 50.0f, -50.0f, -20.0f, 20.0f);
+        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-20.0f, 20.0f, 20.0f, -20.0f, -30.0f, 30.0f);
         //float3 look = float3multiplyScalar(&lights[0].dir, -1.0f);
         float3 look = lights[0].dir;
         float3 up = {0,1,0};
@@ -218,10 +221,10 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             { right.x, right.y, right.z, 0.0f },
             {    up.x,    up.y,    up.z, 0.0f },
             {  look.x,  look.y,  look.z, 0.0f },
-            {    0.0f,    0.0f,    0.0f, 1.0f }
+            view.r3
         };
         shadow_view = float4x4inverse(&shadow_view);
-        float4x4 shadow_vp = float4x4multiply(&shadow_view, &shadow_proj);
+        shadow_vp = float4x4multiply(&shadow_view, &shadow_proj);
 
         glUseProgram(_shadow_program);
         for(int ii=0;ii<num_renderables;++ii) {
@@ -260,6 +263,18 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glUniformMatrix4fv(_light_viewproj_uniform, 1, GL_FALSE, (float*)&view_proj);
         glUniformMatrix4fv(_light_inv_viewproj_uniform, 1, GL_FALSE, (float*)&inv_viewproj);
         glUniform3fv(_light_cam_pos_uniform, 1, (float*)&view.r3);
+        float4x4 bias = {
+            0.5, 0.0, 0.0, 0.0,
+            0.0, 0.5, 0.0, 0.0,
+            0.0, 0.0, 0.5, 0.0,
+            0.5, 0.5, 0.5, 1.0
+        };
+        //float4x4 shadow_viewproj = float4x4multiply(&bias, &shadow_vp);
+        float4x4 shadow_viewproj = float4x4multiply(&shadow_vp, &bias);
+        glUniformMatrix4fv(_light_shadow_viewproj_uniform, 1, GL_FALSE, (float*)&shadow_viewproj);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, _shadow_depth);
+        glUniform1i(_light_shadow_map_uniform, 4);
         for(int ii=0;ii<num_lights;++ii) {
             Light light = lights[ii];
             if(light.type == kDirectionalLight) {            
@@ -332,6 +347,8 @@ GLuint  _light_light_uniform;
 GLuint  _light_gbuffer_uniform;
 GLuint  _light_inv_viewproj_uniform;
 GLuint  _light_cam_pos_uniform;
+GLuint  _light_shadow_map_uniform;
+GLuint  _light_shadow_viewproj_uniform;
 
 GLuint  _frame_buffer;
 GLuint  _depth_buffer;
