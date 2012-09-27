@@ -9,7 +9,8 @@
 
 #include <stdint.h>
 #include <vector>
-#include <hash_map>
+#include <map>
+#include <queue>
 #include "vec_math.h"
 
 typedef uint32_t EntityID;
@@ -42,7 +43,7 @@ public:
 private:
     friend class World;
     friend class ComponentSystem;
-    friend class NullSystem;
+    template<class T> friend class SimpleSystem;
 
     Transform   _transform;
     World*      _world;
@@ -51,17 +52,21 @@ private:
 
 class Component {
 public:
+    virtual void* data(void) const = 0;
     virtual ComponentType type(void) const = 0;
 };
-class NullComponent : public Component {
+
+template<class T, ComponentType Type>
+class SimpleComponent : public Component {
 public:
-    NullComponent(float t) 
+    SimpleComponent(T t) 
         : _t(t)
     {
     }
-    ComponentType type(void) const { return kNullComponent; }
+    void* data(void) const { return (void*)&_t; }
+    ComponentType type(void) const { return Type; }
 
-    float _t;
+    T _t;
 };
 
 class ComponentSystem {
@@ -74,48 +79,58 @@ public:
     virtual void deactivate_component(Entity*) { }
 };
 
-class NullSystem : public ComponentSystem {
-public:
-    void update(float elapsed_time) {
-        _iter = _components.begin();
-        while(_iter != _components.end()) {
-            Entity* e = _iter->first;
-            if(_iter->second.first == true)
-                e->_transform.position.y += elapsed_time*_iter->second.second.t;
 
-            ++_iter;
+struct NullData
+{
+    NullData() : t(0.0f) { }
+    NullData(float _t) : t(_t) { }
+    float t;
+};
+
+typedef SimpleComponent<NullData, kNullComponent> NullComponent;
+
+template<typename T>
+class SimpleSystem : public ComponentSystem {
+public:
+    SimpleSystem() { }
+    ~SimpleSystem() { }
+
+    void update(float elapsed_time) {
+        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.begin();
+        while(iter != _components.end()) {
+            Entity* e = iter->first;
+            if(iter->second.first == true)
+            {
+                e->_transform.position.y += elapsed_time*iter->second.second.t;
+            }
+            ++iter;
         }
     }
     void add_component(Entity* entity,const Component& component) {
-        _iter = _components.find(entity);
-        if(_iter == _components.end()) {
-            NullData data = { ((const NullComponent&)component)._t };
-            _components[entity] = std::make_pair(true,data);
+        const T* data = (T*)component.data();
+        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        if(iter == _components.end()) {
+            _components[entity] = std::make_pair(true,*data);
         }
     }
     void remove_component(Entity* entity) {
-        _iter = _components.find(entity);
-        if(_iter != _components.end())
-            _components.erase(_iter);
+        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        if(iter != _components.end())
+            _components.erase(iter);
     }
     void activate_component(Entity* entity) {
-        _iter = _components.find(entity);
-        if(_iter != _components.end())
-            _iter->second.first = true;
+        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        if(iter != _components.end())
+            iter->second.first = true;
     }
     void deactivate_component(Entity* entity) { 
-        _iter = _components.find(entity);
-        if(_iter != _components.end())
-            _iter->second.first = false;
+        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        if(iter != _components.end())
+            iter->second.first = false;
     }
 
 private:
-    struct NullData
-    {
-        float t;
-    };
-    std::hash_map<Entity*,std::pair<bool,NullData>>             _components;
-    std::hash_map<Entity*,std::pair<bool,NullData>>::iterator   _iter;
+    std::map<Entity*,std::pair<bool,T>>  _components;
 };
 
 class World {
@@ -128,7 +143,7 @@ public:
 
     void update(float elapsed_time);
 
-    Entity* get_entity(EntityID id);
+    Entity* entity(EntityID id);
 
     int is_id_valid(EntityID id) const;
     int num_entities(void) const { return (int)(_entities.size() - _free_entities.size()); }

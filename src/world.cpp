@@ -24,6 +24,7 @@ struct IDWrapper {
     operator EntityID() { return (id << 16) | index; }
 };
 
+
 }
 /*
  * External
@@ -49,7 +50,8 @@ void Entity::deactivate_component(ComponentType type) {
 World::World()
     : _new_id(0)
 {
-    _systems[kNullComponent] = new NullSystem;
+    _entities.reserve(1024*16);
+    _systems[kNullComponent] = new SimpleSystem<NullData>();
 }
 World::~World() {
     for(int ii=0;ii<kNUM_COMPONENTS;++ii) 
@@ -95,7 +97,7 @@ EntityID World::create_entity(void) {
 
     return eid;
 }
-Entity* World::get_entity(EntityID id) {
+Entity* World::entity(EntityID id) {
     if(!is_id_valid(id))
         return NULL;
 
