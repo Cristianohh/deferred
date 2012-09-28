@@ -11,19 +11,21 @@
 #include "game.h"
 #include "world.h"
 
-static Game _game;
+static Game*    _game = NULL;
 
 int on_init(int argc, const char* argv[]) {
-    _game.initialize();
+    _game = new Game();
+    _game->initialize();
     return 0;
     (void)(argc);
     (void)(argv[0]);
 }
 int on_frame(void) {
-    return _game.on_frame();
+    return _game->on_frame();
 }
 void on_shutdown(void) {
-    _game.shutdown();
+    _game->shutdown();
+    delete _game;
 }
 
 int main(int argc, const char* argv[])

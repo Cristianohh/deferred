@@ -53,6 +53,7 @@ private:
 
 class Component {
 public:
+    virtual ~Component() { }
     virtual void* data(void) const = 0;
     virtual ComponentType type(void) const = 0;
 };
@@ -97,7 +98,7 @@ public:
     ~SimpleSystem() { }
 
     void update(float elapsed_time) {
-        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.begin();
+        typename std::map<Entity*,std::pair<bool,T> >::iterator iter = _components.begin();
         while(iter != _components.end()) {
             Entity* e = iter->first;
             if(iter->second.first == true)
@@ -109,29 +110,29 @@ public:
     }
     void add_component(Entity* entity,const Component& component) {
         const T* data = (T*)component.data();
-        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        typename std::map<Entity*,std::pair<bool,T> >::iterator iter = _components.find(entity);
         if(iter == _components.end()) {
             _components[entity] = std::make_pair(true,*data);
         }
     }
     void remove_component(Entity* entity) {
-        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        typename std::map<Entity*,std::pair<bool,T> >::iterator iter = _components.find(entity);
         if(iter != _components.end())
             _components.erase(iter);
     }
     void activate_component(Entity* entity) {
-        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        typename std::map<Entity*,std::pair<bool,T> >::iterator iter = _components.find(entity);
         if(iter != _components.end())
             iter->second.first = true;
     }
     void deactivate_component(Entity* entity) { 
-        std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.find(entity);
+        typename std::map<Entity*,std::pair<bool,T> >::iterator iter = _components.find(entity);
         if(iter != _components.end())
             iter->second.first = false;
     }
 
 private:
-    std::map<Entity*,std::pair<bool,T>>  _components;
+    std::map<Entity*,std::pair<bool,T> >  _components;
 };
 
 class World {

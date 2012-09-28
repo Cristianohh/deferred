@@ -244,8 +244,8 @@ TEST_FIXTURE(WorldFixture, MultipleComponents)
 
 }
 
-void TestSystem::update(float elapsed_time) {
-    std::map<Entity*,std::pair<bool,T>>::iterator iter = _components.begin();
+template<> void SimpleSystem<TestData>::update(float elapsed_time) {
+    std::map<Entity*,std::pair<bool,TestData> >::iterator iter = _components.begin();
     while(iter != _components.end()) {
         Entity* e = iter->first;
         if(iter->second.first == true)

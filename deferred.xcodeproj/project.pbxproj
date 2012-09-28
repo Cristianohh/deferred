@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		2707F84416026C020014C2E1 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2707F84316026C020014C2E1 /* Cocoa.framework */; };
+		27317FF516159A6600659EDF /* world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27317FF316159A6600659EDF /* world.cpp */; };
+		2731800316159A7B00659EDF /* world_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2731800216159A7B00659EDF /* world_test.cpp */; };
 		273AB3F316026C5F007C7682 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 273AB3ED16026C5F007C7682 /* main.cpp */; };
 		273EE4BF161167AE00265F0D /* resource_manager_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 273EE4BD161167AE00265F0D /* resource_manager_test.cpp */; };
 		273EE4C51611682000265F0D /* resource_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 273EE4C31611682000265F0D /* resource_manager.cpp */; };
@@ -39,6 +41,9 @@
 		2707F84716026C020014C2E1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		2707F84816026C020014C2E1 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		2719DB8B160511F800485229 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = "<group>"; };
+		27317FF316159A6600659EDF /* world.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = world.cpp; sourceTree = "<group>"; };
+		27317FF416159A6600659EDF /* world.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = world.h; sourceTree = "<group>"; };
+		2731800216159A7B00659EDF /* world_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = world_test.cpp; sourceTree = "<group>"; };
 		2735A818160829B800B60C41 /* geometry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = geometry.h; sourceTree = "<group>"; };
 		273AB3ED16026C5F007C7682 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		273EE4BD161167AE00265F0D /* resource_manager_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = resource_manager_test.cpp; sourceTree = "<group>"; };
@@ -159,6 +164,8 @@
 				27ADE8AC16027ACD00D888DE /* unit_test.cpp */,
 				27ADE8AD16027ACD00D888DE /* unit_test.h */,
 				275A241A1605127C005FA2BC /* vec_math.h */,
+				27317FF316159A6600659EDF /* world.cpp */,
+				27317FF416159A6600659EDF /* world.h */,
 				27ADE8AB16027ACD00D888DE /* tests */,
 				273AB3E316026C5F007C7682 /* macosx */,
 			);
@@ -194,6 +201,7 @@
 			isa = PBXGroup;
 			children = (
 				278F9E0C1602862700F90E06 /* timer_test.cpp */,
+				2731800216159A7B00659EDF /* world_test.cpp */,
 				27CF508716027C57009DBE5A /* unit_test_test.cpp */,
 				27ADE8AF16027B1E00D888DE /* application_test.cpp */,
 				273EE4BD161167AE00265F0D /* resource_manager_test.cpp */,
@@ -309,6 +317,8 @@
 				27FA8ED31606AC8400B3B985 /* stb_image.c in Sources */,
 				273EE4BF161167AE00265F0D /* resource_manager_test.cpp in Sources */,
 				273EE4C51611682000265F0D /* resource_manager.cpp in Sources */,
+				27317FF516159A6600659EDF /* world.cpp in Sources */,
+				2731800316159A7B00659EDF /* world_test.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
