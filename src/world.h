@@ -32,7 +32,7 @@ public:
     Entity() { }
     ~Entity() { }
 
-    Entity& add_component(const Component& component);
+    Entity* add_component(const Component& component);
     void remove_component(ComponentType type);
     void activate_component(ComponentType type);
     void deactivate_component(ComponentType type);

@@ -29,10 +29,10 @@ struct IDWrapper {
 /*
  * External
  */
-Entity& Entity::add_component(const Component& component) {
+Entity* Entity::add_component(const Component& component) {
     ComponentSystem* system = _world->_get_system(component.type());
     system->add_component(this, component);
-    return *this;
+    return this;
 }
 void Entity::remove_component(ComponentType type) {
     ComponentSystem* system = _world->_get_system(type);

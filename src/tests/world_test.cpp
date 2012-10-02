@@ -11,10 +11,10 @@
  *  *Remove component from entity
  *  *Update world
  *  Modify component data
- *  Multiple components per entity
+ *  *Multiple components per entity
  *  *Multiple entities with components
  *  Entity communication
- *  Custom components
+ *  *Custom components
  */
 #include "unit_test.h"
 #include "world.h"
@@ -223,7 +223,8 @@ TEST_FIXTURE(WorldFixture, MultipleComponents)
     world.add_system(new TestSystem, kTestComponent);
 
     EntityID id = world.create_entity();
-    world.entity(id)->add_component(NullComponent(3.0f)).add_component(TestComponent(5.0f));
+    world.entity(id)->add_component(NullComponent(3.0f))
+                    ->add_component(TestComponent(5.0f));
 
     world.update(0.5f);
     CHECK_EQUAL_FLOAT(1.5f, world.entity(id)->transform().position.y);
