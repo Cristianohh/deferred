@@ -22,6 +22,7 @@ enum ComponentType {
    kNullComponent,
    kTestComponent,
    kRenderComponent,
+   kLightComponent,
 
    kNUM_COMPONENTS
 };
@@ -106,13 +107,13 @@ public:
             Entity* e = iter->first;
             if(iter->second.first == true)
             {
-                _update(e, iter->second.second, elapsed_time);
+                _update(e, &iter->second.second, elapsed_time);
             }
             ++iter;
         }
     }
-    void _update(Entity* entity, const T& data, float elapsed_time) {
-        entity->_transform.position.y += elapsed_time*data.t;
+    void _update(Entity* entity, T* data, float elapsed_time) {
+        entity->_transform.position.y += elapsed_time*data->t;
     }
     void add_component(Entity* entity,const Component& component) {
         const T* data = (T*)component.data();

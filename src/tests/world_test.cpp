@@ -246,8 +246,8 @@ TEST_FIXTURE(WorldFixture, MultipleComponents)
 
 }
 
-template<> void SimpleSystem<TestData>::_update(Entity* entity, const TestData& data, float elapsed_time) {
-    entity->_transform.position.x += elapsed_time*data.x;
-    entity->_transform.position.z += elapsed_time*data.z;
-    entity->_transform.position.y += elapsed_time*data.y;
+template<> void SimpleSystem<TestData>::_update(Entity* entity, TestData* data, float elapsed_time) {
+    entity->_transform.position.x += elapsed_time*data->x;
+    entity->_transform.position.z += elapsed_time*data->z;
+    entity->_transform.position.y += elapsed_time*data->y;
 }

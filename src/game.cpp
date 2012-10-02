@@ -35,12 +35,32 @@ Render* RenderData::_render = NULL;
 typedef SimpleComponent<RenderData, kRenderComponent>   RenderComponent;
 typedef SimpleSystem<RenderData>                        RenderSystem;
 
+struct LightData {
+    LightData() { }
+    LightData(Light _light) : light(_light) { }
+    Light   light;
+
+    static Render*  _render;
+};
+
+Render* LightData::_render = NULL;
+
+typedef SimpleComponent<LightData, kLightComponent>   LightComponent;
+typedef SimpleSystem<LightData>                        LightSystem;
+
+
 }
 
-template<> void SimpleSystem<RenderData>::_update(Entity* entity, const RenderData& data, float) {
+template<> void SimpleSystem<RenderData>::_update(Entity* entity, RenderData* data, float) {
     Transform transform = entity->transform();
-    data._render->draw_3d(data.mesh, &data.material, TransformGetMatrix(&transform));
-    //data._render->draw_3d(data.mesh, &data.material, float4x4identity);
+    data->_render->draw_3d(data->mesh, &data->material, TransformGetMatrix(&transform));
+}
+
+template<> void SimpleSystem<LightData>::_update(Entity* entity, LightData* data, float) {
+    Transform transform = entity->transform();
+    data->light.pos = transform.position;
+    data->light.dir = quaternionGetZAxis(&transform.orientation);
+    data->_render->draw_light(data->light);
 }
 
 
@@ -65,7 +85,9 @@ void Game::initialize(void) {
     _render->initialize(app_get_window());
 
     _world.add_system(new RenderSystem, kRenderComponent);
+    _world.add_system(new LightSystem, kLightComponent);
     RenderData::_render = _render;
+    LightData::_render = _render;
 
 
     //srand((uint32_t)_timer.start_time);
@@ -200,7 +222,7 @@ void Game::initialize(void) {
     render_data.material = o.material;
     id = _world.create_entity();
     _world.entity(id)->set_transform(o.transform)
-                        ->add_component(RenderComponent(render_data));
+                     ->add_component(RenderComponent(render_data));
 
     // Add a "sun"
     _lights[0].pos.x = 0.0f;
@@ -216,6 +238,15 @@ void Game::initialize(void) {
     _lights[0].inner_cos = cosf(DegToRad(60.0f/2));
     _lights[0].outer_cos = cosf(DegToRad(70.0f/2));
     _lights[0].type = kDirectionalLight;
+
+    Transform t = TransformZero();
+    t.orientation = quaternionFromAxisAngle(&_lights[0].dir, 1.0f);
+    
+    id = _world.create_entity();
+    _world.entity(id)->set_transform(t)
+                     ->add_component(LightComponent(_lights[0]));
+    
+    t = TransformZero();
     for(int ii=1;ii<MAX_LIGHTS;++ii) {
         _lights[ii].pos.x = _rand_float(-50.0f, 50.0f);
         _lights[ii].pos.y = _rand_float(1.0f, 4.0f);
@@ -225,6 +256,11 @@ void Game::initialize(void) {
         _lights[ii].color.y = _rand_float(0.0f, 1.0f);
         _lights[ii].color.z = _rand_float(0.0f, 1.0f);
         _lights[ii].type = kPointLight;
+        
+        t.position = _lights[ii].pos;
+        id = _world.create_entity();
+        _world.entity(id)->set_transform(t)
+                         ->add_component(LightComponent(_lights[ii]));
     }
 }
 void Game::shutdown(void) {
@@ -286,9 +322,9 @@ int Game::on_frame(void) {
     //}
     _world.update(_delta_time);
 
-    for(int ii=0;ii<1;++ii) {
-        _render->draw_light(_lights[ii]);
-    }
+    //for(int ii=0;ii<1;++ii) {
+    //    _render->draw_light(_lights[ii]);
+    //}
     _render->render();
 
     // End of frame stuff

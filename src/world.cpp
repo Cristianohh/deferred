@@ -83,6 +83,8 @@ void World::update(float elapsed_time) {
     }
 }
 ComponentSystem* World::_get_system(ComponentType type) {
+    assert(type >= 0 && type <= kNUM_COMPONENTS);
+    assert(_systems[type]);
     return _systems[type];
 }
 EntityID World::create_entity(void) {
