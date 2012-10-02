@@ -12,6 +12,7 @@
 #include "fps.h"
 #include "render.h"
 #include "resource_manager.h"
+#include "world.h"
 
 class Render;
 
@@ -47,6 +48,8 @@ private:
     Light       _lights[MAX_LIGHTS];
 
     ResourceManager _resource_manager;
+
+    World       _world;
 };
 
 #endif /* include guard */

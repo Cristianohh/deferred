@@ -15,6 +15,7 @@
  *  *Multiple entities with components
  *  Entity communication
  *  *Custom components
+ *  Simple component update
  */
 #include "unit_test.h"
 #include "world.h"
@@ -189,9 +190,9 @@ struct TestData {
     float x;
     float z;
 
-    static float y;
+    static const float y;
 };
-float TestData::y = 0.0f;
+const float TestData::y = 0.0f;
 typedef SimpleComponent<TestData, kTestComponent> TestComponent;
 typedef SimpleSystem<TestData> TestSystem;
 
@@ -245,16 +246,8 @@ TEST_FIXTURE(WorldFixture, MultipleComponents)
 
 }
 
-template<> void SimpleSystem<TestData>::update(float elapsed_time) {
-    std::map<Entity*,std::pair<bool,TestData> >::iterator iter = _components.begin();
-    while(iter != _components.end()) {
-        Entity* e = iter->first;
-        if(iter->second.first == true)
-        {
-            e->_transform.position.x += elapsed_time*iter->second.second.x;
-            e->_transform.position.z += elapsed_time*iter->second.second.z;
-            e->_transform.position.y += elapsed_time*iter->second.second.y;
-        }
-        ++iter;
-    }
+template<> void SimpleSystem<TestData>::_update(Entity* entity, const TestData& data, float elapsed_time) {
+    entity->_transform.position.x += elapsed_time*data.x;
+    entity->_transform.position.z += elapsed_time*data.z;
+    entity->_transform.position.y += elapsed_time*data.y;
 }

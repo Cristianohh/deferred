@@ -10,18 +10,39 @@
 #include "render.h"
 #include "assert.h"
 #include "application.h"
-#include "world.h"
 #include "unit_test.h"
 
 /*
  * Internal
  */
-static float _rand_float(float min, float max) {
+ namespace {
+
+float _rand_float(float min, float max) {
     float r = rand()/(float)RAND_MAX;
     float delta = max-min;
     r *= delta;
     return r+min;
 }
+
+struct RenderData {
+    Resource    mesh;
+    Material    material;
+
+    static Render*  _render;
+};
+Render* RenderData::_render = NULL;
+
+typedef SimpleComponent<RenderData, kRenderComponent>   RenderComponent;
+typedef SimpleSystem<RenderData>                        RenderSystem;
+
+}
+
+template<> void SimpleSystem<RenderData>::_update(Entity* entity, const RenderData& data, float) {
+    Transform transform = entity->transform();
+    data._render->draw_3d(data.mesh, &data.material, TransformGetMatrix(&transform));
+    //data._render->draw_3d(data.mesh, &data.material, float4x4identity);
+}
+
 
 /*
  * External
@@ -37,17 +58,15 @@ Game::Game()
     _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
 }
 void Game::initialize(void) {
-    {
-        World world;
-    }
-
-
-
 
     timer_init(&_timer);
     _frame_count = 0;
     _render = Render::create();
     _render->initialize(app_get_window());
+
+    _world.add_system(new RenderSystem, kRenderComponent);
+    RenderData::_render = _render;
+
 
     //srand((uint32_t)_timer.start_time);
     srand(42);
@@ -123,6 +142,14 @@ void Game::initialize(void) {
     o.material = grass_material;
     _add_object(o);
 
+    RenderData render_data = {0};
+    render_data.mesh = o.mesh;
+    render_data.material = o.material;
+
+    EntityID id = _world.create_entity();
+    _world.entity(id)->set_transform(o.transform)
+                     ->add_component(RenderComponent(render_data));
+
 
     for(int ii=0; ii<32;++ii) {
         o.transform = TransformZero();
@@ -143,6 +170,12 @@ void Game::initialize(void) {
         int material = rand()%3;
         o.material = materials[material];
         _add_object(o);
+        
+        render_data.mesh = o.mesh;
+        render_data.material = o.material;
+        id = _world.create_entity();
+        _world.entity(id)->set_transform(o.transform)
+                         ->add_component(RenderComponent(render_data));
     }
 
     Material house_material =
@@ -161,6 +194,13 @@ void Game::initialize(void) {
     o.mesh = _resource_manager.get_resource("assets/house_obj.obj");
     o.material = house_material;
     _add_object(o);
+
+    
+    render_data.mesh = o.mesh;
+    render_data.material = o.material;
+    id = _world.create_entity();
+    _world.entity(id)->set_transform(o.transform)
+                        ->add_component(RenderComponent(render_data));
 
     // Add a "sun"
     _lights[0].pos.x = 0.0f;
@@ -240,11 +280,13 @@ int Game::on_frame(void) {
     float4x4 view = TransformGetMatrix(&_camera);
     _render->set_3d_view_matrix(view);
 
-    for(int ii=0;ii<_num_objects;++ii) {
-        const Object& o = _objects[ii];
-        _render->draw_3d(o.mesh, &o.material, TransformGetMatrix(&o.transform));
-    }
-    for(int ii=0;ii<MAX_LIGHTS;++ii) {
+    //for(int ii=0;ii<_num_objects;++ii) {
+    //    const Object& o = _objects[ii];
+    //    _render->draw_3d(o.mesh, &o.material, TransformGetMatrix(&o.transform));
+    //}
+    _world.update(_delta_time);
+
+    for(int ii=0;ii<1;++ii) {
         _render->draw_light(_lights[ii]);
     }
     _render->render();

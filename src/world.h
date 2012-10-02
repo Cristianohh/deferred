@@ -21,6 +21,7 @@ class Component;
 enum ComponentType {
    kNullComponent,
    kTestComponent,
+   kRenderComponent,
 
    kNUM_COMPONENTS
 };
@@ -40,6 +41,8 @@ public:
     EntityID id(void) const { return _id; }
     Transform transform(void) const { return _transform; }
     World* world(void) const { return _world; }
+
+    Entity* set_transform(const Transform& transform) { _transform = transform; return this; }
 
 private:
     friend class World;
@@ -103,10 +106,13 @@ public:
             Entity* e = iter->first;
             if(iter->second.first == true)
             {
-                e->_transform.position.y += elapsed_time*iter->second.second.t;
+                _update(e, iter->second.second, elapsed_time);
             }
             ++iter;
         }
+    }
+    void _update(Entity* entity, const T& data, float elapsed_time) {
+        entity->_transform.position.y += elapsed_time*data.t;
     }
     void add_component(Entity* entity,const Component& component) {
         const T* data = (T*)component.data();
