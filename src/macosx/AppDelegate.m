@@ -348,11 +348,9 @@ void app_unlock_and_show_cursor(void) {
     [[self window] setContentView:[[OpenGLView alloc] init]];
     [[self window] setOpaque:YES];
     [[self window] setAcceptsMouseMovedEvents:YES];
-    [self setController:[[NSWindowController alloc] initWithWindow:[self window]]];
-    [[self controller] showWindow:nil];
-    
-    /*chdir([[bundle resourcePath] UTF8String]); */ /* Set cwd to Content/Resources */
-    chdir([[[bundle bundlePath] stringByDeletingLastPathComponent] UTF8String]);
+    [[self window] makeKeyAndOrderFront:nil];
+
+    chdir([[[bundle bundlePath] stringByDeletingLastPathComponent] UTF8String]); /* Set cwd to Content/Resources */
     {   /* Get argc/argv */
         NSArray *arguments = [[NSProcessInfo processInfo] arguments];
         int argc = (int)[arguments count];
