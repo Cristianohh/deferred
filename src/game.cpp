@@ -201,11 +201,7 @@ void Game::initialize(void) {
     };
     transform = TransformZero();
     transform.scale = 0.015f;
-    float3 yaxis = {0,1,0};
-    transform.orientation = quaternionFromAxisAngle(&yaxis, DegToRad(-135.0f));
-
-    transform.orientation = quaternionFromEuler(DegToRad(45.0f), DegToRad(180.0f), 0.0f);
-
+    transform.orientation = quaternionFromEuler(0.0f, DegToRad(-90.0f), 0.0f);
 
     render_data.mesh = _resource_manager.get_resource("assets/house_obj.obj");
     render_data.material = house_material;
@@ -230,7 +226,7 @@ void Game::initialize(void) {
     light.type = kDirectionalLight;
 
     transform = TransformZero();
-    transform.orientation = quaternionFromAxisAngle(&light.dir, 0.0001f);
+    transform.orientation = quaternionFromEuler(DegToRad(90.0f), 0.0f, 0.0f);
     transform.position = light.pos;
 
     id = _world.create_entity();
@@ -307,15 +303,8 @@ int Game::on_frame(void) {
     float4x4 view = TransformGetMatrix(&_camera);
     _render->set_3d_view_matrix(view);
 
-    //for(int ii=0;ii<_num_objects;++ii) {
-    //    const Object& o = _objects[ii];
-    //    _render->draw_3d(o.mesh, &o.material, TransformGetMatrix(&o.transform));
-    //}
     _world.update(_delta_time);
 
-    //for(int ii=0;ii<1;++ii) {
-    //    _render->draw_light(_lights[ii]);
-    //}
     _render->render();
 
     // End of frame stuff

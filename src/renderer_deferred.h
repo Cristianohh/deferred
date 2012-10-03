@@ -213,8 +213,12 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glViewport(0, 0, SHADOW_MAP_RES, SHADOW_MAP_RES);
         glClearDepth(1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        float4x4 shadow_proj = float4x4OrthographicOffCenterLH(-40.0f, 40.0f, 40.0f, -40.0f, -30.0f, 30.0f);
+
+        float4x4 shadow_proj;
+        if(lights[0].type == kDirectionalLight)
+            shadow_proj = float4x4OrthographicOffCenterLH(-40.0f, 40.0f, 40.0f, -40.0f, -30.0f, 30.0f);
+        else if(lights[0].type == kSpotLight)
+            shadow_proj = float4x4OrthographicOffCenterLH(-40.0f, 40.0f, 40.0f, -40.0f, -30.0f, 30.0f);
         float3 look = lights[0].dir;
         float3 up = {0,1,0};
         look = float3normalize(&look);

@@ -994,6 +994,7 @@ static float3 quaternionGetXAxis(const quaternion* q)
     float3 ret = { 1-2*(q->y*q->y+q->z*q->z),
                      2*(q->x*q->y+q->w*q->z),
                      2*(q->x*q->z-q->y*q->w) };
+    ret = float3normalize(&ret);
     return ret;
 }
 static float3 quaternionGetYAxis(const quaternion* q)
@@ -1001,6 +1002,7 @@ static float3 quaternionGetYAxis(const quaternion* q)
     float3 ret = {   2*(q->x*q->y-q->z*q->w),
                    1-2*(q->x*q->x+q->z*q->z),
                      2*(q->y*q->z+q->x*q->w) };
+    ret = float3normalize(&ret);
     return ret;
 }
 static float3 quaternionGetZAxis(const quaternion* q)
@@ -1008,6 +1010,7 @@ static float3 quaternionGetZAxis(const quaternion* q)
     float3 ret = {  2*(q->x*q->z+q->y*q->w),
                     2*(q->y*q->z-q->x*q->w),
                   1-2*(q->x*q->x+q->y*q->y) };
+    ret = float3normalize(&ret);
     return ret;
 }
 static float3x3 quaternionGetMatrix(const quaternion* q)
