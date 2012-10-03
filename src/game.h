@@ -16,12 +16,6 @@
 
 class Render;
 
-struct Object {
-    Transform   transform;
-    Resource    mesh;
-    Material    material;
-};
-
 class Game {
 public:
     Game();
@@ -32,8 +26,7 @@ public:
     
 private:
     void _control_camera(float mouse_x, float mouse_y);
-    void _add_object(const Object& o);
-
+    
 private:
     FPSCounter  _fps;
     Timer       _timer;
@@ -42,10 +35,6 @@ private:
     float       _delta_time;
 
     Transform   _camera;
-
-    Object      _objects[1024];
-    int         _num_objects;
-    Light       _lights[MAX_LIGHTS];
 
     ResourceManager _resource_manager;
 

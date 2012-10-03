@@ -68,7 +68,6 @@ template<> void SimpleSystem<LightData>::_update(Entity* entity, LightData* data
  * External
  */
 Game::Game()
-    : _num_objects(0)
 {
     _fps.frame = 0;
     _camera = TransformZero();
@@ -142,7 +141,6 @@ void Game::initialize(void) {
         }
     };
 
-    Object o;
     // Ground
     const VtxPosNormTex ground_vertices[] =
     {
@@ -157,46 +155,38 @@ void Game::initialize(void) {
         3,1,0,
         2,1,3,
     };
-    o.transform = TransformZero();
-    o.transform.scale = 100.0f;
-    o.transform.position.y = 0.0f;
-    o.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
-    o.material = grass_material;
-    _add_object(o);
 
+    Transform transform = TransformZero();
+    transform.scale = 100.0f;
     RenderData render_data = {0};
-    render_data.mesh = o.mesh;
-    render_data.material = o.material;
+    render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
+    render_data.material = grass_material;
 
     EntityID id = _world.create_entity();
-    _world.entity(id)->set_transform(o.transform)
+    _world.entity(id)->set_transform(transform)
                      ->add_component(RenderComponent(render_data));
 
 
     for(int ii=0; ii<32;++ii) {
-        o.transform = TransformZero();
-        o.transform.scale = _rand_float(0.5f, 5.0f);
-        o.transform.position.x = _rand_float(-50.0f, 50.0f);
-        o.transform.position.y = _rand_float(0.5f, 5.0f);
-        o.transform.position.z = _rand_float(-50.0f, 50.0f);
+        transform = TransformZero();
+        transform.scale = _rand_float(0.5f, 5.0f);
+        transform.position.x = _rand_float(-50.0f, 50.0f);
+        transform.position.y = _rand_float(0.5f, 5.0f);
+        transform.position.z = _rand_float(-50.0f, 50.0f);
         float3 axis = { _rand_float(-3.0f, 3.0f), _rand_float(-3.0f, 3.0f), _rand_float(-3.0f, 3.0f) };
-        o.transform.orientation = quaternionFromAxisAngle(&axis, _rand_float(0.0f, kPi));
+        transform.orientation = quaternionFromAxisAngle(&axis, _rand_float(0.0f, kPi));
         switch(rand()%2) {
             case 0:
-                o.mesh = _render->sphere_mesh();
+                render_data.mesh = _render->sphere_mesh();
                 break;
             case 1:
-                o.mesh = _render->cube_mesh();
+                render_data.mesh = _render->cube_mesh();
                 break;
         }
         int material = rand()%3;
-        o.material = materials[material];
-        _add_object(o);
-        
-        render_data.mesh = o.mesh;
-        render_data.material = o.material;
+        render_data.material = materials[material];
         id = _world.create_entity();
-        _world.entity(id)->set_transform(o.transform)
+        _world.entity(id)->set_transform(transform)
                          ->add_component(RenderComponent(render_data));
     }
 
@@ -209,58 +199,56 @@ void Game::initialize(void) {
         1.5f,
         0.06f
     };
-    o.transform = TransformZero();
-    o.transform.scale = 0.015f;
+    transform = TransformZero();
+    transform.scale = 0.015f;
     float3 yaxis = {0,1,0};
-    o.transform.orientation = quaternionFromAxisAngle(&yaxis, DegToRad(-135.0f));
-    o.mesh = _resource_manager.get_resource("assets/house_obj.obj");
-    o.material = house_material;
-    _add_object(o);
+    transform.orientation = quaternionFromAxisAngle(&yaxis, DegToRad(-135.0f));
 
-    
-    render_data.mesh = o.mesh;
-    render_data.material = o.material;
+
+    render_data.mesh = _resource_manager.get_resource("assets/house_obj.obj");
+    render_data.material = house_material;
     id = _world.create_entity();
-    _world.entity(id)->set_transform(o.transform)
+    _world.entity(id)->set_transform(transform)
                      ->add_component(RenderComponent(render_data));
 
     // Add a "sun"
-    _lights[0].pos.x = 0.0f;
-    _lights[0].pos.y = 10.0f;
-    _lights[0].pos.z = -60.0f;
-    _lights[0].size = 250.0f;
-    _lights[0].dir.x = 0.5f;
-    _lights[0].dir.y = -0.8f;
-    _lights[0].dir.z = 0.1f;
-    _lights[0].color.x = 1.0f;
-    _lights[0].color.y = 1.0f;
-    _lights[0].color.z = 1.0f;
-    _lights[0].inner_cos = cosf(DegToRad(60.0f/2));
-    _lights[0].outer_cos = cosf(DegToRad(70.0f/2));
-    _lights[0].type = kDirectionalLight;
+    Light light;
+    light.pos.x = 0.0f;
+    light.pos.y = 10.0f;
+    light.pos.z = -60.0f;
+    light.size = 250.0f;
+    light.dir.x = 0.5f;
+    light.dir.y = -0.8f;
+    light.dir.z = 0.1f;
+    light.color.x = 1.0f;
+    light.color.y = 1.0f;
+    light.color.z = 1.0f;
+    light.inner_cos = cosf(DegToRad(60.0f/2));
+    light.outer_cos = cosf(DegToRad(70.0f/2));
+    light.type = kDirectionalLight;
 
-    Transform t = TransformZero();
-    t.orientation = quaternionFromAxisAngle(&_lights[0].dir, 1.0f);
-    
+    transform = TransformZero();
+    transform.orientation = quaternionFromAxisAngle(&light.dir, 1.0f);
+
     id = _world.create_entity();
-    _world.entity(id)->set_transform(t)
-                     ->add_component(LightComponent(_lights[0]));
-    
-    t = TransformZero();
+    _world.entity(id)->set_transform(transform)
+                     ->add_component(LightComponent(light));
+
+    transform = TransformZero();
     for(int ii=1;ii<MAX_LIGHTS;++ii) {
-        _lights[ii].pos.x = _rand_float(-50.0f, 50.0f);
-        _lights[ii].pos.y = _rand_float(1.0f, 4.0f);
-        _lights[ii].pos.z = _rand_float(-50.0f, 50.0f);
-        _lights[ii].size = 3.0f;
-        _lights[ii].color.x = _rand_float(0.0f, 1.0f);
-        _lights[ii].color.y = _rand_float(0.0f, 1.0f);
-        _lights[ii].color.z = _rand_float(0.0f, 1.0f);
-        _lights[ii].type = kPointLight;
-        
-        t.position = _lights[ii].pos;
+        light.pos.x = _rand_float(-50.0f, 50.0f);
+        light.pos.y = _rand_float(1.0f, 4.0f);
+        light.pos.z = _rand_float(-50.0f, 50.0f);
+        light.size = 3.0f;
+        light.color.x = _rand_float(0.0f, 1.0f);
+        light.color.y = _rand_float(0.0f, 1.0f);
+        light.color.z = _rand_float(0.0f, 1.0f);
+        light.type = kPointLight;
+
+        transform.position = light.pos;
         id = _world.create_entity();
-        _world.entity(id)->set_transform(t)
-                         ->add_component(LightComponent(_lights[ii]));
+        _world.entity(id)->set_transform(transform)
+                         ->add_component(LightComponent(light));
     }
 }
 void Game::shutdown(void) {
@@ -383,7 +371,4 @@ void Game::_control_camera(float mouse_x, float mouse_y)
     float3 xaxis = {1.0f, 0.0f, 0.0f};
     q = quaternionFromAxisAngle(&xaxis, _delta_time*mouse_y);
     _camera.orientation = quaternionMultiply(&q, &_camera.orientation);
-}
-void Game::_add_object(const Object& o) {
-    _objects[_num_objects++] = o;
 }
