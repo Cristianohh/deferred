@@ -204,6 +204,8 @@ void Game::initialize(void) {
     float3 yaxis = {0,1,0};
     transform.orientation = quaternionFromAxisAngle(&yaxis, DegToRad(-135.0f));
 
+    transform.orientation = quaternionFromEuler(DegToRad(45.0f), DegToRad(180.0f), 0.0f);
+
 
     render_data.mesh = _resource_manager.get_resource("assets/house_obj.obj");
     render_data.material = house_material;
@@ -215,11 +217,11 @@ void Game::initialize(void) {
     Light light;
     light.pos.x = 0.0f;
     light.pos.y = 10.0f;
-    light.pos.z = -60.0f;
+    light.pos.z = 0.0f;
     light.size = 250.0f;
-    light.dir.x = 0.5f;
-    light.dir.y = -0.8f;
-    light.dir.z = 0.1f;
+    light.dir.x = 0.0f;
+    light.dir.y = -1.0f;
+    light.dir.z = 0.0f;
     light.color.x = 1.0f;
     light.color.y = 1.0f;
     light.color.z = 1.0f;
@@ -228,14 +230,15 @@ void Game::initialize(void) {
     light.type = kDirectionalLight;
 
     transform = TransformZero();
-    transform.orientation = quaternionFromAxisAngle(&light.dir, 1.0f);
+    transform.orientation = quaternionFromAxisAngle(&light.dir, 0.0001f);
+    transform.position = light.pos;
 
     id = _world.create_entity();
     _world.entity(id)->set_transform(transform)
                      ->add_component(LightComponent(light));
 
     transform = TransformZero();
-    for(int ii=1;ii<MAX_LIGHTS;++ii) {
+    for(int ii=1;ii<0;++ii) {
         light.pos.x = _rand_float(-50.0f, 50.0f);
         light.pos.y = _rand_float(1.0f, 4.0f);
         light.pos.z = _rand_float(-50.0f, 50.0f);

@@ -1054,6 +1054,30 @@ static quaternion quaternionMultiply(const quaternion* l, const quaternion* r)
                     r->w*l->w - r->x*l->x - r->y*l->y - r->z*l->z };
     return q;
 }
+static quaternion quaternionFromEuler(float pitch, float yaw, float roll)
+{
+    float x = pitch/2;
+    float y = yaw/2;
+    float z = roll/2;
+
+    float cx = cosf(x);
+    float cy = cosf(y);
+    float cz = cosf(z);
+    float sx = sinf(x);
+    float sy = sinf(y);
+    float sz = sinf(z);
+
+    quaternion q =
+    {
+        (sx*cy*cz) - (cx*sy*sz),
+        (cx*sy*cz) + (sx*cy*sz),
+        (cx*cy*sz) - (sx*sy*cz),
+        (cx*cy*cz) + (sx*sy*sz),
+    };
+    q = quaternionNormalize(&q);
+
+    return q;
+}
 
 /*
  * Transform
