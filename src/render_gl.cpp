@@ -230,6 +230,29 @@ void render(void) {
 
     float4x4 view = _3d_view;
     float4x4 proj = _perspective_projection;
+    { // Draw shadow map
+        float4x4 inv_view = float4x4inverse(&view);
+        float4x4 view_proj = float4x4multiply(&inv_view, &proj);
+        glDrawBuffer(GL_NONE);
+        glClearDepth(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glColorMask(0, 0, 0, 0);
+
+        glUseProgram(_depth_program);
+        for(int ii=0;ii<_num_renderables;++ii) {
+            const Renderable& r = _renderables[ii];
+            float4x4 wvp = float4x4multiply(&r.transform, &view_proj);
+            glUniformMatrix4fv(_view_proj_uniform, 1, GL_FALSE, (float*)&wvp);
+
+            glBindVertexArray(r.vao);
+            _validate_program(_depth_program);
+            glDrawElements(GL_TRIANGLES, (GLsizei)r.index_count, r.index_format, NULL);
+        }
+
+        glColorMask(1, 1, 1, 1);
+    }
+
+
     _deferred_renderer.render(view, proj, _frame_buffer,
                               _renderables, _num_renderables,
                               _light_buffer.lights, _light_buffer.num_lights);
@@ -260,6 +283,8 @@ void render(void) {
         glEnable(GL_DEPTH_TEST);
     } else {
         _render_fullscreen(_color_texture);
+        //_render_fullscreen(_depth_texture);
+
     }
 
     _num_renderables = 0;
@@ -617,19 +642,6 @@ Resource _load_obj(const char* filename) {
     int vertex_count = (int)indicies.size();
     int index_count = vertex_count;
     
-    //int vertex_size = sizeof(VtxPosNormTex);
-    //int index_size = sizeof(uint32_t);
-    //char new_filename[256];
-    //sprintf(new_filename, "%s.mesh", filename);
-    //file = fopen(new_filename, "wb");
-    //fwrite(&vertex_size, sizeof(int), 1, file);
-    //fwrite(&vertex_count, sizeof(int), 1, file);
-    //fwrite(&index_size, sizeof(int), 1, file);
-    //fwrite(&index_count, sizeof(int), 1, file);
-    //fwrite(vertices, vertex_size, vertex_count, file);
-    //fwrite(i, index_size, index_count, file);
-    //fclose(file);
-
     VtxPosNormTanBitanTex* new_vertices = _calculate_tangets(vertices, vertex_count, i, sizeof(uint32_t), index_count);
 
     Resource resource = create_mesh(vertex_count, kVtxPosNormTanBitanTex, index_count, sizeof(uint32_t), new_vertices, i);
@@ -714,6 +726,14 @@ void _load_shaders(void) {
 
     _2d_viewproj_uniform = glGetUniformLocation(_2d_program, "kViewProj");
     _2d_world_uniform = glGetUniformLocation(_2d_program, "kWorld");
+
+    
+    vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/depth.vsh");
+    fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/depth.fsh");
+    _depth_program = _create_program(vs, fs);
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+    _view_proj_uniform = glGetUniformLocation(_depth_program, "kWorldViewProj");
 }
 void _create_base_meshes(void) {
     _cube_mesh = create_mesh(ARRAYSIZE(kCubeVertices), kVtxPosNormTex,
@@ -747,6 +767,13 @@ void _resize_framebuffer(void) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _color_texture, 0);
     CheckGLError();
+    
+    glBindTexture(GL_TEXTURE_2D, _depth_texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, _width, _height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_texture, 0);
+    CheckGLError();
 
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if( status != GL_FRAMEBUFFER_COMPLETE) {
@@ -761,6 +788,7 @@ void _create_framebuffer(void) {
     glGenRenderbuffers(1, &_depth_buffer);
 
     glGenTextures(1, &_color_texture);
+    glGenTextures(1, &_depth_texture);
 }
 
 private:
@@ -793,12 +821,16 @@ GLuint  _color_buffer;
 GLuint  _depth_buffer;
 
 GLuint  _color_texture;
+GLuint  _depth_texture;
 
 GLuint  _fullscreen_program;
 
 GLuint  _2d_program;
 GLuint  _2d_world_uniform;
 GLuint  _2d_viewproj_uniform;
+
+GLuint  _depth_program;
+GLuint  _view_proj_uniform;
 
 int     _width;
 int     _height;

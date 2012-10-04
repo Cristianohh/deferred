@@ -78,8 +78,8 @@ void init(void) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
 
-        GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/shadow.vsh");
-        GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/shadow.fsh");
+        GLuint vs = _compile_shader(GL_VERTEX_SHADER, "assets/shaders/depth.vsh");
+        GLuint fs = _compile_shader(GL_FRAGMENT_SHADER, "assets/shaders/depth.fsh");
         _shadow_program = _create_program(vs, fs);
         glDeleteShader(vs);
         glDeleteShader(fs);
