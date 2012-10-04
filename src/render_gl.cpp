@@ -42,7 +42,6 @@
 
 #include "renderer.h"
 #include "renderer_deferred.h"
-#include "renderer_forward.h"
 
 #define CheckGLError()                  \
     do {                                \
@@ -215,13 +214,11 @@ void initialize(void* window) {
 
     _create_framebuffer();
 
-    _forward_renderer.init();
     _deferred_renderer.init();
     _deferred_renderer.set_sphere_mesh(*((Mesh*)_sphere_mesh.ptr));
     _deferred_renderer.set_fullscreen_mesh(*((Mesh*)_fullscreen_quad_mesh.ptr));
 }
 void shutdown(void) {
-    _forward_renderer.shutdown();
     _deferred_renderer.shutdown();
 }
 void render(void) {
@@ -233,15 +230,9 @@ void render(void) {
 
     float4x4 view = _3d_view;
     float4x4 proj = _perspective_projection;
-
-    if(_deferred)
-        _deferred_renderer.render(view, proj, _frame_buffer,
-                                  _renderables, _num_renderables,
-                                  _light_buffer.lights, _light_buffer.num_lights);
-    else
-        _forward_renderer.render(view, proj, _frame_buffer,
-                                 _renderables, _num_renderables,
-                                 _light_buffer.lights, _light_buffer.num_lights);
+    _deferred_renderer.render(view, proj, _frame_buffer,
+                              _renderables, _num_renderables,
+                              _light_buffer.lights, _light_buffer.num_lights);
 
     // Render the scene from the render target
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -283,7 +274,6 @@ void resize(int width, int height) {
 
     // Resize render targets
     _resize_framebuffer();
-    _forward_renderer.resize(width, height);
     _deferred_renderer.resize(width, height);
 }
 void _render_fullscreen(GLuint texture) {
@@ -322,11 +312,7 @@ Resource quad_mesh(void) { return _quad_mesh; }
 Resource sphere_mesh(void) { return _sphere_mesh; }
 void toggle_debug_graphics(void) { _debug = !_debug; }
 void toggle_deferred(void) {
-    _deferred = !_deferred;
-    if(_deferred)
-        debug_output("Deferred\n");
-    else
-        debug_output("Forward\n");
+    debug_output("Deferred\n");
 }
 
 void set_3d_view_matrix(const float4x4& view) {
@@ -818,7 +804,6 @@ int     _width;
 int     _height;
 
 RendererDeferred    _deferred_renderer;
-RendererForward     _forward_renderer;
 
 };
 
