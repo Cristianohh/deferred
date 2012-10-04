@@ -105,7 +105,7 @@ public:
     static Resource load_mesh(const char* mesh, void* ud);
     static void unload_mesh(Resource resource, void* ud);
 
-    
+protected:
     virtual Resource _load_texture(const char* filename) = 0;
     virtual void _unload_texture(Resource resource) = 0;
     
@@ -114,7 +114,6 @@ public:
 
 private:
     static Render* _create_ogl(void);
-
 };
 
 /* @} */
