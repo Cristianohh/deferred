@@ -475,8 +475,7 @@ Resource _load_dxt_texture(const char* filename) {
     for (uint32_t level = 0; level < mipMapCount && (width || height); ++level)
     {
         uint32_t size = ((width+3)/4)*((height+3)/4)*blockSize;
-        glCompressedTexImage2D(GL_TEXTURE_2D, level, format, width, height, 
-            0, size, buffer + offset);
+        glCompressedTexImage2D(GL_TEXTURE_2D, level, format, width, height, 0, size, buffer + offset);
      
         offset += size;
         width  /= 2;
