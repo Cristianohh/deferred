@@ -230,7 +230,7 @@ void render(void) {
 
     float4x4 view = _3d_view;
     float4x4 proj = _perspective_projection;
-    { // Draw shadow map
+    if(0) { // Draw shadow map
         float4x4 inv_view = float4x4inverse(&view);
         float4x4 view_proj = float4x4multiply(&inv_view, &proj);
         glDrawBuffer(GL_NONE);
@@ -295,7 +295,7 @@ void resize(int width, int height) {
     _height = height;
     glViewport(0, 0, width, height);
     _orthographic_projection = float4x4OrthographicOffCenterLH(0, (float)width, (float)height, 0, 0.0f, 1.0f);
-    _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 1.0f, 10000.0f);
+    _perspective_projection = float4x4PerspectiveFovLH(DegToRad(50.0f), width/(float)height, 0.1f, 10000.0f);
 
     // Resize render targets
     _resize_framebuffer();

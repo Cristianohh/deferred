@@ -16,7 +16,7 @@
 //  [2] RGB: Spec Color A: Spec exponent
 //  [3] R: Depth
 
-#define SHADOW_MAP_RES 2048
+#define SHADOW_MAP_RES 4096
 
 class RendererDeferred : public Renderer {
 public:
@@ -215,8 +215,9 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float4x4 shadow_proj;
+        const float kShadowMapSize = 80.0f;
         if(lights[0].type == kDirectionalLight)
-            shadow_proj = float4x4OrthographicOffCenterLH(-40.0f, 40.0f, 40.0f, -40.0f, -30.0f, 30.0f);
+            shadow_proj = float4x4OrthographicOffCenterLH(-kShadowMapSize, kShadowMapSize, kShadowMapSize, -kShadowMapSize, -30.0f, 30.0f);
         else if(lights[0].type == kSpotLight)
             shadow_proj = float4x4OrthographicOffCenterLH(-40.0f, 40.0f, 40.0f, -40.0f, -30.0f, 30.0f);
         float3 look = lights[0].dir;
@@ -304,8 +305,8 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
                 transform.r3.y = light.pos.y;
                 transform.r3.z = light.pos.z;
 
-                float3 v = float3subtract((float3*)&transform.r3, (float3*)&light.pos);
-                if(float3lengthSq(&v) < light.size*light.size) {
+                float3 v = float3subtract((float3*)&transform.r3, (float3*)&view.r3);
+                if(float3lengthSq(&v) < (light.size*light.size)) {
                     glCullFace(GL_FRONT);
                 }
                 glUniformMatrix4fv(_light_world_uniform, 1, GL_FALSE, (float*)&transform);

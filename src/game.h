@@ -34,6 +34,8 @@ private:
     int         _frame_count;
     float       _delta_time;
 
+    EntityID    _sun_id;
+
     Transform   _camera;
 
     ResourceManager _resource_manager;

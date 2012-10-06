@@ -226,15 +226,15 @@ void Game::initialize(void) {
     light.type = kDirectionalLight;
 
     transform = TransformZero();
-    transform.orientation = quaternionFromEuler(DegToRad(90.0f), 0.0f, 0.0f);
+    transform.orientation = quaternionFromEuler(DegToRad(90.0f), DegToRad(60.0f), 0.0f);
     transform.position = light.pos;
 
-    id = _world.create_entity();
-    _world.entity(id)->set_transform(transform)
-                     ->add_component(LightComponent(light));
+    _sun_id = _world.create_entity();
+    _world.entity(_sun_id)->set_transform(transform)
+                          ->add_component(LightComponent(light));
 
     transform = TransformZero();
-    for(int ii=1;ii<0;++ii) {
+    for(int ii=1;ii<MAX_LIGHTS;++ii) {
         light.pos.x = _rand_float(-50.0f, 50.0f);
         light.pos.y = _rand_float(1.0f, 4.0f);
         light.pos.z = _rand_float(-50.0f, 50.0f);
@@ -297,6 +297,15 @@ int Game::on_frame(void) {
     _delta_time = (float)timer_delta_time(&_timer);
     update_fps(&_fps, _delta_time);
 
+    float3 xaxis = {1.0f, 0.0f, 0.0f};
+    quaternion q = quaternionFromAxisAngle(&xaxis, _delta_time*0.25f);
+    Transform t = _world.entity(_sun_id)->transform();
+    t.orientation = quaternionMultiply(&q, &t.orientation);
+    _world.entity(_sun_id)->set_transform(t);
+    if(quaternionGetZAxis(&t.orientation).y > 0.0f && 0)
+        _world.entity(_sun_id)->deactivate_component(kLightComponent);
+    else
+        _world.entity(_sun_id)->activate_component(kLightComponent);
 
     // Frame
     _control_camera(delta_x, delta_y);
