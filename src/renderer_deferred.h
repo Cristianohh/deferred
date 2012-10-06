@@ -281,7 +281,6 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
             0.0, 0.0, 0.5, 0.0,
             0.5, 0.5, 0.5, 1.0
         };
-        //float4x4 shadow_viewproj = float4x4multiply(&bias, &shadow_vp);
         float4x4 shadow_viewproj = float4x4multiply(&shadow_vp, &bias);
         glUniformMatrix4fv(_light_shadow_viewproj_uniform, 1, GL_FALSE, (float*)&shadow_viewproj);
         glActiveTexture(GL_TEXTURE4);

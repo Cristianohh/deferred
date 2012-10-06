@@ -137,7 +137,7 @@ RenderGL()
     , _debug(0)
     , _num_renderables(0)
 {
-    _light_buffer.num_lights = 0;
+    _num_lights = 0;
 }
 ~RenderGL() {
 }
@@ -255,7 +255,7 @@ void render(void) {
 
     _deferred_renderer.render(view, proj, _frame_buffer,
                               _renderables, _num_renderables,
-                              _light_buffer.lights, _light_buffer.num_lights);
+                              _lights, _num_lights);
 
     // Render the scene from the render target
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -288,7 +288,7 @@ void render(void) {
     }
 
     _num_renderables = 0;
-    _light_buffer.num_lights = 0;
+    _num_lights = 0;
 }
 void resize(int width, int height) {
     _width = width;
@@ -358,8 +358,8 @@ void draw_3d(Resource mesh, const Material* material, const float4x4& transform)
     _num_renderables++;
 }
 void draw_light(const Light& light) {
-    int index = _light_buffer.num_lights++;
-    _light_buffer.lights[index] = light;
+    int index = _num_lights++;
+    _lights[index] = light;
 }
 Resource _load_texture(const char* filename) {
     int width, height, components;
@@ -811,7 +811,8 @@ float4x4    _2d_view;
 Renderable  _renderables[kMAX_RENDER_COMMANDS];
 int         _num_renderables;
 
-LightBuffer _light_buffer;
+Light       _lights[MAX_LIGHTS];
+int         _num_lights;
 
 int _debug;
 int _deferred;

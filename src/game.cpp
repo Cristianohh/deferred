@@ -149,17 +149,27 @@ void Game::initialize(void) {
         { { 0.5f,  0.0f, -0.5f}, { 0.0f,  1.0f,  0.0f}, {10.0f, 10.0f} },
         { { 0.5f,  0.0f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {10.0f, 0.0f} },
         { {-0.5f,  0.0f,  0.5f}, { 0.0f,  1.0f,  0.0f}, {0.0f, 0.0f} },
+        /* Bottom */
+        { {-0.5f,  0.0f, -0.5f}, { 0.0f,  -1.0f,  0.0f}, {0.0f, 10.0f} },
+        { { 0.5f,  0.0f, -0.5f}, { 0.0f,  -1.0f,  0.0f}, {10.0f, 10.0f} },
+        { { 0.5f,  0.0f,  0.5f}, { 0.0f,  -1.0f,  0.0f}, {10.0f, 0.0f} },
+        { {-0.5f,  0.0f,  0.5f}, { 0.0f,  -1.0f,  0.0f}, {0.0f, 0.0f} },
     };
     const unsigned short ground_indices[] =
     {
         3,1,0,
         2,1,3,
+        3,0,1,
+        2,3,1,
     };
+    assert(ground_indices && ground_vertices);
 
     Transform transform = TransformZero();
-    transform.scale = 100.0f;
+    transform.scale = 100000.0f;
+    transform.position.y = -100000.0f;
     RenderData render_data = {0};
-    render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
+    //render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
+    render_data.mesh = _render->sphere_mesh();
     render_data.material = grass_material;
 
     EntityID id = _world.create_entity();
@@ -171,7 +181,7 @@ void Game::initialize(void) {
         transform = TransformZero();
         transform.scale = _rand_float(0.5f, 5.0f);
         transform.position.x = _rand_float(-50.0f, 50.0f);
-        transform.position.y = _rand_float(0.5f, 5.0f);
+        transform.position.y = _rand_float(3.0f, 7.5f);
         transform.position.z = _rand_float(-50.0f, 50.0f);
         float3 axis = { _rand_float(-3.0f, 3.0f), _rand_float(-3.0f, 3.0f), _rand_float(-3.0f, 3.0f) };
         transform.orientation = quaternionFromAxisAngle(&axis, _rand_float(0.0f, kPi));
@@ -221,8 +231,7 @@ void Game::initialize(void) {
     light.color.x = 1.0f;
     light.color.y = 1.0f;
     light.color.z = 1.0f;
-    light.inner_cos = cosf(DegToRad(60.0f/2));
-    light.outer_cos = cosf(DegToRad(70.0f/2));
+    light.inner_cos = 0.1f;
     light.type = kDirectionalLight;
 
     transform = TransformZero();
@@ -298,14 +307,15 @@ int Game::on_frame(void) {
     update_fps(&_fps, _delta_time);
 
     float3 xaxis = {1.0f, 0.0f, 0.0f};
-    quaternion q = quaternionFromAxisAngle(&xaxis, _delta_time*0.25f);
+    quaternion q = quaternionFromAxisAngle(&xaxis, _delta_time*0.15f);
     Transform t = _world.entity(_sun_id)->transform();
     t.orientation = quaternionMultiply(&q, &t.orientation);
     _world.entity(_sun_id)->set_transform(t);
-    if(quaternionGetZAxis(&t.orientation).y > 0.0f && 0)
-        _world.entity(_sun_id)->deactivate_component(kLightComponent);
-    else
-        _world.entity(_sun_id)->activate_component(kLightComponent);
+    if(quaternionGetZAxis(&t.orientation).y > 0.0f) {
+        //_world.entity(_sun_id)->deactivate_component(kLightComponent);
+    } else {
+        //_world.entity(_sun_id)->activate_component(kLightComponent);
+    }
 
     // Frame
     _control_camera(delta_x, delta_y);

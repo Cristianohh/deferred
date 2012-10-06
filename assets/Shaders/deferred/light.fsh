@@ -127,7 +127,7 @@ void main()
     // Only add ambient to directional lights
     // In the future, AO/GI/better lighting will handle the ambient
     if(light_type == kDirectionalLight) {
-        color = color*0.7f + albedo*0.3f*light_color;
+        color = color*(1.0f-light.inner_cos) + albedo*light.inner_cos*light_color;
     }
     out_Color = vec4(color, 1.0f);
 }
