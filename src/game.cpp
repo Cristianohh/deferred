@@ -165,11 +165,12 @@ void Game::initialize(void) {
     assert(ground_indices && ground_vertices);
 
     Transform transform = TransformZero();
-    transform.scale = 100000.0f;
+    transform.scale = 100.0f;
     transform.position.y = -100000.0f;
+    transform.position.y = 0.0f;
     RenderData render_data = {0};
-    //render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
-    render_data.mesh = _render->sphere_mesh();
+    render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
+    //render_data.mesh = _render->sphere_mesh();
     render_data.material = grass_material;
 
     EntityID id = _world.create_entity();
