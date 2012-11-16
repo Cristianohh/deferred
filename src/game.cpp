@@ -197,8 +197,8 @@ void Game::initialize(void) {
         int material = rand()%3;
         render_data.material = materials[material];
         id = _world.create_entity();
-        _world.entity(id)->set_transform(transform)
-                         ->add_component(RenderComponent(render_data));
+        _world.entity(id)->set_transform(transform);
+                         //->add_component(RenderComponent(render_data));
     }
 
     Material house_material =
@@ -217,8 +217,8 @@ void Game::initialize(void) {
     render_data.mesh = _resource_manager.get_resource("assets/house_obj.obj");
     render_data.material = house_material;
     id = _world.create_entity();
-    _world.entity(id)->set_transform(transform)
-                     ->add_component(RenderComponent(render_data));
+    _world.entity(id)->set_transform(transform);
+                     //->add_component(RenderComponent(render_data));
 
     // Add a "sun"
     Light light;
@@ -311,7 +311,7 @@ int Game::on_frame(void) {
     quaternion q = quaternionFromAxisAngle(&xaxis, _delta_time*0.15f);
     Transform t = _world.entity(_sun_id)->transform();
     t.orientation = quaternionMultiply(&q, &t.orientation);
-    _world.entity(_sun_id)->set_transform(t);
+    //_world.entity(_sun_id)->set_transform(t);
     if(quaternionGetZAxis(&t.orientation).y > 0.0f) {
         //_world.entity(_sun_id)->deactivate_component(kLightComponent);
     } else {
