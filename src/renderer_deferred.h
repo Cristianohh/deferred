@@ -215,7 +215,7 @@ void render(const float4x4& view, const float4x4& proj, GLuint frame_buffer,
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float4x4 shadow_proj;
-        const float kShadowMapSize = 80.0f;
+        const float kShadowMapSize = 30.0f;
         if(lights[0].type == kDirectionalLight)
             shadow_proj = float4x4OrthographicOffCenterLH(-kShadowMapSize, kShadowMapSize, kShadowMapSize, -kShadowMapSize, -30.0f, 30.0f);
         else if(lights[0].type == kSpotLight)

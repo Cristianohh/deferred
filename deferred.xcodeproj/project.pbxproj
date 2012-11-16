@@ -25,6 +25,7 @@
 		27ADE8AE16027ACD00D888DE /* unit_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27ADE8AC16027ACD00D888DE /* unit_test.cpp */; };
 		27ADE8B016027B1E00D888DE /* application_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27ADE8AF16027B1E00D888DE /* application_test.cpp */; };
 		27B5E1651602DFE900C0ECC0 /* fps.c in Sources */ = {isa = PBXBuildFile; fileRef = 27B5E1631602DFE900C0ECC0 /* fps.c */; };
+		27B8A9061656FA380015C9AE /* perlin_noise.c in Sources */ = {isa = PBXBuildFile; fileRef = 27B8A9041656FA380015C9AE /* perlin_noise.c */; };
 		27B91CCC16564B740075652E /* marching_cubes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27B91CCA16564B740075652E /* marching_cubes.cpp */; };
 		27CF508816027C57009DBE5A /* unit_test_test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 27CF508716027C57009DBE5A /* unit_test_test.cpp */; };
 		27CF508B16027CE0009DBE5A /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27CF508A16027CE0009DBE5A /* OpenGL.framework */; };
@@ -74,6 +75,8 @@
 		27ADE8AF16027B1E00D888DE /* application_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = application_test.cpp; sourceTree = "<group>"; };
 		27B5E1631602DFE900C0ECC0 /* fps.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fps.c; sourceTree = "<group>"; };
 		27B5E1641602DFE900C0ECC0 /* fps.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fps.h; sourceTree = "<group>"; };
+		27B8A9041656FA380015C9AE /* perlin_noise.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = perlin_noise.c; sourceTree = "<group>"; };
+		27B8A9051656FA380015C9AE /* perlin_noise.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = perlin_noise.h; sourceTree = "<group>"; };
 		27B91CCA16564B740075652E /* marching_cubes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = marching_cubes.cpp; sourceTree = "<group>"; };
 		27B91CCB16564B740075652E /* marching_cubes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = marching_cubes.h; sourceTree = "<group>"; };
 		27CF508716027C57009DBE5A /* unit_test_test.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unit_test_test.cpp; sourceTree = "<group>"; };
@@ -171,6 +174,8 @@
 				273AB3E316026C5F007C7682 /* macosx */,
 				27B91CCA16564B740075652E /* marching_cubes.cpp */,
 				27B91CCB16564B740075652E /* marching_cubes.h */,
+				27B8A9041656FA380015C9AE /* perlin_noise.c */,
+				27B8A9051656FA380015C9AE /* perlin_noise.h */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -323,6 +328,7 @@
 				27317FF516159A6600659EDF /* world.cpp in Sources */,
 				2731800316159A7B00659EDF /* world_test.cpp in Sources */,
 				27B91CCC16564B740075652E /* marching_cubes.cpp in Sources */,
+				27B8A9061656FA380015C9AE /* perlin_noise.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
