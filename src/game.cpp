@@ -57,7 +57,7 @@ float terrain_func(float3 v) {
     float density = -v.y;
     //return -v.y + cosf(v.x) + sinf(v.z) + (float)noise(v.x, v.z);
     density += (float)noise(v.x, v.y, v.z);
-    density += (float)noise(v.x*2, v.y*2, v.z*2) * 0.5f;
+    //density += (float)noise(v.x*2, v.y*2, v.z*2) * 0.5f;
     //return v.x*v.x + v.y*v.y + v.z*v.z;
     return density;
 }
@@ -110,7 +110,7 @@ Game::Game()
     _fps.frame = 0;
     _camera = TransformZero();
     //_camera.position.z = -60.0f;
-    //_camera.position.y = 15.0f;
+    _camera.position.y = 5.0f;
     float3 axis = {1.0f, 0.0f, 0.0f};
     _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
 }

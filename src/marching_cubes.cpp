@@ -414,7 +414,7 @@ int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5])
 }
 void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& vertices, std::vector<uint32_t>& indices) {
     static const float size = 10.0f;
-    static const float granularity = 0.125f;
+    static const float granularity = 0.0625f;
     static const float gran_div_2 = granularity * 0.5f;
     uint32_t vtx_index = 0;
     float x, y, z;

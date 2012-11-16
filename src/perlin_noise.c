@@ -5,6 +5,7 @@
  */
 #include "perlin_noise.h"
 
+#include <stdint.h>
 #include <math.h>
 
 /*
@@ -41,9 +42,10 @@ static int permutation[] = {
 float noise(float x, float y, float z) {
     static int init = 0;
     if(init == 0) {
+        const uint8_t seed = 153;
         int i;
         for(i=0; i < 256 ; i++)
-            p[256+i] = p[i] = permutation[i];
+            p[256+i] = p[i] = permutation[i] ^ seed;
         init = 1;
         return noise(x,y,z);
     } else {
