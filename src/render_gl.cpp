@@ -211,6 +211,7 @@ void initialize(void* window) {
     glFrontFace(GL_CW);
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
+    //glDisable(GL_CULL_FACE);
 
     _create_framebuffer();
 

@@ -413,42 +413,51 @@ int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5])
     return(ntriang);
 }
 void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& vertices, std::vector<uint32_t>& indices) {
+    static const float size = 10.0f;
+    static const float granularity = 0.125f;
+    static const float gran_div_2 = granularity * 0.5f;
     uint32_t vtx_index = 0;
     float x, y, z;
-    for(x=-99.5f;x<100.0f;x += 1.0f) {
-        for(y=-99.5f;y<100.0f;y += 1.0f) {
-            for(z=-99.5f;z<100.0f;z += 1.0f) {
+    for(x=-size;x<=size;x += granularity) {
+        for(y=-size;y<=size;y += granularity) {
+            for(z=-size;z<=size;z += granularity) {
                 gridcell_t cell;
                 int ii = 0;
-                for(float xx=x-0.5f; xx < x+0.5f; xx += 1.0f) {
-                    for(float yy=y-0.5f; yy < y+0.5f; yy += 1.0f) {
-                        for(float zz=z-0.5f; zz < z+0.5f; zz += 1.0f) {
-                            cell.p[ii].x = xx;
-                            cell.p[ii].y = yy;
-                            cell.p[ii].z = zz;
-                            ++ii;
-                        }
+                float xx = x-gran_div_2;
+                float xadder = granularity;
+                for(float yy=y-gran_div_2; yy <= y+gran_div_2; yy += granularity) {
+                    for(float zz=z-gran_div_2; zz <= z+gran_div_2; zz += granularity) {
+                        cell.p[ii].x = xx;
+                        cell.p[ii].y = yy;
+                        cell.p[ii].z = zz;
+                        ++ii;
+                        xx += xadder;
+                        cell.p[ii].x = xx;
+                        cell.p[ii].y = yy;
+                        cell.p[ii].z = zz;
+                        ++ii;
+                        xadder *= -1.0f;
                     }
                 }
                 for(ii=0;ii<8;++ii) {
                     cell.val[ii] = function(cell.p[ii]);
                 }
-
                 triangle_t triangles[5];
                 int num_triangles = Polygonise(cell, 0.0f, triangles);
                 for(ii=0;ii<num_triangles;++ii) {
                     triangle_t tri = triangles[ii];
                     float3 norm;
-                    float3 edge0 = float3subtract(&tri.p[0], &tri.p[1]);
-                    float3 edge1 = float3subtract(&tri.p[0], &tri.p[2]);
-                    norm = float3cross(&edge0, &edge1);
+                    float3 edge0 = float3subtract(&tri.p[1], &tri.p[0]);
+                    float3 edge1 = float3subtract(&tri.p[2], &tri.p[0]);
+                    norm = float3cross(&edge1, &edge0);
                     norm = float3normalize(&norm);
 
-                    for(int jj=0; jj<3; ++jj) {
+                    for(int jj=2; jj>=0; --jj) {
+                        float2 tex = {tri.p[jj].x, tri.p[jj].z};
                         VtxPosNormTex v = {
                             tri.p[jj],
                             norm,
-                            {0.0f, 0.0f}
+                            tex
                         };
                         vertices.push_back(v);
                         indices.push_back(vtx_index++);

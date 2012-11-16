@@ -11,17 +11,55 @@
 #include "assert.h"
 #include "application.h"
 #include "unit_test.h"
+#include "marching_cubes.h"
 
 /*
  * Internal
  */
- namespace {
+namespace {
 
 float _rand_float(float min, float max) {
     float r = rand()/(float)RAND_MAX;
     float delta = max-min;
     r *= delta;
     return r+min;
+}
+inline double interpolate(double a,double b,double x)
+{
+    double ft=x * 3.1415927;
+    double f=(1.0-cos(ft))* 0.5;
+    return a*(1.0-f)+b*f;
+}
+
+inline double findnoise2(double x,double y)
+{
+    int n=(int)x+(int)y*57;
+    n=(n<<13)^n;
+    int nn=(n*(n*n*60493+19990303)+1376312589)&0x7fffffff;
+    return 1.0-((double)nn/1073741824.0);
+}
+double noise(double x,double y)
+{
+    double floorx=(double)((int)x);//This is kinda a cheap way to floor a double integer.
+    double floory=(double)((int)y);
+    double s,t,u,v;//Integer declaration
+    s=findnoise2(floorx,floory);
+    t=findnoise2(floorx+1,floory);
+    u=findnoise2(floorx,floory+1);//Get the surrounding pixels to calculate the transition.
+    v=findnoise2(floorx+1,floory+1);
+    double int1=interpolate(s,t,x-floorx);//Interpolate between the values.
+    double int2=interpolate(u,v,x-floorx);//Here we use x-floorx, to get 1st dimension. Don't mind the x-floorx thingie, it's part of the cosine formula.
+    return interpolate(int1,int2,y-floory);//Here we use y-floory, to get the 2nd dimension.
+}
+
+float terrain_func(float3 v) {
+    float density = -v.y;
+    //return -v.y + cosf(v.x) + sinf(v.z) + (float)noise(v.x, v.z);
+    density += (float)noise(v.x*4.03f, v.z*4.03f) * 0.25f;
+    density += (float)noise(v.x*1.96f, v.z*1.96f) * 0.5f;
+    density += (float)noise(v.x*1.01f, v.z*1.01f);
+    //return v.x*v.x + v.y*v.y + v.z*v.z;
+    return -v.y;
 }
 
 struct RenderData {
@@ -71,8 +109,8 @@ Game::Game()
 {
     _fps.frame = 0;
     _camera = TransformZero();
-    _camera.position.z = -60.0f;
-    _camera.position.y = 15.0f;
+    //_camera.position.z = -60.0f;
+    //_camera.position.y = 15.0f;
     float3 axis = {1.0f, 0.0f, 0.0f};
     _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
 }
@@ -165,12 +203,16 @@ void Game::initialize(void) {
     assert(ground_indices && ground_vertices);
 
     Transform transform = TransformZero();
-    transform.scale = 100.0f;
+    transform.scale = 1.0f;
     transform.position.y = -100000.0f;
     transform.position.y = 0.0f;
     RenderData render_data = {0};
-    render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
+    //render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
     //render_data.mesh = _render->sphere_mesh();
+    std::vector<VtxPosNormTex>  terrain_verts;
+    std::vector<uint32_t>       terrain_indices;
+    generate_terrain(terrain_func, terrain_verts, terrain_indices);
+    render_data.mesh = _render->create_mesh((uint32_t)terrain_verts.size(), kVtxPosNormTex, (uint32_t)terrain_indices.size(), sizeof(uint32_t), terrain_verts.data(), terrain_indices.data());
     render_data.material = grass_material;
 
     EntityID id = _world.create_entity();
@@ -236,7 +278,7 @@ void Game::initialize(void) {
     light.type = kDirectionalLight;
 
     transform = TransformZero();
-    transform.orientation = quaternionFromEuler(DegToRad(90.0f), DegToRad(60.0f), 0.0f);
+    transform.orientation = quaternionFromEuler(DegToRad(30.0f), DegToRad(60.0f), 0.0f);
     transform.position = light.pos;
 
     _sun_id = _world.create_entity();
@@ -256,8 +298,8 @@ void Game::initialize(void) {
 
         transform.position = light.pos;
         id = _world.create_entity();
-        _world.entity(id)->set_transform(transform)
-                         ->add_component(LightComponent(light));
+        _world.entity(id)->set_transform(transform);
+                         //->add_component(LightComponent(light));
     }
 }
 void Game::shutdown(void) {
