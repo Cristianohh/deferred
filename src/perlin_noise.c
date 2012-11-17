@@ -64,7 +64,7 @@ static __inline float grad(int hash, float x, float y, float z) {
     v = h<4 ? y : h==12||h==14 ? x : z;
     return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
-static __inline __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) {
+static __inline __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
     float x[4] ALIGN(16);
     float y[4] ALIGN(16);
     float z[4] ALIGN(16);
@@ -75,7 +75,7 @@ static __inline __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) 
     _mm_store_ps(x, vx);
     _mm_store_ps(y, vy);
     _mm_store_ps(z, vz);
-    _mm_store_si128((__m128i*)hash, vhash);
+    _mm_store_si128((__m128i*)hash, _mm_cvtps_epi32(vhash));
 
     for(ii=0; ii<4; ++ii) {
         int h = hash[ii] & 15;                      // CONVERT LO 4 BITS OF HASH CODE
@@ -85,7 +85,7 @@ static __inline __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) 
     }
     return _mm_load_ps(r);
 }
-static __inline __m256 grad_avx(__m256i vhash, __m256 vx, __m256 vy, __m256 vz) {
+static __inline __m256 grad_avx(__m256 vhash, __m256 vx, __m256 vy, __m256 vz) {
     float x[8] ALIGN(32);
     float y[8] ALIGN(32);
     float z[8] ALIGN(32);
@@ -96,7 +96,7 @@ static __inline __m256 grad_avx(__m256i vhash, __m256 vx, __m256 vy, __m256 vz) 
     _mm256_store_ps(x, vx);
     _mm256_store_ps(y, vy);
     _mm256_store_ps(z, vz);
-    _mm256_store_si256((__m256i*)hash, vhash);
+    _mm256_store_si256((__m256i*)hash, _mm256_cvtps_epi32(vhash));
 
     for(ii=0; ii<8; ++ii) {
         int h = hash[ii] & 15;                      // CONVERT LO 4 BITS OF HASH CODE
@@ -133,15 +133,23 @@ static int32_t _pp[512] = {
     107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
     138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
 };
-/*static __inline int32_t _p(int index) {
-    return _pp[index];
-}*/
-#define _p(mask, i) ((mask) ^ _pp[(int)(i) & 255])
+static __inline int32_t _p(uint32_t mask, int index) {
+    int32_t val = _pp[(int)(index) & 255];
+    int32_t t = (mask ^ val);
+    return t;
+}
+/*#define _p(mask, i) ((mask) ^ _pp[(int)(i) & 255])*/
 static __inline __m128 _p_sse(__m128 mask, __m128 v) {
     __m128i v255 = _mm_set1_epi32(255);
-    int i[4] ALIGN(16);
-    _mm_store_si128((__m128i*)i, _mm_and_ps(v255, _mm_cvtps_epi32(v)));
-    return _mm_cvtepi32_ps(_mm_xor_ps(mask,_mm_set_epi32(_pp[i[0]], _pp[i[1]], _pp[i[2]], _pp[i[3]])));
+    __m128i vval;
+    __m128i vt;
+    int index[4] ALIGN(16);
+    
+    _mm_store_si128((__m128i*)index, _mm_and_ps(v255, _mm_cvtps_epi32(v)));
+    
+    vval = _mm_set_epi32(_pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
+    vt = _mm_xor_ps(mask, vval);
+    return _mm_cvtepi32_ps(vt);    
 }
 static __inline __m256 _p_avx(__m256 mask, __m256 v) {
     __m256i v255 = _mm256_set1_epi32(255);
