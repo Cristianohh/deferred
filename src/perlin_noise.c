@@ -135,11 +135,6 @@ static int32_t _pp[512] = {
     107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
     138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
 };
-/*static __inline int32_t _p(uint32_t mask, int index) {
-    int32_t val = _pp[(int)(index) & 255];
-    int32_t t = (mask ^ val);
-    return t;
-}*/
 #define _p(mask, i) ((mask) ^ _pp[(int)(i) & 255])
 static __m128 _p_sse(__m128 mask, __m128 v) {
     __m128i v255 = _mm_set1_epi32(255);
@@ -200,7 +195,7 @@ float noise(uint32_t seed, float x, float y, float z) {
                            lerp(u, grad(_p(seed, AB+1), x  , y-1, z-1 ),
                                    grad(_p(seed, BB+1), x-1, y-1, z-1 ))));
 }
-void noisev(uint32_t seed, const float* x, const float* y, const float* z, float* n, int count) {
+void noisev(uint32_t seed, __restrict const float* x, __restrict const float* y, __restrict const float* z, __restrict float* n, int count) {
     int ii;
     //
     // Scalar

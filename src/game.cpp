@@ -233,12 +233,15 @@ void Game::initialize(void) {
     terrain_indices.reserve(1000000);
     float3 min = {-10.0f, -10.0f, -10.0f};
     float3 max = { 10.0f,  10.0f,  10.0f};
+    timer_reset(&_timer);
     generate_terrain_points(terrain_func, min, max, 0.25f, verts);
-    debug_output("Num raw Vertices: %d\n", verts.size());
+    debug_output("Time: %f\tNum raw Vertices: %d\n", timer_delta_time(&_timer), verts.size());
+    timer_reset(&_timer);
     smooth_terrain(verts, terrain_verts, terrain_indices);
     //generate_terrain(terrain_func, terrain_verts, terrain_indices);
-    debug_output("Num Terrain Vertices: %d\n", terrain_verts.size());
+    debug_output("time: %f, Num Terrain Vertices: %d\n", timer_delta_time(&_timer), terrain_verts.size());
     debug_output("Num Terrain indices: %d\n", terrain_indices.size());
+    timer_reset(&_timer);
     render_data.mesh = _render->create_mesh((uint32_t)terrain_verts.size(), kVtxPosNormTex, (uint32_t)terrain_indices.size(), sizeof(uint32_t), terrain_verts.data(), terrain_indices.data());
     render_data.material = grass_material;
 
