@@ -19,6 +19,7 @@ static Game*    _game = NULL;
 #define CHUNK_SIZE (32)
 
 int on_init(int argc, const char* argv[]) {
+#if 0
     Timer timer;
     float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE], res2[CHUNK_SIZE];
     for(int ii=0; ii<CHUNK_SIZE; ++ii) {
@@ -48,6 +49,7 @@ int on_init(int argc, const char* argv[]) {
     
     exit(0);
     return 1;
+#endif
     _game = new Game();
     _game->initialize();
     return 0;

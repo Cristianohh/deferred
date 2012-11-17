@@ -136,7 +136,7 @@ static int32_t _pp[512] = {
 /*static __inline int32_t _p(int index) {
     return _pp[index];
 }*/
-#define _p(i) _pp[i]
+#define _p(mask, i) (mask ^ _pp[i])
 static __inline __m128i _p_sse(__m128i v) {
     int i[4] ALIGN(16);
     _mm_store_si128((__m128i*)i, v);
@@ -164,17 +164,17 @@ float noise(uint32_t seed, float x, float y, float z) {
     u = fade(x),                                // COMPUTE FADE CURVES
     v = fade(y),                                // FOR EACH OF X,Y,Z.
     w = fade(z);
-    A = (seed^_p(X  ))+Y, AA = (seed^_p(A))+Z, AB = (seed^_p(A+1))+Z,      // HASH COORDINATES OF
-    B = (seed^_p(X+1))+Y, BA = (seed^_p(B))+Z, BB = (seed^_p(B+1))+Z;      // THE 8 CUBE CORNERS,
+    A = (_p(seed, X  ))+Y, AA = (_p(seed, A))+Z, AB = (_p(seed, A+1))+Z,      // HASH COORDINATES OF
+    B = (_p(seed, X+1))+Y, BA = (_p(seed, B))+Z, BB = (_p(seed, B+1))+Z;      // THE 8 CUBE CORNERS,
 
-    return lerp(w, lerp(v, lerp(u, grad(seed ^ _p(AA  ), x  , y  , z   ),  // AND ADD
-                                   grad(seed ^ _p(BA  ), x-1, y  , z   )), // BLENDED
-                           lerp(u, grad(seed ^ _p(AB  ), x  , y-1, z   ),  // RESULTS
-                                   grad(seed ^ _p(BB  ), x-1, y-1, z   ))),// FROM  8
-                   lerp(v, lerp(u, grad(seed ^ _p(AA+1), x  , y  , z-1 ),  // CORNERS
-                                   grad(seed ^ _p(BA+1), x-1, y  , z-1 )), // OF CUBE
-                           lerp(u, grad(seed ^ _p(AB+1), x  , y-1, z-1 ),
-                                   grad(seed ^ _p(BB+1), x-1, y-1, z-1 ))));
+    return lerp(w, lerp(v, lerp(u, grad(_p(seed, AA  ), x  , y  , z   ),  // AND ADD
+                                   grad(_p(seed, BA  ), x-1, y  , z   )), // BLENDED
+                           lerp(u, grad(_p(seed, AB  ), x  , y-1, z   ),  // RESULTS
+                                   grad(_p(seed, BB  ), x-1, y-1, z   ))),// FROM  8
+                   lerp(v, lerp(u, grad(_p(seed, AA+1), x  , y  , z-1 ),  // CORNERS
+                                   grad(_p(seed, BA+1), x-1, y  , z-1 )), // OF CUBE
+                           lerp(u, grad(_p(seed, AB+1), x  , y-1, z-1 ),
+                                   grad(_p(seed, BB+1), x-1, y-1, z-1 ))));
 }
 void noisev(uint32_t seed, const float* x, const float* y, const float* z, float* n, int count) {
     int ii;
@@ -214,6 +214,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     // SSE
     //
 #if 1
+    _mm256_zeroall();
     for(ii=0; ii<count; ii += 4) {
         __m128 vn;
         __m128i vpAA, vpBA, vpAB, vpBB, vpAA1, vpBA1, vpAB1, vpBB1;
@@ -289,6 +290,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     // AVX
     //
 #if 0
+    _mm256_zeroall();
     for(ii=0; ii<count; ii += 4) {
         __m256 vn;
         __m256i vpAA, vpBA, vpAB, vpBB, vpAA1, vpBA1, vpAB1, vpBB1;
