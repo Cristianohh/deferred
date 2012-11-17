@@ -18,10 +18,10 @@
  * Internal
  */
 /* Source: http://mrl.nyu.edu/~perlin/noise/ */
-static float __inline fade(float t) {
+static float fade(float t) {
     return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
 }
-static __inline __m128 fade_sse(__m128 t) {
+static __m128 fade_sse(__m128 t) {
     __m128 v6  = _mm_set1_ps(6.0f);
     __m128 v15 = _mm_set1_ps(15.0f);
     __m128 v10 = _mm_set1_ps(10.0f);
@@ -33,38 +33,38 @@ static __inline __m128 fade_sse(__m128 t) {
     __m128 vt3 = _mm_mul_ps(t, _mm_mul_ps(t, t)); /* t*t*t */
     return _mm_mul_ps(d, vt3);
 }
-static __inline __m256 fade_avx(__m256 t) {
+static __m256 fade_avx(__m256 t) {
     __m256 v6  = _mm256_set1_ps(6.0f);
     __m256 v15 = _mm256_set1_ps(15.0f);
     __m256 v10 = _mm256_set1_ps(10.0f);
 
-    __m256 a = _mm256_mul_ps(t, v6); /* (t * 6.0f) */
+    __m256 a = _mm256_mul_ps(t, v6);  /* (t * 6.0f) */
     __m256 b = _mm256_sub_ps(a, v15); /* (a - 15.0f) */
-    __m256 c = _mm256_mul_ps(t, b); /* (t * b) */
+    __m256 c = _mm256_mul_ps(t, b);   /* (t * b) */
     __m256 d = _mm256_add_ps(c, v10); /* c + 10.0f */
     __m256 vt3 = _mm256_mul_ps(t, _mm256_mul_ps(t, t)); /* t*t*t */
     return _mm256_mul_ps(d, vt3);
 }
-static float __inline lerp(float t, float a, float b) {
+static float lerp(float t, float a, float b) {
     return a + t * (b - a);
 }
-static __inline __m128 lerp_sse(__m128 t, __m128 a, __m128 b) {
+static __m128 lerp_sse(__m128 t, __m128 a, __m128 b) {
     __m128 b_minus_a = _mm_sub_ps(b, a);     /* (b-a) */
     __m128 t_bma = _mm_mul_ps(t, b_minus_a); /* (t*(b-a) */
     return _mm_add_ps(a, t_bma);               /* a + (t*(b-a)) */
 }
-static __inline __m256 lerp_avx(__m256 t, __m256 a, __m256 b) {
+static __m256 lerp_avx(__m256 t, __m256 a, __m256 b) {
     __m256 b_minus_a = _mm256_sub_ps(b, a);     /* (b-a) */
     __m256 t_bma = _mm256_mul_ps(t, b_minus_a); /* (t*(b-a) */
-    return _mm256_add_ps(a, t_bma);               /* a + (t*(b-a)) */
+    return _mm256_add_ps(a, t_bma);             /* a + (t*(b-a)) */
 }
-static __inline float grad(int hash, float x, float y, float z) {
+static float grad(int hash, float x, float y, float z) {
     int h = hash & 15;                      // CONVERT LO 4 BITS OF HASH CODE
-    float u = h<8 ? x : y,                 // INTO 12 GRADIENT DIRECTIONS.
+    float u = h<8 ? x : y,                  // INTO 12 GRADIENT DIRECTIONS.
     v = h<4 ? y : h==12||h==14 ? x : z;
     return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
-static __inline __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
+static __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
     float x[4] ALIGN(16);
     float y[4] ALIGN(16);
     float z[4] ALIGN(16);
@@ -85,7 +85,7 @@ static __inline __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
     }
     return _mm_load_ps(r);
 }
-static __inline __m256 grad_avx(__m256 vhash, __m256 vx, __m256 vy, __m256 vz) {
+static __m256 grad_avx(__m256 vhash, __m256 vx, __m256 vy, __m256 vz) {
     float x[8] ALIGN(32);
     float y[8] ALIGN(32);
     float z[8] ALIGN(32);
@@ -139,7 +139,7 @@ static int32_t _pp[512] = {
     return t;
 }*/
 #define _p(mask, i) ((mask) ^ _pp[(int)(i) & 255])
-static __inline __m128 _p_sse(__m128 mask, __m128 v) {
+static __m128 _p_sse(__m128 mask, __m128 v) {
     __m128i v255 = _mm_set1_epi32(255);
     __m128i vval;
     __m128i vt;
@@ -151,7 +151,7 @@ static __inline __m128 _p_sse(__m128 mask, __m128 v) {
     vt = _mm_xor_ps(mask, vval);
     return _mm_cvtepi32_ps(vt);
 }
-static __inline __m256 _p_avx(__m256 mask, __m256 v) {
+static __m256 _p_avx(__m256 mask, __m256 v) {
     __m256i v255 = _mm256_set1_epi32(255);
     __m256i vval;
     __m256i vt;
@@ -203,31 +203,9 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
 #if 0
     for(ii=0; ii<count; ++ii) {
-        float u, v, w;
-        float x = *xv, y = *yv, z = *zv;
-        int A, AA, AB, B, BA, BB;
-        int X = (int)floorf(x) & 255,                  // FIND UNIT CUBE THAT
-            Y = (int)floorf(y) & 255,                  // CONTAINS POINT.
-            Z = (int)floorf(z) & 255;
-        x -= floorf(x);                                // FIND RELATIVE X,Y,Z
-        y -= floorf(y);                                // OF POINT IN CUBE.
-        z -= floorf(z);
-        u = fade(x),                                // COMPUTE FADE CURVES
-        v = fade(y),                                // FOR EACH OF X,Y,Z.
-        w = fade(z);
-        A = (seed^_p[X  ])+Y, AA = (seed^_p[A])+Z, AB = (seed^_p[A+1])+Z,      // HASH COORDINATES OF
-        B = (seed^_p[X+1])+Y, BA = (seed^_p[B])+Z, BB = (seed^_p[B+1])+Z;      // THE 8 CUBE CORNERS,
-
-        n[ii] = lerp(w, lerp(v, lerp(u, grad(seed ^ _p[AA  ], x  , y  , z   ),  // AND ADD
-                                        grad(seed ^ _p[BA  ], x-1, y  , z   )), // BLENDED
-                                lerp(u, grad(seed ^ _p[AB  ], x  , y-1, z   ),  // RESULTS
-                                        grad(seed ^ _p[BB  ], x-1, y-1, z   ))),// FROM  8
-                        lerp(v, lerp(u, grad(seed ^ _p[AA+1], x  , y  , z-1 ),  // CORNERS
-                                        grad(seed ^ _p[BA+1], x-1, y  , z-1 )), // OF CUBE
-                                lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
-                                        grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
-        ++xv, ++yv, ++zv;
+        n[ii] = noise(seed, x[ii], y[ii], z[ii]);
     }
+    return;
 #endif
 
     //
@@ -302,6 +280,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
                                                     grad_sse(vpBB1, vx1, vy1, vz1 ))));
         _mm_store_ps(n+ii, vn);
     }
+    return;
 #endif
 
     //
@@ -327,9 +306,6 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
         __m256 vY = _mm256_floor_ps(vy);
         __m256 vZ = _mm256_floor_ps(vz);
 
-//        __m256  vX = vfloorx, // int X = (int)floorf(x) & 255,
-//                vY = vfloory, //     Y = (int)floorf(y) & 255,
-//                vZ = vfloorz; //     Z = (int)floorf(z) & 255;
         vx = _mm256_sub_ps(vx, vX); // x -= floorf(x);
         vy = _mm256_sub_ps(vy, vY); // y -= floorf(y);
         vz = _mm256_sub_ps(vz, vZ); // z -= floorf(z);
