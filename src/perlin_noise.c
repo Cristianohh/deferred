@@ -10,14 +10,18 @@
 #include <immintrin.h>
 #include <smmintrin.h>
 
+#ifdef __GNUC__
+    #define ALIGN(x) __attribute__((aligned(x)))
+#endif
+
 /*
  * Internal
  */
 /* Source: http://mrl.nyu.edu/~perlin/noise/ */
-static float fade(float t) {
+static float __inline fade(float t) {
     return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
 }
-static __m128 fade_sse(__m128 t) {
+static __inline __m128 fade_sse(__m128 t) {
     __m128 v6 = _mm_set1_ps(6.0f);
     __m128 v15 = _mm_set1_ps(15.0f);
     __m128 v10 = _mm_set1_ps(10.0f);
@@ -29,28 +33,26 @@ static __m128 fade_sse(__m128 t) {
     __m128 vt3 = _mm_mul_ps(t, _mm_mul_ps(t, t)); /* t*t*t */
     return _mm_mul_ps(d, vt3);
 }
-static float lerp(float t, float a, float b) {
+static float __inline lerp(float t, float a, float b) {
     return a + t * (b - a);
 }
-static __m128 lerp_sse(__m128 t, __m128 a, __m128 b) {
+static __inline __m128 lerp_sse(__m128 t, __m128 a, __m128 b) {
     __m128 b_minus_a = _mm_sub_ps(b, a);     /* (b-a) */
     __m128 t_bma = _mm_mul_ps(t, b_minus_a); /* (t*(b-a) */
     return _mm_add_ps(a, t_bma);               /* a + (t*(b-a)) */
 }
-static float grad(int hash, float x, float y, float z) {
+static __inline float grad(int hash, float x, float y, float z) {
     int h = hash & 15;                      // CONVERT LO 4 BITS OF HASH CODE
     float u = h<8 ? x : y,                 // INTO 12 GRADIENT DIRECTIONS.
     v = h<4 ? y : h==12||h==14 ? x : z;
     return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
-static __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) {
-    void* m = _mm_malloc(sizeof(uint32_t)*20, 16);
-    float* f = (float*)m;
-    float* x = f + 0;
-    float* y = f + 4;
-    float* z = f + 8;
-    float* r = f + 12;
-    int* hash = (int32_t*)m + 16;
+static __inline __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) {
+    float x[4] ALIGN(16);
+    float y[4] ALIGN(16);
+    float z[4] ALIGN(16);
+    float r[4] ALIGN(16);
+    int hash[4] ALIGN(16);
     int ii;
 
     _mm_store_ps(x, vx);
@@ -66,7 +68,7 @@ static __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) {
     }
     return _mm_load_ps(r);
 }
-static uint8_t _p[512] = {
+static int32_t _pp[512] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
     8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,
     35,11,32,57,177,33,88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,
@@ -93,10 +95,11 @@ static uint8_t _p[512] = {
     107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
     138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
 };
-static __m128i _p_sse(__m128i v) {
+#define _p(i) _pp[i]
+static __inline __m128i _p_sse(__m128i v) {
     int i[4];
     _mm_store_si128((__m128i*)i, v);
-    return _mm_set_epi32(_p[i[0]], _p[i[1]], _p[i[2]], _p[i[3]]);
+    return _mm_set_epi32(_pp[i[0]], _pp[i[1]], _pp[i[2]], _pp[i[3]]);
 }
 
 /*
@@ -114,17 +117,17 @@ float noise(uint32_t seed, float x, float y, float z) {
     u = fade(x),                                // COMPUTE FADE CURVES
     v = fade(y),                                // FOR EACH OF X,Y,Z.
     w = fade(z);
-    A = (seed^_p[X  ])+Y, AA = (seed^_p[A])+Z, AB = (seed^_p[A+1])+Z,      // HASH COORDINATES OF
-    B = (seed^_p[X+1])+Y, BA = (seed^_p[B])+Z, BB = (seed^_p[B+1])+Z;      // THE 8 CUBE CORNERS,
+    A = (seed^_p(X  ))+Y, AA = (seed^_p(A))+Z, AB = (seed^_p(A+1))+Z,      // HASH COORDINATES OF
+    B = (seed^_p(X+1))+Y, BA = (seed^_p(B))+Z, BB = (seed^_p(B+1))+Z;      // THE 8 CUBE CORNERS,
 
-    return lerp(w, lerp(v, lerp(u, grad(seed ^ _p[AA  ], x  , y  , z   ),  // AND ADD
-                                   grad(seed ^ _p[BA  ], x-1, y  , z   )), // BLENDED
-                           lerp(u, grad(seed ^ _p[AB  ], x  , y-1, z   ),  // RESULTS
-                                   grad(seed ^ _p[BB  ], x-1, y-1, z   ))),// FROM  8
-                   lerp(v, lerp(u, grad(seed ^ _p[AA+1], x  , y  , z-1 ),  // CORNERS
-                                   grad(seed ^ _p[BA+1], x-1, y  , z-1 )), // OF CUBE
-                           lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
-                                   grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
+    return lerp(w, lerp(v, lerp(u, grad(seed ^ _p(AA  ), x  , y  , z   ),  // AND ADD
+                                   grad(seed ^ _p(BA  ), x-1, y  , z   )), // BLENDED
+                           lerp(u, grad(seed ^ _p(AB  ), x  , y-1, z   ),  // RESULTS
+                                   grad(seed ^ _p(BB  ), x-1, y-1, z   ))),// FROM  8
+                   lerp(v, lerp(u, grad(seed ^ _p(AA+1), x  , y  , z-1 ),  // CORNERS
+                                   grad(seed ^ _p(BA+1), x-1, y  , z-1 )), // OF CUBE
+                           lerp(u, grad(seed ^ _p(AB+1), x  , y-1, z-1 ),
+                                   grad(seed ^ _p(BB+1), x-1, y-1, z-1 ))));
 }
 void noisev(uint32_t seed, const float* x, const float* y, const float* z, float* n, int count) {
     int ii;
@@ -201,10 +204,10 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
         vBA = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(                  vB )), vZ); // BA = (seed^_p[B  ])+Z;
         vBB = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(_mm_add_epi32(v1, vB))), vZ); // BB = (seed^_p[B+1])+Z;
 
-        vpAA = _p_sse(vAA);
-        vpBA = _p_sse(vBA);
-        vpAB = _p_sse(vAB);
-        vpBB = _p_sse(vBB);
+        vpAA  = _p_sse(vAA);
+        vpBA  = _p_sse(vBA);
+        vpAB  = _p_sse(vAB);
+        vpBB  = _p_sse(vBB);
         vpAA1 = _p_sse(_mm_add_epi32(v1, vAA));
         vpBA1 = _p_sse(_mm_add_epi32(v1, vBA));
         vpAB1 = _p_sse(_mm_add_epi32(v1, vAB));
@@ -214,12 +217,12 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
         vy1 = _mm_sub_ps(vy, v1f);
         vz1 = _mm_sub_ps(vz, v1f);
 
-        //n[ii] = lerp(w, lerp(v, lerp(u, grad(seed ^ _p[AA  ], x  , y  , z   ),  
-        //                                grad(seed ^ _p[BA  ], x-1, y  , z   )), 
-        //                        lerp(u, grad(seed ^ _p[AB  ], x  , y-1, z   ),  
+        //n[ii] = lerp(w, lerp(v, lerp(u, grad(seed ^ _p[AA  ], x  , y  , z   ),
+        //                                grad(seed ^ _p[BA  ], x-1, y  , z   )),
+        //                        lerp(u, grad(seed ^ _p[AB  ], x  , y-1, z   ),
         //                                grad(seed ^ _p[BB  ], x-1, y-1, z   ))),
-        //                lerp(v, lerp(u, grad(seed ^ _p[AA+1], x  , y  , z-1 ),  
-        //                                grad(seed ^ _p[BA+1], x-1, y  , z-1 )), 
+        //                lerp(v, lerp(u, grad(seed ^ _p[AA+1], x  , y  , z-1 ),
+        //                                grad(seed ^ _p[BA+1], x-1, y  , z-1 )),
         //                        lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
         //                                grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
 

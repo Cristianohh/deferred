@@ -15,7 +15,7 @@
 
 static Game*    _game = NULL;
 
-#define TOTAL_NUM_NUMBERS (1024*1024)
+#define TOTAL_NUM_NUMBERS (1024*1024*8)
 #define CHUNK_SIZE (32)
 
 int on_init(int argc, const char* argv[]) {
@@ -45,11 +45,6 @@ int on_init(int argc, const char* argv[]) {
     }
     delta_time = timer_delta_time(&timer);
     debug_output("Fast time: %f\n", delta_time);
-
-    // Sanity check
-    for(int ii=0; ii<CHUNK_SIZE; ++ii) {
-        debug_output("R: %f\n", res2[ii]-res[ii]);
-    }
     
     exit(0);
     return 1;
