@@ -481,51 +481,12 @@ void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& verti
     }
 }
 void generate_terrain_points(density_func_t function, float3 min, float3 max, float granularity, std::vector<float3>& vertices) {
-    
     const float inv_gran = 1.0f/granularity;
     // Calculate the grid size
     int32_t x_size = (int32_t)((max.x - min.x) * inv_gran) + 1;
     int32_t y_size = (int32_t)((max.y - min.y) * inv_gran) + 1;
     int32_t z_size = (int32_t)((max.z - min.z) * inv_gran) + 1;
     uint32_t grid_size = x_size * y_size * z_size;
-#if 0
-    triangle_t triangles[5];
-    int num_triangles;
-    int ii;
-    gridcell_t cell = {
-        {
-            { -10.0f, -10.0f, -10.0f },
-            {  10.0f, -10.0f, -10.0f },
-            {  10.0f, -10.0f,  10.0f },
-            { -10.0f, -10.0f,  10.0f },
-
-            { -10.0f,  10.0f, -10.0f },
-            {  10.0f,  10.0f, -10.0f },
-            {  10.0f,  10.0f,  10.0f },
-            { -10.0f,  10.0f,  10.0f },
-        },
-        {
-            1.0f,
-            1.0f,
-            1.0f,
-            1.0f,
-
-            -1.0f,
-            -1.0f,
-            -1.0f,
-            -1.0f,
-        }
-    };
-
-    num_triangles = Polygonise(cell, 0.0f, triangles);
-    for(ii=0;ii<num_triangles;++ii) {
-        triangle_t tri = triangles[ii];
-        for(int jj=2; jj>=0; --jj) {
-            vertices.push_back(tri.p[jj]);
-        }
-    }
-    min.x = function(max) + granularity;
-#elif 1
 
     #define ARRAY_INDEX(_x,_y,_z) ((_z)*x_size*y_size + (_y)*x_size + (_x))
     float4* grid = (float4*)calloc(grid_size, sizeof(float4));
@@ -575,7 +536,6 @@ void generate_terrain_points(density_func_t function, float3 min, float3 max, fl
                 cell.p[ii] = *(float3*)&val;
                 cell.val[ii++] = val.w;
 
-                --grid_size;
                 // Polygonize the cell
                 triangle_t triangles[5];
                 int num_triangles = Polygonise(cell, 0.0f, triangles);
@@ -584,64 +544,11 @@ void generate_terrain_points(density_func_t function, float3 min, float3 max, fl
                     if(degenerate(tri))
                         continue;
                     for(int jj=2; jj>=0; --jj) {
-                        for(int kk=0; kk<3; ++kk) {
-                            if(kk==jj)
-                                continue;
-                            assert(float3equal(&tri.p[kk], &tri.p[jj]) == 0);
-                        }
                         vertices.push_back(tri.p[jj]);
                     }
-//                    for(int jj=0; jj<3; ++jj) {
-//                        vertices.push_back(tri.p[jj]);
-//                    }
                 }
             }
         }
     }
     free(grid);
-#elif 1
-    const float gran_div_2 = granularity * 0.5f;
-    float x, y, z;
-    for(x=min.x; x<=max.x; x += granularity) {
-        for(y=min.y; y<=max.y; y += granularity) {
-            for(z=min.z; z<=max.z; z += granularity) {
-                gridcell_t cell;
-                int ii = 0;
-                float xx = x-gran_div_2;
-                float yy, zz;
-                float xadder = granularity;
-                for(yy=y-gran_div_2; yy <= y+gran_div_2; yy += granularity) {
-                    for(zz=z-gran_div_2; zz <= z+gran_div_2; zz += granularity) {
-                        cell.p[ii].x = xx;
-                        cell.p[ii].y = yy;
-                        cell.p[ii].z = zz;
-                        ++ii;
-                        xx += xadder;
-                        cell.p[ii].x = xx;
-                        cell.p[ii].y = yy;
-                        cell.p[ii].z = zz;
-                        ++ii;
-                        xadder *= -1.0f;
-                    }
-                }
-                for(ii=0;ii<8;++ii) {
-                    cell.val[ii] = function(cell.p[ii]);
-                }
-                //assert(xx != 0.0f && yy != 0.0f && zz != 0.0f);
-                
-                grid_size--;
-                triangle_t triangles[5];
-                int num_triangles = Polygonise(cell, 0.0f, triangles);
-                for(ii=0;ii<num_triangles;++ii) {
-                    triangle_t tri = triangles[ii];
-                    for(int jj=2; jj>=0; --jj) {
-                        vertices.push_back(tri.p[jj]);
-                    }
-                }
-            }
-        }
-    }
-#endif
 }
-
-
