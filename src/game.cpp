@@ -29,7 +29,7 @@ float _rand_float(float min, float max) {
 
 float terrain_func(float3 v) {
     float density = -v.y;
-    density += (float)noise(2, v.x*0.65f, v.y*0.65f, v.z*0.65f) * 2.0f;
+    density += (float)noise(2, v.x*0.125f, v.y*0.125f, v.z*0.125f) * 8.0f;
     density += (float)noise(32, v.x, v.y, v.z);
     density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.5f;
     density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.25f;
@@ -61,7 +61,7 @@ typedef SimpleComponent<LightData, kLightComponent>   LightComponent;
 typedef SimpleSystem<LightData>                        LightSystem;
 
 void smooth_terrain(std::vector<float3>& positions, std::vector<VtxPosNormTex>& vertices, std::vector<uint32_t>& indices) {
-    //std::map<std::pair<float, std::pair<float,float> >, uint32_t> index_map;
+    std::map<std::pair<float, std::pair<float,float> >, uint32_t> index_map;
     for(uint32_t ii=0; ii<positions.size(); ii += 3) {
         triangle_t tri = {
             positions[ii+0],
@@ -75,19 +75,12 @@ void smooth_terrain(std::vector<float3>& positions, std::vector<VtxPosNormTex>& 
         norm = float3cross(&edge0, &edge1);
         norm = float3normalize(&norm);
         for(int jj=0;jj<3;++jj) {
-            int found = 0;
-            //std::pair<float, std::pair<float,float> > check = std::make_pair(tri.p[jj].x, std::make_pair(tri.p[jj].y, tri.p[jj].z));
-            for(uint32_t kk=0;kk<vertices.size();++kk) {
-                //std::map<std::pair<float, std::pair<float,float> >, uint32_t>::iterator iter = index_map.find(check);
-                //if(iter != index_map.end()) { // If we've already added this vertex, add the normal and add to the index list
-                if(float3equal(&vertices[kk].pos, &tri.p[jj])) { // If we've already added this vertex, add the normal and add to the index list
-                    vertices[kk].norm = float3add(&norm, &vertices[kk].norm);
-                    indices.push_back(kk);
-                    found = 1;
-                    break;
-                }
-            }
-            if(found == 0) {
+            std::pair<float, std::pair<float,float> > check = std::make_pair(tri.p[jj].x, std::make_pair(tri.p[jj].y, tri.p[jj].z));
+            std::map<std::pair<float, std::pair<float,float> >, uint32_t>::iterator iter = index_map.find(check);
+            if(iter != index_map.end()) { // If we've already added this vertex, add the normal and add to the index list
+                vertices[iter->second].norm = float3add(&norm, &vertices[iter->second].norm);
+                indices.push_back(iter->second);
+            } else {
                 VtxPosNormTex vtx = {
                     tri.p[jj],
                     norm,
@@ -96,7 +89,7 @@ void smooth_terrain(std::vector<float3>& positions, std::vector<VtxPosNormTex>& 
                 vertices.push_back(vtx);
                 uint32_t index = (uint32_t)vertices.size()-1;
                 indices.push_back(index);
-                //index_map[check] = index;
+                index_map[check] = index;
             }
         }
     }

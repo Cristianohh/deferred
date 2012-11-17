@@ -469,7 +469,7 @@ void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& verti
     }
 }
 void generate_terrain_points(density_func_t function, std::vector<float3>& vertices) {
-static const float size = 5.0f;
+    static const float size = 10.0f;
     static const float granularity = 0.25f;
     static const float gran_div_2 = granularity * 0.5f;
     float x, y, z;
