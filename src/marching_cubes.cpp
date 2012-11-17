@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <vector>
+#include "assert.h"
 
 /*
  * Internal
@@ -34,6 +35,17 @@ static float3 VertexInterp(float isolevel,
     p.z = p1.z + mu * (p2.z - p1.z);
 
     return(p);
+}
+static bool degenerate(triangle_t tri) {
+    for(int ii=0;ii<3;++ii) {
+        for(int jj=0;jj<3;++jj) {
+            if(ii==jj)
+                continue;
+            if(float3equal(&tri.p[ii], &tri.p[jj]))
+                return true;
+        }
+    }
+    return false;
 }
 
 /*
@@ -351,14 +363,14 @@ int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5])
      tells us which vertices are inside of the surface
      */
     cubeindex = 0;
-    if (grid.p[0] < isolevel) cubeindex |= 1;
-    if (grid.p[1].w < isolevel) cubeindex |= 2;
-    if (grid.p[2].w < isolevel) cubeindex |= 4;
-    if (grid.p[3].w < isolevel) cubeindex |= 8;
-    if (grid.p[4].w < isolevel) cubeindex |= 16;
-    if (grid.p[5].w < isolevel) cubeindex |= 32;
-    if (grid.p[6].w < isolevel) cubeindex |= 64;
-    if (grid.p[7].w < isolevel) cubeindex |= 128;
+    if (grid.val[0] <= isolevel) cubeindex |= 1;
+    if (grid.val[1] <= isolevel) cubeindex |= 2;
+    if (grid.val[2] <= isolevel) cubeindex |= 4;
+    if (grid.val[3] <= isolevel) cubeindex |= 8;
+    if (grid.val[4] <= isolevel) cubeindex |= 16;
+    if (grid.val[5] <= isolevel) cubeindex |= 32;
+    if (grid.val[6] <= isolevel) cubeindex |= 64;
+    if (grid.val[7] <= isolevel) cubeindex |= 128;
 
     /* Cube is entirely in/out of the surface */
     if (edgeTable[cubeindex] == 0)
@@ -367,40 +379,40 @@ int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5])
     /* Find the vertices where the surface intersects the cube */
     if (edgeTable[cubeindex] & 1)
         vertlist[0] =
-        VertexInterp(isolevel,grid.p[0],grid.p[1],grid.p[0].w,grid.p[1].w);
+        VertexInterp(isolevel,grid.p[0],grid.p[1],grid.val[0],grid.val[1]);
     if (edgeTable[cubeindex] & 2)
         vertlist[1] =
-        VertexInterp(isolevel,grid.p[1],grid.p[2],grid.p[1].w,grid.p[2].w);
+        VertexInterp(isolevel,grid.p[1],grid.p[2],grid.val[1],grid.val[2]);
     if (edgeTable[cubeindex] & 4)
         vertlist[2] =
-        VertexInterp(isolevel,grid.p[2],grid.p[3],grid.p[2].w,grid.p[3].w);
+        VertexInterp(isolevel,grid.p[2],grid.p[3],grid.val[2],grid.val[3]);
     if (edgeTable[cubeindex] & 8)
         vertlist[3] =
-        VertexInterp(isolevel,grid.p[3],grid.p[0],grid.p[3].w,grid.p[0].w);
+        VertexInterp(isolevel,grid.p[3],grid.p[0],grid.val[3],grid.val[0]);
     if (edgeTable[cubeindex] & 16)
         vertlist[4] =
-        VertexInterp(isolevel,grid.p[4],grid.p[5],grid.p[4].w,grid.p[5].w);
+        VertexInterp(isolevel,grid.p[4],grid.p[5],grid.val[4],grid.val[5]);
     if (edgeTable[cubeindex] & 32)
         vertlist[5] =
-        VertexInterp(isolevel,grid.p[5],grid.p[6],grid.p[5].w,grid.p[6].w);
+        VertexInterp(isolevel,grid.p[5],grid.p[6],grid.val[5],grid.val[6]);
     if (edgeTable[cubeindex] & 64)
         vertlist[6] =
-        VertexInterp(isolevel,grid.p[6],grid.p[7],grid.p[6].w,grid.p[7].w);
+        VertexInterp(isolevel,grid.p[6],grid.p[7],grid.val[6],grid.val[7]);
     if (edgeTable[cubeindex] & 128)
         vertlist[7] =
-        VertexInterp(isolevel,grid.p[7],grid.p[4],grid.p[7].w,grid.p[4].w);
+        VertexInterp(isolevel,grid.p[7],grid.p[4],grid.val[7],grid.val[4]);
     if (edgeTable[cubeindex] & 256)
         vertlist[8] =
-        VertexInterp(isolevel,grid.p[0],grid.p[4],grid.p[0].w,grid.p[4].w);
+        VertexInterp(isolevel,grid.p[0],grid.p[4],grid.val[0],grid.val[4]);
     if (edgeTable[cubeindex] & 512)
         vertlist[9] =
-        VertexInterp(isolevel,grid.p[1],grid.p[5],grid.p[1].w,grid.p[5].w);
+        VertexInterp(isolevel,grid.p[1],grid.p[5],grid.val[1],grid.val[5]);
     if (edgeTable[cubeindex] & 1024)
         vertlist[10] =
-        VertexInterp(isolevel,grid.p[2],grid.p[6],grid.p[2].w,grid.p[6].w);
+        VertexInterp(isolevel,grid.p[2],grid.p[6],grid.val[2],grid.val[6]);
     if (edgeTable[cubeindex] & 2048)
         vertlist[11] =
-        VertexInterp(isolevel,grid.p[3],grid.p[7],grid.p[3].w,grid.p[7].w);
+        VertexInterp(isolevel,grid.p[3],grid.p[7],grid.val[3],grid.val[7]);
 
     /* Create the triangle */
     ntriang = 0;
@@ -469,47 +481,137 @@ void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& verti
     }
 }
 void generate_terrain_points(density_func_t function, float3 min, float3 max, float granularity, std::vector<float3>& vertices) {
-    const float gran_div_2 = granularity * 0.5f;
+    
     const float inv_gran = 1.0f/granularity;
-
     // Calculate the grid size
     int32_t x_size = (int32_t)((max.x - min.x) * inv_gran) + 1;
     int32_t y_size = (int32_t)((max.y - min.y) * inv_gran) + 1;
     int32_t z_size = (int32_t)((max.z - min.z) * inv_gran) + 1;
     uint32_t grid_size = x_size * y_size * z_size;
-    float4*** grid = (float4***)calloc(grid_size, sizeof(float4));
-    float x, y, z;
+#if 0
+    triangle_t triangles[5];
+    int num_triangles;
+    int ii;
+    gridcell_t cell = {
+        {
+            { -10.0f, -10.0f, -10.0f },
+            {  10.0f, -10.0f, -10.0f },
+            {  10.0f, -10.0f,  10.0f },
+            { -10.0f, -10.0f,  10.0f },
+
+            { -10.0f,  10.0f, -10.0f },
+            {  10.0f,  10.0f, -10.0f },
+            {  10.0f,  10.0f,  10.0f },
+            { -10.0f,  10.0f,  10.0f },
+        },
+        {
+            1.0f,
+            1.0f,
+            1.0f,
+            1.0f,
+
+            -1.0f,
+            -1.0f,
+            -1.0f,
+            -1.0f,
+        }
+    };
+
+    num_triangles = Polygonise(cell, 0.0f, triangles);
+    for(ii=0;ii<num_triangles;++ii) {
+        triangle_t tri = triangles[ii];
+        for(int jj=2; jj>=0; --jj) {
+            vertices.push_back(tri.p[jj]);
+        }
+    }
+    min.x = function(max) + granularity;
+#elif 1
+
+    #define ARRAY_INDEX(_x,_y,_z) ((_z)*x_size*y_size + (_y)*x_size + (_x))
+    float4* grid = (float4*)calloc(grid_size, sizeof(float4));
+
     float xf, yf, zf;
     int xi, yi, zi;
-    for(xf = min.x, xi = 0; xf < max.x && xi < x_size; ++xi, xf += granularity) {
-        for(yf = min.y, yi = 0; yf < max.y && yi < y_size; ++yi, yf += granularity) {
-            for(zf = min.z, zi = 0; zf < max.z && zi < z_size; ++zi, zf += granularity) {
+    for(zf = min.z, zi = 0; zi < z_size; ++zi, zf += granularity) {
+        for(yf = min.y, yi = 0; yi < y_size; ++yi, yf += granularity) {
+            for(xf = min.x, xi = 0; xi < x_size; ++xi, xf += granularity) {
                 float4 pt = { xf, yf, zf, 0.0f };
                 pt.w = function(*(float3*)&pt);
-                grid[xi][yi][zi] = pt;
+                grid[ARRAY_INDEX(xi,yi,zi)] = pt;
             }
         }
     }
 
-    for(xi = 0; xi < x_size-1; ++xi) {
+    for(zi = 0; zi < z_size-1; ++zi) {
         for(yi = 0; yi < y_size-1; ++yi) {
-            for(zi = 0; zi < z_size-1; ++zi) {
+            for(xi = 0; xi < x_size-1; ++xi) {
                 gridcell_t cell;
+                float4 val;
                 int ii=0;
-                cell.p
+                // Get the cell corners
+                val = grid[ARRAY_INDEX(xi, yi, zi)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+                val = grid[ARRAY_INDEX(xi+1, yi, zi)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+                val = grid[ARRAY_INDEX(xi+1, yi, zi+1)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+                val = grid[ARRAY_INDEX(xi, yi, zi+1)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+                
+                val = grid[ARRAY_INDEX(xi, yi+1, zi)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+                val = grid[ARRAY_INDEX(xi+1, yi+1, zi)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+                val = grid[ARRAY_INDEX(xi+1, yi+1, zi+1)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+                val = grid[ARRAY_INDEX(xi, yi+1, zi+1)];
+                cell.p[ii] = *(float3*)&val;
+                cell.val[ii++] = val.w;
+
+                --grid_size;
+                // Polygonize the cell
+                triangle_t triangles[5];
+                int num_triangles = Polygonise(cell, 0.0f, triangles);
+                for(ii=0;ii<num_triangles;++ii) {
+                    triangle_t tri = triangles[ii];
+                    if(degenerate(tri))
+                        continue;
+                    for(int jj=2; jj>=0; --jj) {
+                        for(int kk=0; kk<3; ++kk) {
+                            if(kk==jj)
+                                continue;
+                            assert(float3equal(&tri.p[kk], &tri.p[jj]) == 0);
+                        }
+                        vertices.push_back(tri.p[jj]);
+                    }
+//                    for(int jj=0; jj<3; ++jj) {
+//                        vertices.push_back(tri.p[jj]);
+//                    }
+                }
             }
         }
     }
-
+    free(grid);
+#elif 1
+    const float gran_div_2 = granularity * 0.5f;
+    float x, y, z;
     for(x=min.x; x<=max.x; x += granularity) {
         for(y=min.y; y<=max.y; y += granularity) {
             for(z=min.z; z<=max.z; z += granularity) {
                 gridcell_t cell;
                 int ii = 0;
                 float xx = x-gran_div_2;
+                float yy, zz;
                 float xadder = granularity;
-                for(float yy=y-gran_div_2; yy <= y+gran_div_2; yy += granularity) {
-                    for(float zz=z-gran_div_2; zz <= z+gran_div_2; zz += granularity) {
+                for(yy=y-gran_div_2; yy <= y+gran_div_2; yy += granularity) {
+                    for(zz=z-gran_div_2; zz <= z+gran_div_2; zz += granularity) {
                         cell.p[ii].x = xx;
                         cell.p[ii].y = yy;
                         cell.p[ii].z = zz;
@@ -522,10 +624,12 @@ void generate_terrain_points(density_func_t function, float3 min, float3 max, fl
                         xadder *= -1.0f;
                     }
                 }
-                grid_size--;
                 for(ii=0;ii<8;++ii) {
                     cell.val[ii] = function(cell.p[ii]);
                 }
+                //assert(xx != 0.0f && yy != 0.0f && zz != 0.0f);
+                
+                grid_size--;
                 triangle_t triangles[5];
                 int num_triangles = Polygonise(cell, 0.0f, triangles);
                 for(ii=0;ii<num_triangles;++ii) {
@@ -537,7 +641,7 @@ void generate_terrain_points(density_func_t function, float3 min, float3 max, fl
             }
         }
     }
-    free(grid);
+#endif
 }
 
 

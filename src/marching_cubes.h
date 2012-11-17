@@ -16,7 +16,8 @@ extern "C" {
 #endif
 
 typedef struct {
-    float4  p[8];
+    float3 p[8];
+    float val[8];
 } gridcell_t;
 typedef struct {
     float3 p[3];

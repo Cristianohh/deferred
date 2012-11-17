@@ -29,9 +29,11 @@ float _rand_float(float min, float max) {
 
 float terrain_func(float3 v) {
     float density = -v.y;
-    density += (float)noise(24, v.x*0.00125f, v.y*0.00125f, v.z*0.00125f) * 64.0f;
-    density += (float)noise(2, v.x*0.03125f, v.y*0.03125f, v.z*0.03125f) * 8.0f;
-    density += (float)noise(32, v.x, v.y, v.z) * 0.5f;
+    //density += -v.x;
+    //density += sinf(v.x*0.125f);
+    density += (float)noise(24, v.x*0.0125f, v.y*0.0125f, v.z*0.0125f) * 16.0f;
+    //density += (float)noise(2, v.x*0.03125f, v.y*0.03125f, v.z*0.03125f) * 8.0f;
+    density += (float)noise(32, v.x, v.y, v.z) * 0.25f;
     density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.125f;
     density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.0625f;
     return density;
@@ -97,8 +99,8 @@ void smooth_terrain(std::vector<float3>& positions, std::vector<VtxPosNormTex>& 
 
     for(uint32_t ii=0;ii<vertices.size();++ii) {
         vertices[ii].norm = float3normalize(&vertices[ii].norm);
-        vertices[ii].tex.x = vertices[ii].pos.x;
-        vertices[ii].tex.y = vertices[ii].pos.z;
+        vertices[ii].tex.x = vertices[ii].pos.x / 2.0f;
+        vertices[ii].tex.y = vertices[ii].pos.z / 2.0f;
     }
 }
 
@@ -127,7 +129,7 @@ Game::Game()
     //_camera.position.z = -60.0f;
     _camera.position.y = 5.0f;
     float3 axis = {1.0f, 0.0f, 0.0f};
-    _camera.orientation = quaternionFromAxisAngle(&axis, 0.3f);
+    _camera.orientation = quaternionFromAxisAngle(&axis, 0.4f);
 }
 void Game::initialize(void) {
 
@@ -231,10 +233,12 @@ void Game::initialize(void) {
     verts.reserve(1000000);
     terrain_verts.reserve(1000000);
     terrain_indices.reserve(1000000);
-    float3 min = {-10.0f, -10.0f, -10.0f};
-    float3 max = { 10.0f,  10.0f,  10.0f};
+    const float size = 50.0f;
+    float3 min = { -size, -size, -size };
+    float3 max = {  size,  size,  size };
+    //min = float3addScalar(&min,)
     timer_reset(&_timer);
-    generate_terrain_points(terrain_func, min, max, 0.25f, verts);
+    generate_terrain_points(terrain_func, min, max, 0.5f, verts);
     debug_output("Time: %f\tNum raw Vertices: %d\n", timer_delta_time(&_timer), verts.size());
     timer_reset(&_timer);
     smooth_terrain(verts, terrain_verts, terrain_indices);
