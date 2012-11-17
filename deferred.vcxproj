@@ -28,6 +28,8 @@
       </SubType>
     </ClCompile>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\marching_cubes.cpp" />
+    <ClCompile Include="src\perlin_noise.c" />
     <ClCompile Include="src\render.cpp">
       <SubType>
       </SubType>
@@ -67,6 +69,8 @@
       </SubType>
     </ClInclude>
     <ClInclude Include="src\geometry.h" />
+    <ClInclude Include="src\marching_cubes.h" />
+    <ClInclude Include="src\perlin_noise.h" />
     <ClInclude Include="src\render.h" />
     <ClInclude Include="src\renderer.h" />
     <ClInclude Include="src\renderer_deferred.h" />

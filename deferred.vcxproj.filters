@@ -81,6 +81,12 @@
     <ClCompile Include="src\world.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\perlin_noise.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\marching_cubes.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\application.h">
@@ -138,6 +144,12 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\world.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\marching_cubes.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\perlin_noise.h">
       <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>

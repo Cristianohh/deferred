@@ -44,8 +44,13 @@ static float grad(int hash, float x, float y, float z) {
     return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
 static __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) {
-    float x[4], y[4], z[4], r[4];
-    int hash[4];
+    void* m = _mm_malloc(sizeof(uint32_t)*20, 16);
+    float* f = (float*)m;
+    float* x = f + 0;
+    float* y = f + 4;
+    float* z = f + 8;
+    float* r = f + 12;
+    int* hash = (int32_t*)m + 16;
     int ii;
 
     _mm_store_ps(x, vx);
@@ -59,7 +64,7 @@ static __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) {
         v = h<4 ? y[ii] : h==12||h==14 ? x[ii] : z[ii];
         r[ii] = ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
     }
-    return _mm_load_si128((__m128i*)hash);
+    return _mm_load_ps(r);
 }
 static uint8_t _p[512] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
@@ -167,6 +172,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
 
         __m128i vseed = _mm_set1_epi32(seed);
         __m128i v1 = _mm_set1_epi32(1);
+        __m128 v1f = _mm_set1_ps(1.0f);
 
         __m128 vu, vv, vw; // float u, v, w;
         __m128 vx = _mm_load_ps(x + ii),
@@ -204,9 +210,9 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
         vpAB1 = _p_sse(_mm_add_epi32(v1, vAB));
         vpBB1 = _p_sse(_mm_add_epi32(v1, vBB));
 
-        vx1 = _mm_sub_ps(vx, v1);
-        vy1 = _mm_sub_ps(vy, v1);
-        vz1 = _mm_sub_ps(vz, v1);
+        vx1 = _mm_sub_ps(vx, v1f);
+        vy1 = _mm_sub_ps(vy, v1f);
+        vz1 = _mm_sub_ps(vz, v1f);
 
         //n[ii] = lerp(w, lerp(v, lerp(u, grad(seed ^ _p[AA  ], x  , y  , z   ),  
         //                                grad(seed ^ _p[BA  ], x-1, y  , z   )), 
