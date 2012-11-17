@@ -133,30 +133,36 @@ static int32_t _pp[512] = {
     107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
     138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
 };
-static __inline int32_t _p(uint32_t mask, int index) {
+/*static __inline int32_t _p(uint32_t mask, int index) {
     int32_t val = _pp[(int)(index) & 255];
     int32_t t = (mask ^ val);
     return t;
-}
-/*#define _p(mask, i) ((mask) ^ _pp[(int)(i) & 255])*/
+}*/
+#define _p(mask, i) ((mask) ^ _pp[(int)(i) & 255])
 static __inline __m128 _p_sse(__m128 mask, __m128 v) {
     __m128i v255 = _mm_set1_epi32(255);
     __m128i vval;
     __m128i vt;
     int index[4] ALIGN(16);
-    
+
     _mm_store_si128((__m128i*)index, _mm_and_ps(v255, _mm_cvtps_epi32(v)));
-    
+
     vval = _mm_set_epi32(_pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
     vt = _mm_xor_ps(mask, vval);
-    return _mm_cvtepi32_ps(vt);    
+    return _mm_cvtepi32_ps(vt);
 }
 static __inline __m256 _p_avx(__m256 mask, __m256 v) {
     __m256i v255 = _mm256_set1_epi32(255);
-    int i[8] ALIGN(32);
-    _mm256_store_si256((__m256i*)i, _mm256_and_ps(v255, _mm256_cvtps_epi32(v)));
-    return _mm256_cvtepi32_ps(_mm256_xor_ps(mask, _mm256_set_epi32(_pp[i[0]], _pp[i[1]], _pp[i[2]], _pp[i[3]],
-                                                                   _pp[i[4]], _pp[i[5]], _pp[i[6]], _pp[i[7]])));
+    __m256i vval;
+    __m256i vt;
+    int index[8] ALIGN(32);
+
+    _mm256_store_si256((__m256i*)index, _mm256_and_ps(v255, _mm256_cvtps_epi32(v)));
+
+    vval = _mm256_set_epi32(_pp[index[7]], _pp[index[6]], _pp[index[5]], _pp[index[4]],
+                            _pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
+    vt = _mm256_xor_ps(mask, vval);
+    return _mm256_cvtepi32_ps(vt);
 }
 
 /*
@@ -227,7 +233,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // SSE
     //
-#if 1
+#if 0
     _mm256_zeroall();
     for(ii=0; ii<count; ii += 4) {
         __m128 vn;
@@ -301,54 +307,51 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // AVX
     //
-#if 0
+#if 1
     _mm256_zeroall();
-    for(ii=0; ii<count; ii += 4) {
+    for(ii=0; ii<count; ii += 8) {
         __m256 vn;
         __m256i vpAA, vpBA, vpAB, vpBB, vpAA1, vpBA1, vpAB1, vpBB1;
 
         __m256 vx1, vy1, vz1;
 
-        __m256i vseed = _mm256_set1_epi32(seed);
-        __m256i v1 = _mm256_set1_epi32(1);
+        __m256 vseed = _mm256_set1_epi32(seed);
         __m256 v1f = _mm256_set1_ps(1.0f);
 
         __m256 vu, vv, vw; // float u, v, w;
         __m256 vx = _mm256_load_ps(x + ii),
                vy = _mm256_load_ps(y + ii),
                vz = _mm256_load_ps(z + ii); //float x = *xv, y = *yv, z = *zv;
-        __m256i vA, vAA, vAB, vB, vBA, vBB; // int A, AA, AB, B, BA, BB;
-        __m256 vfloorx = _mm256_floor_ps(vx);
-        __m256 vfloory = _mm256_floor_ps(vy);
-        __m256 vfloorz = _mm256_floor_ps(vz);
+        __m256 vA, vAA, vAB, vB, vBA, vBB; // int A, AA, AB, B, BA, BB;
+        __m256 vX = _mm256_floor_ps(vx);
+        __m256 vY = _mm256_floor_ps(vy);
+        __m256 vZ = _mm256_floor_ps(vz);
 
-
-        __m256i v255 = _mm256_set1_epi32(255);
-        __m256i vX = _mm256_and_ps(_mm256_cvtps_epi32(vfloorx), v255), // int X = (int)floorf(x) & 255,
-                vY = _mm256_and_ps(_mm256_cvtps_epi32(vfloory), v255), //     Y = (int)floorf(y) & 255,
-                vZ = _mm256_and_ps(_mm256_cvtps_epi32(vfloorz), v255); //     Z = (int)floorf(z) & 255;
-        vx = _mm256_sub_ps(vx, vfloorx); // x -= floorf(x);
-        vy = _mm256_sub_ps(vy, vfloory); // y -= floorf(y);
-        vz = _mm256_sub_ps(vz, vfloorz); // z -= floorf(z);
+//        __m256  vX = vfloorx, // int X = (int)floorf(x) & 255,
+//                vY = vfloory, //     Y = (int)floorf(y) & 255,
+//                vZ = vfloorz; //     Z = (int)floorf(z) & 255;
+        vx = _mm256_sub_ps(vx, vX); // x -= floorf(x);
+        vy = _mm256_sub_ps(vy, vY); // y -= floorf(y);
+        vz = _mm256_sub_ps(vz, vZ); // z -= floorf(z);
         vu = fade_avx(vx); // u = fade(x),
         vv = fade_avx(vy); // v = fade(y),
         vw = fade_avx(vz); // w = fade(z);
 
-        vA  = _mm_add_epi32(_mm_xor_si128(vseed, _p_avx(                  vX )), vY); // A  = (seed^_p[X  ])+Y;
-        vAA = _mm_add_epi32(_mm_xor_si128(vseed, _p_avx(                  vA )), vZ); // AA = (seed^_p[A  ])+Z;
-        vAB = _mm_add_epi32(_mm_xor_si128(vseed, _p_avx(_mm_add_epi32(v1, vA))), vZ); // AB = (seed^_p[A+1])+Z;
-        vB  = _mm_add_epi32(_mm_xor_si128(vseed, _p_avx(_mm_add_epi32(v1, vX))), vY); // B  = (seed^_p[X+1])+Y;
-        vBA = _mm_add_epi32(_mm_xor_si128(vseed, _p_avx(                  vB )), vZ); // BA = (seed^_p[B  ])+Z;
-        vBB = _mm_add_epi32(_mm_xor_si128(vseed, _p_avx(_mm_add_epi32(v1, vB))), vZ); // BB = (seed^_p[B+1])+Z;
+        vA  = _mm256_add_ps(_p_avx(vseed,                 vX ), vY); // A  = (seed^_p[X  ])+Y;
+        vAA = _mm256_add_ps(_p_avx(vseed,                 vA ), vZ); // AA = (seed^_p[A  ])+Z;
+        vAB = _mm256_add_ps(_p_avx(vseed, _mm256_add_ps(v1f, vA)), vZ); // AB = (seed^_p[A+1])+Z;
+        vB  = _mm256_add_ps(_p_avx(vseed, _mm256_add_ps(v1f, vX)), vY); // B  = (seed^_p[X+1])+Y;
+        vBA = _mm256_add_ps(_p_avx(vseed,                 vB ), vZ); // BA = (seed^_p[B  ])+Z;
+        vBB = _mm256_add_ps(_p_avx(vseed, _mm256_add_ps(v1f, vB)), vZ); // BB = (seed^_p[B+1])+Z;
 
-        vpAA  = _p_avx(vAA);
-        vpBA  = _p_avx(vBA);
-        vpAB  = _p_avx(vAB);
-        vpBB  = _p_avx(vBB);
-        vpAA1 = _p_avx(_mm_add_epi32(v1, vAA));
-        vpBA1 = _p_avx(_mm_add_epi32(v1, vBA));
-        vpAB1 = _p_avx(_mm_add_epi32(v1, vAB));
-        vpBB1 = _p_avx(_mm_add_epi32(v1, vBB));
+        vpAA  = _p_avx(vseed, vAA);
+        vpBA  = _p_avx(vseed, vBA);
+        vpAB  = _p_avx(vseed, vAB);
+        vpBB  = _p_avx(vseed, vBB);
+        vpAA1 = _p_avx(vseed, _mm256_add_ps(v1f, vAA));
+        vpBA1 = _p_avx(vseed, _mm256_add_ps(v1f, vBA));
+        vpAB1 = _p_avx(vseed, _mm256_add_ps(v1f, vAB));
+        vpBB1 = _p_avx(vseed, _mm256_add_ps(v1f, vBB));
 
         vx1 = _mm256_sub_ps(vx, v1f);
         vy1 = _mm256_sub_ps(vy, v1f);
@@ -363,15 +366,15 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
         //                        lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
         //                                grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
 
-        vn = lerp_avx(vw, lerp_avx(vv, lerp_avx(vu, grad_avx(_mm_xor_si128(vseed, vpAA ), vx , vy , vz  ),
-                                                    grad_avx(_mm_xor_si128(vseed, vpBA ), vx1, vy , vz  )),
-                                       lerp_avx(vu, grad_avx(_mm_xor_si128(vseed, vpAB ), vx , vy1, vz  ),
-                                                    grad_avx(_mm_xor_si128(vseed, vpBB ), vx1, vy1, vz  ))),
-                          lerp_avx(vv, lerp_avx(vu, grad_avx(_mm_xor_si128(vseed, vpAA1), vx , vy , vz1 ),
-                                                    grad_avx(_mm_xor_si128(vseed, vpBA1), vx1, vy , vz1 )),
-                                       lerp_avx(vu, grad_avx(_mm_xor_si128(vseed, vpAB1), vx , vy1, vz1 ),
-                                                    grad_avx(_mm_xor_si128(vseed, vpBB1), vx1, vy1, vz1 ))));
-        _mm_store_ps(n+ii, vn);
+        vn = lerp_avx(vw, lerp_avx(vv, lerp_avx(vu, grad_avx(vpAA , vx , vy , vz  ),
+                                                    grad_avx(vpBA , vx1, vy , vz  )),
+                                       lerp_avx(vu, grad_avx(vpAB , vx , vy1, vz  ),
+                                                    grad_avx(vpBB , vx1, vy1, vz  ))),
+                          lerp_avx(vv, lerp_avx(vu, grad_avx(vpAA1, vx , vy , vz1 ),
+                                                    grad_avx(vpBA1, vx1, vy , vz1 )),
+                                       lerp_avx(vu, grad_avx(vpAB1, vx , vy1, vz1 ),
+                                                    grad_avx(vpBB1, vx1, vy1, vz1 ))));
+        _mm256_store_ps(n+ii, vn);
     }
 #endif
 }
