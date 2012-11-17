@@ -217,7 +217,7 @@ void noisev(uint32_t seed, __restrict const float* x, __restrict const float* y,
 
         __m128 vx1, vy1, vz1;
 
-        __m128 vseed = _mm_load1_ps(&seed);
+        __m128 vseed = _mm_load1_ps((float*)&seed);
         __m128 v1f = _mm_set1_ps(1.0f);
 
         __m128 vu, vv, vw; // float u, v, w;

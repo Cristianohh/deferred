@@ -16,15 +16,13 @@ extern "C" {
 #endif
 
 typedef struct {
-    float3  p[8];
-    float   val[8];
+    float4  p[8];
 } gridcell_t;
 typedef struct {
     float3 p[3];
 } triangle_t;
 
 typedef float density_func_t(float3 p);
-
 
 int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5]);
 void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& vertices, std::vector<uint32_t>& indices);
