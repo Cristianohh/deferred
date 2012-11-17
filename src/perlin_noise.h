@@ -7,11 +7,13 @@
 #ifndef __perlin_noise_h__
 #define __perlin_noise_h__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-float noise(float x, float y, float z);
+float noise(uint8_t seed, float x, float y, float z);
 
 #ifdef __cplusplus
 } // extern "C" {

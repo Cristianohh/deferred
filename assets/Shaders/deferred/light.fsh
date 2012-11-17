@@ -130,4 +130,5 @@ void main()
         color = color*(1.0f-light.inner_cos) + albedo*light.inner_cos*light_color;
     }
     out_Color = vec4(color, 1.0f);
+    //out_Color = vec4(albedo, 1.0f);
 }

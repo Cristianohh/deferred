@@ -124,9 +124,9 @@ static float3 float3divideScalar(const float3* v, float f)
 /* Misc */
 static int float3equal(const float3* a, const float3* b)
 {
-    return  (a->x == b->x) &&
-            (a->y == b->y) &&
-            (a->z == b->z);
+    return  fabsf(a->x - b->x) < kEpsilon &&
+            fabsf(a->y - b->y) < kEpsilon &&
+            fabsf(a->z - b->z) < kEpsilon;
 }
 
 static float float3hadd(const float3* v)

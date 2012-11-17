@@ -25,40 +25,14 @@ float _rand_float(float min, float max) {
     r *= delta;
     return r+min;
 }
-inline double interpolate(double a,double b,double x)
-{
-    double ft=x * 3.1415927;
-    double f=(1.0-cos(ft))* 0.5;
-    return a*(1.0-f)+b*f;
-}
 
-inline double findnoise2(double x,double y)
-{
-    int n=(int)x+(int)y*57;
-    n=(n<<13)^n;
-    int nn=(n*(n*n*60493+19990303)+1376312589)&0x7fffffff;
-    return 1.0-((double)nn/1073741824.0);
-}
-//double noise(double x,double y)
-//{
-//    double floorx=(double)((int)x);//This is kinda a cheap way to floor a double integer.
-//    double floory=(double)((int)y);
-//    double s,t,u,v;//Integer declaration
-//    s=findnoise2(floorx,floory);
-//    t=findnoise2(floorx+1,floory);
-//    u=findnoise2(floorx,floory+1);//Get the surrounding pixels to calculate the transition.
-//    v=findnoise2(floorx+1,floory+1);
-//    double int1=interpolate(s,t,x-floorx);//Interpolate between the values.
-//    double int2=interpolate(u,v,x-floorx);//Here we use x-floorx, to get 1st dimension. Don't mind the x-floorx thingie, it's part of the cosine formula.
-//    return interpolate(int1,int2,y-floory);//Here we use y-floory, to get the 2nd dimension.
-//}
 
 float terrain_func(float3 v) {
     float density = -v.y;
-    //return -v.y + cosf(v.x) + sinf(v.z) + (float)noise(v.x, v.z);
-    density += (float)noise(v.x, v.y, v.z);
-    //density += (float)noise(v.x*2, v.y*2, v.z*2) * 0.5f;
-    //return v.x*v.x + v.y*v.y + v.z*v.z;
+    density += (float)noise(2, v.x*0.65f, v.y*0.65f, v.z*0.65f) * 2.0f;
+    density += (float)noise(32, v.x, v.y, v.z);
+    density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.5f;
+    density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.25f;
     return density;
 }
 
@@ -86,6 +60,53 @@ Render* LightData::_render = NULL;
 typedef SimpleComponent<LightData, kLightComponent>   LightComponent;
 typedef SimpleSystem<LightData>                        LightSystem;
 
+void smooth_terrain(std::vector<float3>& positions, std::vector<VtxPosNormTex>& vertices, std::vector<uint32_t>& indices) {
+    //std::map<std::pair<float, std::pair<float,float> >, uint32_t> index_map;
+    for(uint32_t ii=0; ii<positions.size(); ii += 3) {
+        triangle_t tri = {
+            positions[ii+0],
+            positions[ii+1],
+            positions[ii+2],
+        };
+        float3 norm;
+        float3 edge0 = float3subtract(&tri.p[1], &tri.p[0]);
+        float3 edge1 = float3subtract(&tri.p[2], &tri.p[0]);
+        norm = float3cross(&edge1, &edge0);
+        norm = float3cross(&edge0, &edge1);
+        norm = float3normalize(&norm);
+        for(int jj=0;jj<3;++jj) {
+            int found = 0;
+            //std::pair<float, std::pair<float,float> > check = std::make_pair(tri.p[jj].x, std::make_pair(tri.p[jj].y, tri.p[jj].z));
+            for(uint32_t kk=0;kk<vertices.size();++kk) {
+                //std::map<std::pair<float, std::pair<float,float> >, uint32_t>::iterator iter = index_map.find(check);
+                //if(iter != index_map.end()) { // If we've already added this vertex, add the normal and add to the index list
+                if(float3equal(&vertices[kk].pos, &tri.p[jj])) { // If we've already added this vertex, add the normal and add to the index list
+                    vertices[kk].norm = float3add(&norm, &vertices[kk].norm);
+                    indices.push_back(kk);
+                    found = 1;
+                    break;
+                }
+            }
+            if(found == 0) {
+                VtxPosNormTex vtx = {
+                    tri.p[jj],
+                    norm,
+                    {0.0f, 0.0f},
+                };
+                vertices.push_back(vtx);
+                uint32_t index = (uint32_t)vertices.size()-1;
+                indices.push_back(index);
+                //index_map[check] = index;
+            }
+        }
+    }
+
+    for(uint32_t ii=0;ii<vertices.size();++ii) {
+        vertices[ii].norm = float3normalize(&vertices[ii].norm);
+        vertices[ii].tex.x = vertices[ii].pos.x;
+        vertices[ii].tex.y = vertices[ii].pos.z;
+    }
+}
 
 }
 
@@ -209,9 +230,19 @@ void Game::initialize(void) {
     RenderData render_data = {0};
     //render_data.mesh = _render->create_mesh(ARRAYSIZE(ground_vertices), kVtxPosNormTex, ARRAYSIZE(ground_indices), sizeof(ground_indices[0]), ground_vertices, ground_indices);
     //render_data.mesh = _render->sphere_mesh();
+    std::map<float3, VtxPosNormTex> m;
+    std::vector<float3> verts;
     std::vector<VtxPosNormTex>  terrain_verts;
     std::vector<uint32_t>       terrain_indices;
-    generate_terrain(terrain_func, terrain_verts, terrain_indices);
+    verts.reserve(1000000);
+    terrain_verts.reserve(1000000);
+    terrain_indices.reserve(1000000);
+    generate_terrain_points(terrain_func, verts);  
+    debug_output("Num raw Vertices: %d\n", verts.size());
+    smooth_terrain(verts, terrain_verts, terrain_indices);
+    //generate_terrain(terrain_func, terrain_verts, terrain_indices);
+    debug_output("Num Terrain Vertices: %d\n", terrain_verts.size());
+    debug_output("Num Terrain indices: %d\n", terrain_indices.size());
     render_data.mesh = _render->create_mesh((uint32_t)terrain_verts.size(), kVtxPosNormTex, (uint32_t)terrain_indices.size(), sizeof(uint32_t), terrain_verts.data(), terrain_indices.data());
     render_data.material = grass_material;
 
@@ -278,7 +309,7 @@ void Game::initialize(void) {
     light.type = kDirectionalLight;
 
     transform = TransformZero();
-    transform.orientation = quaternionFromEuler(DegToRad(30.0f), DegToRad(60.0f), 0.0f);
+    transform.orientation = quaternionFromEuler(DegToRad(90.0f), DegToRad(60.0f), 0.0f);
     transform.position = light.pos;
 
     _sun_id = _world.create_entity();

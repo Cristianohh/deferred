@@ -46,6 +46,7 @@ static float3 VertexInterp(float isolevel,
  will be loaded up with the vertices at most 5 triangular facets.
  0 will be returned if the grid cell is either totally above
  of totally below the isolevel.
+ http://paulbourke.net/geometry/polygonise/
  */
 int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5])
 {
@@ -414,7 +415,7 @@ int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5])
 }
 void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& vertices, std::vector<uint32_t>& indices) {
     static const float size = 10.0f;
-    static const float granularity = 0.0625f;
+    static const float granularity = 0.125f;
     static const float gran_div_2 = granularity * 0.5f;
     uint32_t vtx_index = 0;
     float x, y, z;
@@ -461,6 +462,47 @@ void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& verti
                         };
                         vertices.push_back(v);
                         indices.push_back(vtx_index++);
+                    }
+                }                
+            }
+        }
+    }
+}
+void generate_terrain_points(density_func_t function, std::vector<float3>& vertices) {
+static const float size = 5.0f;
+    static const float granularity = 0.25f;
+    static const float gran_div_2 = granularity * 0.5f;
+    float x, y, z;
+    for(x=-size;x<=size;x += granularity) {
+        for(y=-size;y<=size;y += granularity) {
+            for(z=-size;z<=size;z += granularity) {
+                gridcell_t cell;
+                int ii = 0;
+                float xx = x-gran_div_2;
+                float xadder = granularity;
+                for(float yy=y-gran_div_2; yy <= y+gran_div_2; yy += granularity) {
+                    for(float zz=z-gran_div_2; zz <= z+gran_div_2; zz += granularity) {
+                        cell.p[ii].x = xx;
+                        cell.p[ii].y = yy;
+                        cell.p[ii].z = zz;
+                        ++ii;
+                        xx += xadder;
+                        cell.p[ii].x = xx;
+                        cell.p[ii].y = yy;
+                        cell.p[ii].z = zz;
+                        ++ii;
+                        xadder *= -1.0f;
+                    }
+                }
+                for(ii=0;ii<8;++ii) {
+                    cell.val[ii] = function(cell.p[ii]);
+                }
+                triangle_t triangles[5];
+                int num_triangles = Polygonise(cell, 0.0f, triangles);
+                for(ii=0;ii<num_triangles;++ii) {
+                    triangle_t tri = triangles[ii];
+                    for(int jj=2; jj>=0; --jj) {
+                        vertices.push_back(tri.p[jj]);
                     }
                 }                
             }
