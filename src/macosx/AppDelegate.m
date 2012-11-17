@@ -361,7 +361,8 @@ void app_unlock_and_show_cursor(void) {
             NSString* arg = [arguments objectAtIndex:(NSUInteger)ii];
             argv[ii] = [arg UTF8String];
         }
-        on_init(argc, argv);
+        if(on_init(argc, argv))
+            [NSApp performSelector:@selector(terminate:) withObject:self];
     }
     
     (void)sizeof(aNotification);

@@ -29,10 +29,11 @@ float _rand_float(float min, float max) {
 
 float terrain_func(float3 v) {
     float density = -v.y;
-    density += (float)noise(2, v.x*0.125f, v.y*0.125f, v.z*0.125f) * 8.0f;
-    density += (float)noise(32, v.x, v.y, v.z);
-    density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.5f;
-    density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.25f;
+    density += (float)noise(24, v.x*0.000125f, v.y*0.000125f, v.z*0.000125f) * 64.0f;
+    density += (float)noise(2, v.x*0.03125f, v.y*0.03125f, v.z*0.03125f) * 8.0f;
+    density += (float)noise(32, v.x, v.y, v.z) * 0.25f;
+    density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.125f;
+    density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.0625f;
     return density;
 }
 
@@ -230,7 +231,9 @@ void Game::initialize(void) {
     verts.reserve(1000000);
     terrain_verts.reserve(1000000);
     terrain_indices.reserve(1000000);
-    generate_terrain_points(terrain_func, verts);  
+    float3 min = {-10.0f, -10.0f, -10.0f};
+    float3 max = { 10.0f,  10.0f,  10.0f};
+    generate_terrain_points(terrain_func, min, max, 0.25f, verts);
     debug_output("Num raw Vertices: %d\n", verts.size());
     smooth_terrain(verts, terrain_verts, terrain_indices);
     //generate_terrain(terrain_func, terrain_verts, terrain_indices);

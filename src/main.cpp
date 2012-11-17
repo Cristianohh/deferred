@@ -11,9 +11,43 @@
 #include "game.h"
 #include "world.h"
 
+#include "perlin_noise.h"
+
 static Game*    _game = NULL;
 
+#define TOTAL_NUM_NUMBERS (1024*1024*8)
+#define CHUNK_SIZE (32)
+
 int on_init(int argc, const char* argv[]) {
+    Timer timer;
+    float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE];
+    memset(x, 0, sizeof(x));
+    memset(y, 0, sizeof(y));
+    memset(z, 0, sizeof(z));
+    memset(res, 0, sizeof(res));
+    
+    timer_init(&timer);
+
+    for(int ii=0; ii < TOTAL_NUM_NUMBERS; ii += CHUNK_SIZE) {
+        for(int jj=0; jj < CHUNK_SIZE; ++jj) {
+            res[jj] = noise(42, x[jj], y[jj], z[jj]);
+        }
+    }
+    double delta_time = timer_delta_time(&timer);
+    debug_output("Slow time: %f\n", delta_time);
+
+    
+    timer_init(&timer);
+
+    for(int ii=0; ii < TOTAL_NUM_NUMBERS; ii += CHUNK_SIZE) {
+        noisev(42, x, y, z, res, CHUNK_SIZE);
+    }
+    delta_time = timer_delta_time(&timer);
+    debug_output("Fast time: %f\n", delta_time);
+
+    
+    exit(0);
+    return 1;
     _game = new Game();
     _game->initialize();
     return 0;

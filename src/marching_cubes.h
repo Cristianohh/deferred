@@ -28,7 +28,7 @@ typedef float density_func_t(float3 p);
 
 int Polygonise(gridcell_t grid, float isolevel, triangle_t triangles[5]);
 void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& vertices, std::vector<uint32_t>& indices);
-void generate_terrain_points(density_func_t function, std::vector<float3>& vertices);
+void generate_terrain_points(density_func_t function, float3 min, float3 max, float granularity, std::vector<float3>& vertices);
 
 #ifdef __cplusplus
 } // extern "C" {

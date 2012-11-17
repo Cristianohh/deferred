@@ -468,14 +468,12 @@ void generate_terrain(density_func_t function, std::vector<VtxPosNormTex>& verti
         }
     }
 }
-void generate_terrain_points(density_func_t function, std::vector<float3>& vertices) {
-    static const float size = 10.0f;
-    static const float granularity = 0.25f;
-    static const float gran_div_2 = granularity * 0.5f;
+void generate_terrain_points(density_func_t function, float3 min, float3 max, float granularity, std::vector<float3>& vertices) {
+    const float gran_div_2 = granularity * 0.5f;
     float x, y, z;
-    for(x=-size;x<=size;x += granularity) {
-        for(y=-size;y<=size;y += granularity) {
-            for(z=-size;z<=size;z += granularity) {
+    for(x=min.x; x<=max.x; x += granularity) {
+        for(y=min.y; y<=max.y; y += granularity) {
+            for(z=min.z; z<=max.z; z += granularity) {
                 gridcell_t cell;
                 int ii = 0;
                 float xx = x-gran_div_2;
