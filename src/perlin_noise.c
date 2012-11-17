@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <immintrin.h>
+#include <smmintrin.h>
 
 /*
  * Internal
@@ -16,34 +17,25 @@
 static float fade(float t) {
     return t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
 }
-static void fade_sse(const float* t, float* r) {
-    __m128 vt = _mm_load_ps(t);
+static __m128 fade_sse(__m128 t) {
     __m128 v6 = _mm_set1_ps(6.0f);
     __m128 v15 = _mm_set1_ps(15.0f);
     __m128 v10 = _mm_set1_ps(10.0f);
-    
-    __m128 a = _mm_mul_ps(vt, v6); /* (t * 6.0f) */
-    __m128 b = _mm_sub_ps(a, v15); /* (a - 15.0f) */
-    __m128 c = _mm_mul_ps(vt, b); /* (t * b) */
-    __m128 d = _mm_add_ps(c, v10); /* c + 10.0f */
-    __m128 vt3 = _mm_mul_ps(vt, _mm_mul_ps(vt, vt)); /* t*t*t */
-    __m128 vr = _mm_mul_ps(d, vt3);
 
-    _mm_store_ps(r, vr);
+    __m128 a = _mm_mul_ps(t, v6); /* (t * 6.0f) */
+    __m128 b = _mm_sub_ps(a, v15); /* (a - 15.0f) */
+    __m128 c = _mm_mul_ps(t, b); /* (t * b) */
+    __m128 d = _mm_add_ps(c, v10); /* c + 10.0f */
+    __m128 vt3 = _mm_mul_ps(t, _mm_mul_ps(t, t)); /* t*t*t */
+    return _mm_mul_ps(d, vt3);
 }
 static float lerp(float t, float a, float b) {
     return a + t * (b - a);
 }
-static void lerp_sse(const float* t, const float* a, const float* b, float* r) {
-    __m128 va = _mm_load_ps(a);
-    __m128 vb = _mm_load_ps(b);
-    __m128 vt = _mm_load_ps(t);
-
-    __m128 b_minus_a = _mm_sub_ps(vb, va); /* (b-a) */
-    __m128 t_bma = _mm_mul_ps(vt, b_minus_a); /* (t*(b-a) */
-    __m128 vr = _mm_add_ps(va, t_bma); /* a + (t*(b-a)) */
-    
-    _mm_store_ps(r, vr);
+static __m128 lerp_sse(__m128 t, __m128 a, __m128 b) {
+    __m128 b_minus_a = _mm_sub_ps(b, a);     /* (b-a) */
+    __m128 t_bma = _mm_mul_ps(t, b_minus_a); /* (t*(b-a) */
+    return _mm_add_ps(a, t_bma);               /* a + (t*(b-a)) */
 }
 static float grad(int hash, float x, float y, float z) {
     int h = hash & 15;                      // CONVERT LO 4 BITS OF HASH CODE
@@ -51,14 +43,23 @@ static float grad(int hash, float x, float y, float z) {
     v = h<4 ? y : h==12||h==14 ? x : z;
     return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
-static void grad_sse(const int* hash, const float* x, const float* y, const float* z, float* r) {
+static __m128 grad_sse(__m128i vhash, __m128 vx, __m128 vy, __m128 vz) {
+    float x[4], y[4], z[4], r[4];
+    int hash[4];
     int ii;
+
+    _mm_store_ps(x, vx);
+    _mm_store_ps(y, vy);
+    _mm_store_ps(z, vz);
+    _mm_store_si128((__m128i*)hash, vhash);
+
     for(ii=0; ii<4; ++ii) {
         int h = hash[ii] & 15;                      // CONVERT LO 4 BITS OF HASH CODE
         float u = h<8 ? x[ii] : y[ii],                 // INTO 12 GRADIENT DIRECTIONS.
         v = h<4 ? y[ii] : h==12||h==14 ? x[ii] : z[ii];
         r[ii] = ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
     }
+    return _mm_load_si128((__m128i*)hash);
 }
 static uint8_t _p[512] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
@@ -87,11 +88,16 @@ static uint8_t _p[512] = {
     107,49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
     138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
 };
+static __m128i _p_sse(__m128i v) {
+    int i[4];
+    _mm_store_si128((__m128i*)i, v);
+    return _mm_set_epi32(_p[i[0]], _p[i[1]], _p[i[2]], _p[i[3]]);
+}
 
 /*
  * External
  */
-float noise(uint8_t seed, float x, float y, float z) {
+float noise(uint32_t seed, float x, float y, float z) {
     float u, v, w;
     int A, AA, AB, B, BA, BB;
     int X = (int)floorf(x) & 255,                  // FIND UNIT CUBE THAT
@@ -115,7 +121,7 @@ float noise(uint8_t seed, float x, float y, float z) {
                            lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
                                    grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
 }
-void noisev(uint8_t seed, const float* x, const float* y, const float* z, float* n, int count) {
+void noisev(uint32_t seed, const float* x, const float* y, const float* z, float* n, int count) {
     int ii;
     //
     // Scalar
@@ -148,32 +154,78 @@ void noisev(uint8_t seed, const float* x, const float* y, const float* z, float*
         ++xv, ++yv, ++zv;
     }
 #endif
+
+    //
+    // SSE
+    //
+#if 1
     for(ii=0; ii<count; ii += 4) {
+        __m128 vn;
+        __m128i vpAA, vpBA, vpAB, vpBB, vpAA1, vpBA1, vpAB1, vpBB1;
+
+        __m128 vx1, vy1, vz1;
+
+        __m128i vseed = _mm_set1_epi32(seed);
+        __m128i v1 = _mm_set1_epi32(1);
+
         __m128 vu, vv, vw; // float u, v, w;
         __m128 vx = _mm_load_ps(x + ii),
                vy = _mm_load_ps(y + ii),
                vz = _mm_load_ps(z + ii); //float x = *xv, y = *yv, z = *zv;
         __m128i vA, vAA, vAB, vB, vBA, vBB; // int A, AA, AB, B, BA, BB;
-        __m128i vX = _mm_floor_ps( int X = (int)floorf(x) & 255,                  // FIND UNIT CUBE THAT
-            Y = (int)floorf(y) & 255,                  // CONTAINS POINT.
-            Z = (int)floorf(z) & 255;
-        x -= floorf(x);                                // FIND RELATIVE X,Y,Z
-        y -= floorf(y);                                // OF POINT IN CUBE.
-        z -= floorf(z);
-        u = fade(x),                                // COMPUTE FADE CURVES
-        v = fade(y),                                // FOR EACH OF X,Y,Z.
-        w = fade(z);
-        A = (seed^_p[X  ])+Y, AA = (seed^_p[A])+Z, AB = (seed^_p[A+1])+Z,      // HASH COORDINATES OF
-        B = (seed^_p[X+1])+Y, BA = (seed^_p[B])+Z, BB = (seed^_p[B+1])+Z;      // THE 8 CUBE CORNERS,
+        __m128 vfloorx = _mm_floor_ps(vx);
+        __m128 vfloory = _mm_floor_ps(vy);
+        __m128 vfloorz = _mm_floor_ps(vz);
 
-        n[ii] = lerp(w, lerp(v, lerp(u, grad(seed ^ _p[AA  ], x  , y  , z   ),  // AND ADD
-                                        grad(seed ^ _p[BA  ], x-1, y  , z   )), // BLENDED
-                                lerp(u, grad(seed ^ _p[AB  ], x  , y-1, z   ),  // RESULTS
-                                        grad(seed ^ _p[BB  ], x-1, y-1, z   ))),// FROM  8
-                        lerp(v, lerp(u, grad(seed ^ _p[AA+1], x  , y  , z-1 ),  // CORNERS
-                                        grad(seed ^ _p[BA+1], x-1, y  , z-1 )), // OF CUBE
-                                lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
-                                        grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
-        ++xv, ++yv, ++zv;
+        __m128i v255 = _mm_set1_epi32(255);
+        __m128i vX = _mm_and_si128(_mm_cvtps_epi32(vfloorx), v255), // int X = (int)floorf(x) & 255,
+                vY = _mm_and_si128(_mm_cvtps_epi32(vfloory), v255), //     Y = (int)floorf(y) & 255,
+                vZ = _mm_and_si128(_mm_cvtps_epi32(vfloorz), v255); //     Z = (int)floorf(z) & 255;
+        vx = _mm_sub_ps(vx, vfloorx); // x -= floorf(x);
+        vy = _mm_sub_ps(vy, vfloory); // y -= floorf(y);
+        vz = _mm_sub_ps(vz, vfloorz); // z -= floorf(z);
+        vu = fade_sse(vx); // u = fade(x),
+        vv = fade_sse(vy); // v = fade(y),
+        vw = fade_sse(vz); // w = fade(z);
+
+        vA  = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(                  vX )), vY); // A  = (seed^_p[X  ])+Y;
+        vAA = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(                  vA )), vZ); // AA = (seed^_p[A  ])+Z;
+        vAB = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(_mm_add_epi32(v1, vA))), vZ); // AB = (seed^_p[A+1])+Z;
+        vB  = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(_mm_add_epi32(v1, vX))), vY); // B  = (seed^_p[X+1])+Y;
+        vBA = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(                  vB )), vZ); // BA = (seed^_p[B  ])+Z;
+        vBB = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(_mm_add_epi32(v1, vB))), vZ); // BB = (seed^_p[B+1])+Z;
+
+        vpAA = _p_sse(vAA);
+        vpBA = _p_sse(vBA);
+        vpAB = _p_sse(vAB);
+        vpBB = _p_sse(vBB);
+        vpAA1 = _p_sse(_mm_add_epi32(v1, vAA));
+        vpBA1 = _p_sse(_mm_add_epi32(v1, vBA));
+        vpAB1 = _p_sse(_mm_add_epi32(v1, vAB));
+        vpBB1 = _p_sse(_mm_add_epi32(v1, vBB));
+
+        vx1 = _mm_sub_ps(vx, v1);
+        vy1 = _mm_sub_ps(vy, v1);
+        vz1 = _mm_sub_ps(vz, v1);
+
+        //n[ii] = lerp(w, lerp(v, lerp(u, grad(seed ^ _p[AA  ], x  , y  , z   ),  
+        //                                grad(seed ^ _p[BA  ], x-1, y  , z   )), 
+        //                        lerp(u, grad(seed ^ _p[AB  ], x  , y-1, z   ),  
+        //                                grad(seed ^ _p[BB  ], x-1, y-1, z   ))),
+        //                lerp(v, lerp(u, grad(seed ^ _p[AA+1], x  , y  , z-1 ),  
+        //                                grad(seed ^ _p[BA+1], x-1, y  , z-1 )), 
+        //                        lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
+        //                                grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
+
+        vn = lerp_sse(vw, lerp_sse(vv, lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAA ), vx , vy , vz  ),
+                                                    grad_sse(_mm_xor_si128(vseed, vpBA ), vx1, vy , vz  )),
+                                       lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAB ), vx , vy1, vz  ),
+                                                    grad_sse(_mm_xor_si128(vseed, vpBB ), vx1, vy1, vz  ))),
+                          lerp_sse(vv, lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAA1), vx , vy , vz1 ),
+                                                    grad_sse(_mm_xor_si128(vseed, vpBA1), vx1, vy , vz1 )),
+                                       lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAB1), vx , vy1, vz1 ),
+                                                    grad_sse(_mm_xor_si128(vseed, vpBB1), vx1, vy1, vz1 ))));
+        _mm_store_ps(n+ii, vn);
     }
+#endif
 }

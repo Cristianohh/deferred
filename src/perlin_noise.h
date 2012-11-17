@@ -13,8 +13,8 @@
 extern "C" {
 #endif
 
-float noise(uint8_t seed, float x, float y, float z);
-void noisev(uint8_t seed, const float* x, const float* y, const float* z, float* n, int count);
+float noise(uint32_t seed, float x, float y, float z);
+void noisev(uint32_t seed, const float* x, const float* y, const float* z, float* n, int count);
 
 #ifdef __cplusplus
 } // extern "C" {

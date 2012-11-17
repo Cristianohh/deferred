@@ -15,16 +15,17 @@
 
 static Game*    _game = NULL;
 
-#define TOTAL_NUM_NUMBERS (1024*1024*8)
+#define TOTAL_NUM_NUMBERS (1024*1024)
 #define CHUNK_SIZE (32)
 
 int on_init(int argc, const char* argv[]) {
     Timer timer;
-    float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE];
-    memset(x, 0, sizeof(x));
-    memset(y, 0, sizeof(y));
-    memset(z, 0, sizeof(z));
-    memset(res, 0, sizeof(res));
+    float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE], res2[CHUNK_SIZE];
+    for(int ii=0; ii<CHUNK_SIZE; ++ii) {
+        x[ii] = rand()/(float)RAND_MAX;
+        y[ii] = rand()/(float)RAND_MAX;
+        z[ii] = rand()/(float)RAND_MAX;
+    }
     
     timer_init(&timer);
 
@@ -40,11 +41,15 @@ int on_init(int argc, const char* argv[]) {
     timer_init(&timer);
 
     for(int ii=0; ii < TOTAL_NUM_NUMBERS; ii += CHUNK_SIZE) {
-        noisev(42, x, y, z, res, CHUNK_SIZE);
+        noisev(42, x, y, z, res2, CHUNK_SIZE);
     }
     delta_time = timer_delta_time(&timer);
     debug_output("Fast time: %f\n", delta_time);
 
+    // Sanity check
+    for(int ii=0; ii<CHUNK_SIZE; ++ii) {
+        debug_output("R: %f\n", res2[ii]-res[ii]);
+    }
     
     exit(0);
     return 1;
