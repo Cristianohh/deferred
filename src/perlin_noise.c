@@ -164,8 +164,12 @@ float noise(uint32_t seed, float x, float y, float z) {
     u = fade(x),                                // COMPUTE FADE CURVES
     v = fade(y),                                // FOR EACH OF X,Y,Z.
     w = fade(z);
-    A = (_p(seed, X  ))+Y, AA = (_p(seed, A))+Z, AB = (_p(seed, A+1))+Z,      // HASH COORDINATES OF
-    B = (_p(seed, X+1))+Y, BA = (_p(seed, B))+Z, BB = (_p(seed, B+1))+Z;      // THE 8 CUBE CORNERS,
+    A  = (_p(seed, X  ))+Y,
+    AA = (_p(seed, A  ))+Z,
+    AB = (_p(seed, A+1))+Z,      // HASH COORDINATES OF
+    B  = (_p(seed, X+1))+Y,
+    BA = (_p(seed, B  ))+Z,
+    BB = (_p(seed, B+1))+Z;      // THE 8 CUBE CORNERS,
 
     return lerp(w, lerp(v, lerp(u, grad(_p(seed, AA  ), x  , y  , z   ),  // AND ADD
                                    grad(_p(seed, BA  ), x-1, y  , z   )), // BLENDED

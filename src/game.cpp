@@ -29,9 +29,9 @@ float _rand_float(float min, float max) {
 
 float terrain_func(float3 v) {
     float density = -v.y;
-    density += (float)noise(24, v.x*0.000125f, v.y*0.000125f, v.z*0.000125f) * 64.0f;
+    density += (float)noise(24, v.x*0.00125f, v.y*0.00125f, v.z*0.00125f) * 64.0f;
     density += (float)noise(2, v.x*0.03125f, v.y*0.03125f, v.z*0.03125f) * 8.0f;
-    density += (float)noise(32, v.x, v.y, v.z) * 0.25f;
+    density += (float)noise(32, v.x, v.y, v.z) * 0.5f;
     density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.125f;
     density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.0625f;
     return density;
