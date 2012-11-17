@@ -19,13 +19,13 @@ static Game*    _game = NULL;
 #define CHUNK_SIZE (32)
 
 int on_init(int argc, const char* argv[]) {
-#if 0
+#if 1
     Timer timer;
     float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE], res2[CHUNK_SIZE];
     for(int ii=0; ii<CHUNK_SIZE; ++ii) {
-        x[ii] = rand()/(float)RAND_MAX;
-        y[ii] = rand()/(float)RAND_MAX;
-        z[ii] = rand()/(float)RAND_MAX;
+        x[ii] = rand()/(float)RAND_MAX * 100.0f;
+        y[ii] = rand()/(float)RAND_MAX * 100.0f;
+        z[ii] = rand()/(float)RAND_MAX * 100.0f;
     }
     
     timer_init(&timer);
@@ -46,6 +46,10 @@ int on_init(int argc, const char* argv[]) {
     }
     delta_time = timer_delta_time(&timer);
     debug_output("Fast time: %f\n", delta_time);
+
+    for(int ii=0; ii<CHUNK_SIZE; ++ii) {
+        debug_output("%f\n", res2[ii] - res[ii]);
+        }
     
     exit(0);
     return 1;

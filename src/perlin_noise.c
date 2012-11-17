@@ -136,17 +136,19 @@ static int32_t _pp[512] = {
 /*static __inline int32_t _p(int index) {
     return _pp[index];
 }*/
-#define _p(mask, i) (mask ^ _pp[i])
-static __inline __m128i _p_sse(__m128i v) {
+#define _p(mask, i) ((mask) ^ _pp[(int)(i) & 255])
+static __inline __m128 _p_sse(__m128 mask, __m128 v) {
+    __m128i v255 = _mm_set1_epi32(255);
     int i[4] ALIGN(16);
-    _mm_store_si128((__m128i*)i, v);
-    return _mm_set_epi32(_pp[i[0]], _pp[i[1]], _pp[i[2]], _pp[i[3]]);
+    _mm_store_si128((__m128i*)i, _mm_and_ps(v255, _mm_cvtps_epi32(v)));
+    return _mm_cvtepi32_ps(_mm_xor_ps(mask,_mm_set_epi32(_pp[i[0]], _pp[i[1]], _pp[i[2]], _pp[i[3]])));
 }
-static __inline __m256i _p_avx(__m256i v) {
+static __inline __m256 _p_avx(__m256 mask, __m256 v) {
+    __m256i v255 = _mm256_set1_epi32(255);
     int i[8] ALIGN(32);
-    _mm256_store_si256((__m256i*)i, v);
-    return _mm256_set_epi32(_pp[i[0]], _pp[i[1]], _pp[i[2]], _pp[i[3]],
-                            _pp[i[4]], _pp[i[5]], _pp[i[6]], _pp[i[7]]);
+    _mm256_store_si256((__m256i*)i, _mm256_and_ps(v255, _mm256_cvtps_epi32(v)));
+    return _mm256_cvtepi32_ps(_mm256_xor_ps(mask, _mm256_set_epi32(_pp[i[0]], _pp[i[1]], _pp[i[2]], _pp[i[3]],
+                                                                   _pp[i[4]], _pp[i[5]], _pp[i[6]], _pp[i[7]])));
 }
 
 /*
@@ -225,23 +227,21 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
 
         __m128 vx1, vy1, vz1;
 
-        __m128i vseed = _mm_set1_epi32(seed);
-        __m128i v1 = _mm_set1_epi32(1);
+        __m128 vseed = _mm_set1_epi32(seed);
         __m128 v1f = _mm_set1_ps(1.0f);
 
         __m128 vu, vv, vw; // float u, v, w;
         __m128 vx = _mm_load_ps(x + ii),
                vy = _mm_load_ps(y + ii),
                vz = _mm_load_ps(z + ii); //float x = *xv, y = *yv, z = *zv;
-        __m128i vA, vAA, vAB, vB, vBA, vBB; // int A, AA, AB, B, BA, BB;
+        __m128 vA, vAA, vAB, vB, vBA, vBB; // int A, AA, AB, B, BA, BB;
         __m128 vfloorx = _mm_floor_ps(vx);
         __m128 vfloory = _mm_floor_ps(vy);
         __m128 vfloorz = _mm_floor_ps(vz);
 
-        __m128i v255 = _mm_set1_epi32(255);
-        __m128i vX = _mm_and_si128(_mm_cvtps_epi32(vfloorx), v255), // int X = (int)floorf(x) & 255,
-                vY = _mm_and_si128(_mm_cvtps_epi32(vfloory), v255), //     Y = (int)floorf(y) & 255,
-                vZ = _mm_and_si128(_mm_cvtps_epi32(vfloorz), v255); //     Z = (int)floorf(z) & 255;
+        __m128  vX = vfloorx, // int X = (int)floorf(x) & 255,
+                vY = vfloory, //     Y = (int)floorf(y) & 255,
+                vZ = vfloorz; //     Z = (int)floorf(z) & 255;
         vx = _mm_sub_ps(vx, vfloorx); // x -= floorf(x);
         vy = _mm_sub_ps(vy, vfloory); // y -= floorf(y);
         vz = _mm_sub_ps(vz, vfloorz); // z -= floorf(z);
@@ -249,21 +249,21 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
         vv = fade_sse(vy); // v = fade(y),
         vw = fade_sse(vz); // w = fade(z);
 
-        vA  = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(                  vX )), vY); // A  = (seed^_p[X  ])+Y;
-        vAA = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(                  vA )), vZ); // AA = (seed^_p[A  ])+Z;
-        vAB = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(_mm_add_epi32(v1, vA))), vZ); // AB = (seed^_p[A+1])+Z;
-        vB  = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(_mm_add_epi32(v1, vX))), vY); // B  = (seed^_p[X+1])+Y;
-        vBA = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(                  vB )), vZ); // BA = (seed^_p[B  ])+Z;
-        vBB = _mm_add_epi32(_mm_xor_si128(vseed, _p_sse(_mm_add_epi32(v1, vB))), vZ); // BB = (seed^_p[B+1])+Z;
+        vA  = _mm_add_ps(_p_sse(vseed,                 vX ), vY); // A  = (seed^_p[X  ])+Y;
+        vAA = _mm_add_ps(_p_sse(vseed,                 vA ), vZ); // AA = (seed^_p[A  ])+Z;
+        vAB = _mm_add_ps(_p_sse(vseed, _mm_add_ps(v1f, vA)), vZ); // AB = (seed^_p[A+1])+Z;
+        vB  = _mm_add_ps(_p_sse(vseed, _mm_add_ps(v1f, vX)), vY); // B  = (seed^_p[X+1])+Y;
+        vBA = _mm_add_ps(_p_sse(vseed,                 vB ), vZ); // BA = (seed^_p[B  ])+Z;
+        vBB = _mm_add_ps(_p_sse(vseed, _mm_add_ps(v1f, vB)), vZ); // BB = (seed^_p[B+1])+Z;
 
-        vpAA  = _p_sse(vAA);
-        vpBA  = _p_sse(vBA);
-        vpAB  = _p_sse(vAB);
-        vpBB  = _p_sse(vBB);
-        vpAA1 = _p_sse(_mm_add_epi32(v1, vAA));
-        vpBA1 = _p_sse(_mm_add_epi32(v1, vBA));
-        vpAB1 = _p_sse(_mm_add_epi32(v1, vAB));
-        vpBB1 = _p_sse(_mm_add_epi32(v1, vBB));
+        vpAA  = _p_sse(vseed, vAA);
+        vpBA  = _p_sse(vseed, vBA);
+        vpAB  = _p_sse(vseed, vAB);
+        vpBB  = _p_sse(vseed, vBB);
+        vpAA1 = _p_sse(vseed, _mm_add_ps(v1f, vAA));
+        vpBA1 = _p_sse(vseed, _mm_add_ps(v1f, vBA));
+        vpAB1 = _p_sse(vseed, _mm_add_ps(v1f, vAB));
+        vpBB1 = _p_sse(vseed, _mm_add_ps(v1f, vBB));
 
         vx1 = _mm_sub_ps(vx, v1f);
         vy1 = _mm_sub_ps(vy, v1f);
@@ -278,14 +278,14 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
         //                        lerp(u, grad(seed ^ _p[AB+1], x  , y-1, z-1 ),
         //                                grad(seed ^ _p[BB+1], x-1, y-1, z-1 ))));
 
-        vn = lerp_sse(vw, lerp_sse(vv, lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAA ), vx , vy , vz  ),
-                                                    grad_sse(_mm_xor_si128(vseed, vpBA ), vx1, vy , vz  )),
-                                       lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAB ), vx , vy1, vz  ),
-                                                    grad_sse(_mm_xor_si128(vseed, vpBB ), vx1, vy1, vz  ))),
-                          lerp_sse(vv, lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAA1), vx , vy , vz1 ),
-                                                    grad_sse(_mm_xor_si128(vseed, vpBA1), vx1, vy , vz1 )),
-                                       lerp_sse(vu, grad_sse(_mm_xor_si128(vseed, vpAB1), vx , vy1, vz1 ),
-                                                    grad_sse(_mm_xor_si128(vseed, vpBB1), vx1, vy1, vz1 ))));
+        vn = lerp_sse(vw, lerp_sse(vv, lerp_sse(vu, grad_sse(vpAA , vx , vy , vz  ),
+                                                    grad_sse(vpBA , vx1, vy , vz  )),
+                                       lerp_sse(vu, grad_sse(vpAB , vx , vy1, vz  ),
+                                                    grad_sse(vpBB , vx1, vy1, vz  ))),
+                          lerp_sse(vv, lerp_sse(vu, grad_sse(vpAA1, vx , vy , vz1 ),
+                                                    grad_sse(vpBA1, vx1, vy , vz1 )),
+                                       lerp_sse(vu, grad_sse(vpAB1, vx , vy1, vz1 ),
+                                                    grad_sse(vpBB1, vx1, vy1, vz1 ))));
         _mm_store_ps(n+ii, vn);
     }
 #endif
