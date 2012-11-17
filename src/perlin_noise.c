@@ -12,6 +12,8 @@
 
 #ifdef __GNUC__
     #define ALIGN(x) __attribute__((aligned(x)))
+#elif defined(_MSC_VER)
+    #define ALIGN(x) __declspec(align(x))
 #endif
 
 /*
@@ -65,11 +67,11 @@ static float grad(int hash, float x, float y, float z) {
     return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
 static __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
-    float x[4] ALIGN(16);
-    float y[4] ALIGN(16);
-    float z[4] ALIGN(16);
-    float r[4] ALIGN(16);
-    int hash[4] ALIGN(16);
+    ALIGN(16) float x[4];
+    ALIGN(16) float y[4];
+    ALIGN(16) float z[4];
+    ALIGN(16) float r[4];
+    ALIGN(16) int hash[4];
     int ii;
 
     _mm_store_ps(x, vx);
@@ -86,11 +88,11 @@ static __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
     return _mm_load_ps(r);
 }
 static __m256 grad_avx(__m256 vhash, __m256 vx, __m256 vy, __m256 vz) {
-    float x[8] ALIGN(32);
-    float y[8] ALIGN(32);
-    float z[8] ALIGN(32);
-    float r[8] ALIGN(32);
-    int hash[8] ALIGN(32);
+    ALIGN(32) float x[8] ;
+    ALIGN(32) float y[8] ;
+    ALIGN(32) float z[8] ;
+    ALIGN(32) float r[8] ;
+    ALIGN(32) int hash[8];
     int ii;
 
     _mm256_store_ps(x, vx);
@@ -143,27 +145,29 @@ static __m128 _p_sse(__m128 mask, __m128 v) {
     __m128i v255 = _mm_set1_epi32(255);
     __m128i vval;
     __m128i vt;
-    int index[4] ALIGN(16);
+    ALIGN(16) int index[4];
 
-    _mm_store_si128((__m128i*)index, _mm_and_ps(v255, _mm_cvtps_epi32(v)));
+    __m128i ti = _mm_cvtps_epi32(v);
+    __m128 tf = _mm_and_ps(*(__m128*)&v255, *(__m128*)&ti);
+    _mm_store_si128((__m128i*)index, *(__m128i*)&tf);
 
     vval = _mm_set_epi32(_pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
-    vt = _mm_xor_ps(mask, vval);
+    vt = _mm_xor_si128(*(__m128i*)&mask, vval);
     return _mm_cvtepi32_ps(vt);
 }
-static __m256 _p_avx(__m256 mask, __m256 v) {
-    __m256i v255 = _mm256_set1_epi32(255);
-    __m256i vval;
-    __m256i vt;
-    int index[8] ALIGN(32);
-
-    _mm256_store_si256((__m256i*)index, _mm256_and_ps(v255, _mm256_cvtps_epi32(v)));
-
-    vval = _mm256_set_epi32(_pp[index[7]], _pp[index[6]], _pp[index[5]], _pp[index[4]],
-                            _pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
-    vt = _mm256_xor_ps(mask, vval);
-    return _mm256_cvtepi32_ps(vt);
-}
+//static __m256 _p_avx(__m256 mask, __m256 v) {
+//    __m256i v255 = _mm256_set1_epi32(255);
+//    __m256i vval;
+//    __m256i vt;
+//    ALIGN(32) int index[8];
+//
+//    _mm256_store_si256((__m256i*)index, _mm256_and_ps(v255, _mm256_cvtps_epi32(v)));
+//
+//    vval = _mm256_set_epi32(_pp[index[7]], _pp[index[6]], _pp[index[5]], _pp[index[4]],
+//                            _pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
+//    vt = _mm256_xor_ps(mask, vval);
+//    return _mm256_cvtepi32_ps(vt);
+//}
 
 /*
  * External
@@ -211,15 +215,14 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // SSE
     //
-#if 0
-    _mm256_zeroall();
+#if 1
     for(ii=0; ii<count; ii += 4) {
         __m128 vn;
-        __m128i vpAA, vpBA, vpAB, vpBB, vpAA1, vpBA1, vpAB1, vpBB1;
+        __m128 vpAA, vpBA, vpAB, vpBB, vpAA1, vpBA1, vpAB1, vpBB1;
 
         __m128 vx1, vy1, vz1;
 
-        __m128 vseed = _mm_set1_epi32(seed);
+        __m128 vseed = _mm_load1_ps(&seed);
         __m128 v1f = _mm_set1_ps(1.0f);
 
         __m128 vu, vv, vw; // float u, v, w;
@@ -286,7 +289,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // AVX
     //
-#if 1
+#if 0
     _mm256_zeroall();
     for(ii=0; ii<count; ii += 8) {
         __m256 vn;

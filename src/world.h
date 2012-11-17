@@ -7,6 +7,8 @@
 #ifndef __world_h__
 #define __world_h__
 
+#pragma warning(disable:4702) /* Unreachable code */
+
 #include <stdint.h>
 #include <vector>
 #include <map>
