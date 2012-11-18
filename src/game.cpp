@@ -238,7 +238,7 @@ void Game::initialize(void) {
     float3 max = {  size,  size,  size };
     //min = float3addScalar(&min,)
     timer_reset(&_timer);
-    generate_terrain_points(terrain_func, min, max, 0.5f, verts);
+    generate_terrain_points(terrain_func, min, max, 1.0f, verts);
     debug_output("Time: %f\tNum raw Vertices: %d\n", timer_delta_time(&_timer), verts.size());
     timer_reset(&_timer);
     smooth_terrain(verts, terrain_verts, terrain_indices);
@@ -253,6 +253,24 @@ void Game::initialize(void) {
     _world.entity(id)->set_transform(transform)
                      ->add_component(RenderComponent(render_data));
 
+    id = _world.create_entity();
+    
+    Material sky_material =
+    {
+        _resource_manager.get_resource("assets/sky.png"),
+        _resource_manager.get_resource("assets/default_norm.png"),
+        {0},
+        {0.0f, 0.0f, 0.0f},
+        0.0f,
+        0.0f
+    };
+    render_data.material = sky_material;
+    render_data.mesh = _render->sphere_mesh();
+    transform = TransformZero();
+    transform.scale = -100.0f;
+    //transform.scale = 1.0f;
+    _world.entity(id)->set_transform(transform)
+                     ->add_component(RenderComponent(render_data));
 
     for(int ii=0; ii<32;++ii) {
         transform = TransformZero();
