@@ -21,7 +21,7 @@ struct IDWrapper {
     uint16_t id;
     uint16_t index;
 
-    operator EntityID() { return (id << 16) | index; }
+    operator EntityID() { return CREATE_ID(id, index); }
 };
 
 

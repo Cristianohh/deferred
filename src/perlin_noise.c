@@ -195,7 +195,7 @@ float noise(uint32_t seed, float x, float y, float z) {
                            lerp(u, grad(_p(seed, AB+1), x  , y-1, z-1 ),
                                    grad(_p(seed, BB+1), x-1, y-1, z-1 ))));
 }
-void noisev(uint32_t seed, __restrict const float* x, __restrict const float* y, __restrict const float* z, __restrict float* n, int count) {
+void noisev(uint32_t seed, const float* x, const float* y, const float* z, float* n, int count) {
     int ii;
     //
     // Scalar
