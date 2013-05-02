@@ -31,11 +31,11 @@ float terrain_func(float3 v) {
     float density = -v.y;
     //density += -v.x;
     //density += sinf(v.x*0.125f);
-    density += (float)noise(24, v.x*0.0125f, v.y*0.0125f, v.z*0.0125f) * 16.0f;
+    //density += (float)noise(24, v.x*0.0125f, v.y*0.0125f, v.z*0.0125f) * 16.0f;
     //density += (float)noise(2, v.x*0.03125f, v.y*0.03125f, v.z*0.03125f) * 8.0f;
-    density += (float)noise(32, v.x, v.y, v.z) * 0.25f;
-    density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.125f;
-    density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.0625f;
+    //density += (float)noise(32, v.x, v.y, v.z) * 0.25f;
+    //density += (float)noise(54, v.x*2, v.y*2, v.z*2) * 0.125f;
+    //density += (float)noise(78, v.x*4, v.y*4, v.z*4) * 0.0625f;
     return density;
 }
 
@@ -268,7 +268,7 @@ void Game::initialize(void) {
     render_data.mesh = _render->sphere_mesh();
     transform = TransformZero();
     transform.scale = -100.0f;
-    //transform.scale = 1.0f;
+    transform.scale = 1000.0f;
     _world.entity(id)->set_transform(transform)
                      ->add_component(RenderComponent(render_data));
 
@@ -291,8 +291,8 @@ void Game::initialize(void) {
         int material = rand()%3;
         render_data.material = materials[material];
         id = _world.create_entity();
-        _world.entity(id)->set_transform(transform);
-                         //->add_component(RenderComponent(render_data));
+        _world.entity(id)->set_transform(transform)
+                         ->add_component(RenderComponent(render_data));
     }
 
     Material house_material =
@@ -311,8 +311,8 @@ void Game::initialize(void) {
     render_data.mesh = _resource_manager.get_resource("assets/house_obj.obj");
     render_data.material = house_material;
     id = _world.create_entity();
-    _world.entity(id)->set_transform(transform);
-                     //->add_component(RenderComponent(render_data));
+    _world.entity(id)->set_transform(transform)
+                     ->add_component(RenderComponent(render_data));
 
     // Add a "sun"
     Light light;
@@ -330,7 +330,7 @@ void Game::initialize(void) {
     light.type = kDirectionalLight;
 
     transform = TransformZero();
-    transform.orientation = quaternionFromEuler(DegToRad(90.0f), DegToRad(60.0f), 0.0f);
+    transform.orientation = quaternionFromEuler(DegToRad(90.0f), DegToRad(45.0f), 0.0f);
     transform.position = light.pos;
 
     _sun_id = _world.create_entity();
@@ -350,8 +350,8 @@ void Game::initialize(void) {
 
         transform.position = light.pos;
         id = _world.create_entity();
-        _world.entity(id)->set_transform(transform);
-                         //->add_component(LightComponent(light));
+        _world.entity(id)->set_transform(transform)
+                         ->add_component(LightComponent(light));
     }
 }
 void Game::shutdown(void) {

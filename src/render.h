@@ -14,7 +14,7 @@
 #include "vec_math.h"
 #include "resource_manager.h"
 
-#define MAX_LIGHTS (1024*3)
+#define MAX_LIGHTS (1024*2)
 
 #ifndef ARRAYSIZE
     #define ARRAYSIZE(a) (sizeof((a))/sizeof((a)[0]))
