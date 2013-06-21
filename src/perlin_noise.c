@@ -150,19 +150,19 @@ static __m128 _p_sse(__m128 mask, __m128 v) {
     vt = _mm_xor_si128(*(__m128i*)&mask, vval);
     return _mm_cvtepi32_ps(vt);
 }
-//static __m256 _p_avx(__m256 mask, __m256 v) {
-//    __m256i v255 = _mm256_set1_epi32(255);
-//    __m256i vval;
-//    __m256i vt;
-//    ALIGN(32) int index[8];
-//
-//    _mm256_store_si256((__m256i*)index, _mm256_and_ps(v255, _mm256_cvtps_epi32(v)));
-//
-//    vval = _mm256_set_epi32(_pp[index[7]], _pp[index[6]], _pp[index[5]], _pp[index[4]],
-//                            _pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
-//    vt = _mm256_xor_ps(mask, vval);
-//    return _mm256_cvtepi32_ps(vt);
-//}
+static __m256 _p_avx(__m256 mask, __m256 v) {
+    __m256i v255 = _mm256_set1_epi32(255);
+    __m256i vval;
+    __m256i vt;
+    ALIGN(32) int index[8];
+
+    _mm256_store_si256((__m256i*)index, _mm256_and_ps(v255, _mm256_cvtps_epi32(v)));
+
+    vval = _mm256_set_epi32(_pp[index[7]], _pp[index[6]], _pp[index[5]], _pp[index[4]],
+                            _pp[index[3]], _pp[index[2]], _pp[index[1]], _pp[index[0]]);
+    vt = _mm256_xor_ps(mask, vval);
+    return _mm256_cvtepi32_ps(vt);
+}
 
 /*
  * External
@@ -210,7 +210,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // SSE
     //
-#if 1
+#if 0
     for(ii=0; ii<count; ii += 4) {
         __m128 vn;
         __m128 vpAA, vpBA, vpAB, vpBB, vpAA1, vpBA1, vpAB1, vpBB1;
@@ -284,7 +284,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // AVX
     //
-#if 0
+#if 1
     _mm256_zeroall();
     for(ii=0; ii<count; ii += 8) {
         __m256 vn;

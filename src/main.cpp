@@ -18,10 +18,16 @@ static Game*    _game = NULL;
 #define TOTAL_NUM_NUMBERS (1024*1024*8)
 #define CHUNK_SIZE (128)
 
+#ifdef __GNUC__
+    #define ALIGN(x) __attribute__((aligned(x)))
+#elif defined(_MSC_VER)
+    #define ALIGN(x) __declspec(align(x))
+#endif
+
 int on_init(int argc, const char* argv[]) {
-#if 0
+#if 1
     Timer timer;
-    float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE], res2[CHUNK_SIZE];
+    ALIGN(32) float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE], res2[CHUNK_SIZE];
     for(int ii=0; ii<CHUNK_SIZE; ++ii) {
         x[ii] = rand()/(float)RAND_MAX * 100.0f;
         y[ii] = rand()/(float)RAND_MAX * 100.0f;
