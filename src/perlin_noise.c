@@ -200,7 +200,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // Scalar
     //
-#if 0
+#if 1
     for(ii=0; ii<count; ++ii) {
         n[ii] = noise(seed, x[ii], y[ii], z[ii]);
     }
@@ -284,7 +284,7 @@ void noisev(uint32_t seed, const float* x, const float* y, const float* z, float
     //
     // AVX
     //
-#if 1
+#if 0
     _mm256_zeroall();
     for(ii=0; ii<count; ii += 8) {
         __m256 vn;
