@@ -35,6 +35,7 @@ static __m128 fade_sse(__m128 t) {
     __m128 vt3 = _mm_mul_ps(t, _mm_mul_ps(t, t)); /* t*t*t */
     return _mm_mul_ps(d, vt3);
 }
+#if 0
 static __m256 fade_avx(__m256 t) {
     __m256 v6  = _mm256_set1_ps(6.0f);
     __m256 v15 = _mm256_set1_ps(15.0f);
@@ -47,6 +48,7 @@ static __m256 fade_avx(__m256 t) {
     __m256 vt3 = _mm256_mul_ps(t, _mm256_mul_ps(t, t)); /* t*t*t */
     return _mm256_mul_ps(d, vt3);
 }
+#endif
 static float lerp(float t, float a, float b) {
     return a + t * (b - a);
 }
@@ -55,11 +57,13 @@ static __m128 lerp_sse(__m128 t, __m128 a, __m128 b) {
     __m128 t_bma = _mm_mul_ps(t, b_minus_a); /* (t*(b-a) */
     return _mm_add_ps(a, t_bma);               /* a + (t*(b-a)) */
 }
+#if 0
 static __m256 lerp_avx(__m256 t, __m256 a, __m256 b) {
     __m256 b_minus_a = _mm256_sub_ps(b, a);     /* (b-a) */
     __m256 t_bma = _mm256_mul_ps(t, b_minus_a); /* (t*(b-a) */
     return _mm256_add_ps(a, t_bma);             /* a + (t*(b-a)) */
 }
+#endif
 static float grad(int hash, float x, float y, float z) {
     int h = hash & 15;                      // CONVERT LO 4 BITS OF HASH CODE
     float u = h<8 ? x : y,                  // INTO 12 GRADIENT DIRECTIONS.
@@ -87,6 +91,7 @@ static __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
     }
     return _mm_load_ps(r);
 }
+#if 0
 static __m256 grad_avx(__m256 vhash, __m256 vx, __m256 vy, __m256 vz) {
     ALIGN(32) float x[8] ;
     ALIGN(32) float y[8] ;
@@ -108,6 +113,7 @@ static __m256 grad_avx(__m256 vhash, __m256 vx, __m256 vy, __m256 vz) {
     }
     return _mm256_load_ps(r);
 }
+#endif
 static int32_t _pp[512] = {
     151,160,137,91,90,15,131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,
     8,99,37,240,21,10,23,190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,
@@ -150,6 +156,7 @@ static __m128 _p_sse(__m128 mask, __m128 v) {
     vt = _mm_xor_si128(*(__m128i*)&mask, vval);
     return _mm_cvtepi32_ps(vt);
 }
+#if 0
 static __m256 _p_avx(__m256 mask, __m256 v) {
     __m256i v255 = _mm256_set1_epi32(255);
     __m256i vval;
@@ -163,6 +170,7 @@ static __m256 _p_avx(__m256 mask, __m256 v) {
     vt = _mm256_xor_ps(mask, vval);
     return _mm256_cvtepi32_ps(vt);
 }
+#endif
 
 /*
  * External
