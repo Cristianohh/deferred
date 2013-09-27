@@ -153,7 +153,7 @@ static Key _convert_keycode(uint16_t key)
     KEY_MAPPING(111, KEY_F12);    
     
     default:
-        return -1;
+        return KEY_INVALID;
     }
 }
 
@@ -221,7 +221,7 @@ void app_unlock_and_show_cursor(void) {
 - (void)keyDown:(NSEvent *)theEvent
 {
     Key key = _convert_keycode([theEvent keyCode]);
-    if(key == -1)
+    if(key == KEY_INVALID)
         return;
     if(_keys[key] == 0) {
         SystemEvent event;
@@ -234,7 +234,7 @@ void app_unlock_and_show_cursor(void) {
 - (void)keyUp:(NSEvent *)theEvent
 {
     Key key = _convert_keycode([theEvent keyCode]);
-    if(key == -1)
+    if(key == KEY_INVALID)
         return;
     _keys[key] = 0;
 }

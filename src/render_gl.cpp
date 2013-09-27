@@ -98,7 +98,7 @@ static const VertexDescription kVertexDescriptions[kNUM_VERTEX_TYPES][8] =
     { // kVtxPosNormTex
         { 0, 3 },
         { 1, 3 },
-        { 4, 2 },
+        { 2, 2 },
         { 0, 0 },
     },
     { // kVtxPosTex

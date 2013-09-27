@@ -25,7 +25,7 @@ static Game*    _game = NULL;
 #endif
 
 int on_init(int argc, const char* argv[]) {
-#if 1
+#if 0
     Timer timer;
     ALIGN(32) float x[CHUNK_SIZE], y[CHUNK_SIZE], z[CHUNK_SIZE], res[CHUNK_SIZE], res2[CHUNK_SIZE];
     for(int ii=0; ii<CHUNK_SIZE; ++ii) {

@@ -40,7 +40,9 @@ typedef enum {
 } SystemEventType;
 
 typedef enum {
-    KEY_0,
+    KEY_INVALID = -1,
+
+    KEY_0 = 0,
     KEY_1,
     KEY_2,
     KEY_3,
