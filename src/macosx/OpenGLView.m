@@ -5,6 +5,7 @@
  */
 
 #import "OpenGLView.h"
+#include <OpenGL/gl3.h>
 #include "assert.h"
 #include "application.h"
 
