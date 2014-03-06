@@ -70,6 +70,7 @@ static float grad(int hash, float x, float y, float z) {
     v = h<4 ? y : h==12||h==14 ? x : z;
     return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
 }
+#if 0
 static __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
     ALIGN(16) float x[4];
     ALIGN(16) float y[4];
@@ -91,7 +92,6 @@ static __m128 grad_sse(__m128 vhash, __m128 vx, __m128 vy, __m128 vz) {
     }
     return _mm_load_ps(r);
 }
-#if 0
 static __m256 grad_avx(__m256 vhash, __m256 vx, __m256 vy, __m256 vz) {
     ALIGN(32) float x[8] ;
     ALIGN(32) float y[8] ;
