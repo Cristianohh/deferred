@@ -202,6 +202,12 @@
     <None Include="assets\sphere.mesh">
       <Filter>assets</Filter>
     </None>
+    <None Include="assets\Shaders\depth.fsh">
+      <Filter>assets\shaders</Filter>
+    </None>
+    <None Include="assets\Shaders\depth.vsh">
+      <Filter>assets\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\brick.dds">

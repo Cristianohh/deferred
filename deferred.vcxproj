@@ -98,6 +98,8 @@
     <None Include="assets\Shaders\deferred\geometry.vsh" />
     <None Include="assets\Shaders\deferred\light.fsh" />
     <None Include="assets\Shaders\deferred\light.vsh" />
+    <None Include="assets\Shaders\depth.fsh" />
+    <None Include="assets\Shaders\depth.vsh" />
     <None Include="assets\Shaders\forward\3D.fsh" />
     <None Include="assets\Shaders\forward\3D.vsh" />
     <None Include="assets\sphere.mesh" />
